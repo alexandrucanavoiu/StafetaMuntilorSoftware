@@ -21,6 +21,7 @@ class Orienteering extends \Eloquent
         'total',
         'abandon',
         'missed_posts',
+        'order_posts'
     ];
 
 }

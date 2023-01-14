@@ -19,15 +19,17 @@
         <div class="sidebar-nav navbar-collapse">
             <ul class="nav" id="side-menu">
                 <li>
-                    <a href="/import-trail-cross"><i class="fa fa-list-alt fa-fw"></i> Import CROSS-TRAILL</a>
+                    {{--<a href="/import-trail-cross"><i class="fa fa-list-alt fa-fw"></i> Import CROSS-TRAILL</a>--}}
                     <a href="/import-orienteering"><i class="fa fa-list-alt fa-fw"></i> Import ORIENTARE</a>
+                    <a href="/configure"><i class="fa fa-list-alt fa-fw"></i> Configurare Posturi</a>
+                    <a href="/order-start"><i class="fa fa-list-alt fa-fw"></i> Lista Start</a>
                 </li>
             </ul>
         </div>
 
         <div class="changelog">
-        <div class="center">Version 1.0</div>
-        <div class="center"><a target="_blank" href="http://www.ultraorienteering.drumetiimontane.ro"> Visit Official Website</a></div>
+        <div class="center">Version 1.1</div>
+        <div class="center"><a target="_blank" href="http://www.ultra-orienteering.drumetiimontane.ro"> Visit Official Website</a></div>
         </div>
 
         <div class="changelog center">

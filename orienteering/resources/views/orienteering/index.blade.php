@@ -23,7 +23,7 @@ Import TIMP pentru ORIENTARE
                         <div>Numarul de echipe nu corespunde cu numarul echipelor care au datele completate la proba de orientare, de aceea trebuie sa inserati date provizorii pentru ca importul sa functioneze</div>
                             <p>Automat prin apasarea butonului COMPLETARE DATE ORIENTARE, toate echipele la care nu au fost completate datele vor avea date default sub forma:</p>
                             <p>Nume Participant: - / Start: 00:00:00 / Finish: 00:00:00 / Total: 00:00:00 / Abandon: DA</p>
-                        <p>Dupa ce ati apasat butonul COMPLETARE DATE ORIENTARE si tabela ORIENTARE a fost populata, aceasta sectiune nu va mai aparea si puteti importa linistiti fisierul CSV generat cu ajutorul programului Ultra Orienteering</p>
+                        <p>Dupa ce ati apasat butonul COMPLETARE DATE ORIENTARE si tabela ORIENTARE a fost populata, aceasta sectiune nu va mai aparea si puteti importa linistiti fisierul TEXT generat cu ajutorul programului Ultra Orienteering</p>
                         <div class="table-responsive">
                             <form action="/import-orienteering/seed/insert" class="form-horizontal" method="post">
                                 {{ csrf_field() }}
@@ -35,6 +35,7 @@ Import TIMP pentru ORIENTARE
             </div>
             @endif
 
+            @if($teams == $orienteering)
 
             <div class="col-md-4 col-md-12">
                 <div class="panel panel-default">
@@ -53,6 +54,8 @@ Import TIMP pentru ORIENTARE
                     </div>
                 </div>
             </div>
+
+                @endif
 
 
         </div>

@@ -9,6 +9,11 @@ body {
 #wrapper {
   width: 100%;
 }
+
+.center-right {
+  float: right !important;
+}
+
 #page-wrapper {
   padding: 0 15px;
   min-height: 700px;

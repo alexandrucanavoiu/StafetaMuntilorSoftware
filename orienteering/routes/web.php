@@ -11,15 +11,23 @@
 |
 */
 
-Route::get('/', 'CrossTrailController@index' );
-Route::get('/import-trail-cross', 'CrossTrailController@index' );
-Route::post('/import-trail-cross/xls', 'CrossTrailController@importuuidcardtrail');
+Route::get('/', 'OrienteeringController@index' );
+Route::get('/configure', 'OrienteeringController@configure' );
+Route::post('/configure', 'OrienteeringController@configure_store' );
+//Route::get('/import-trail-cross', 'CrossTrailController@index' );
+//Route::post('/import-trail-cross/xls', 'CrossTrailController@importuuidcardtrail');
+
+Route::get('/order-start', 'TeamController@index' );
+Route::get('/order-start/pdf', 'TeamController@pdf' );
+Route::get('/order-start/edit', 'TeamController@order_start' );
+Route::post('/order-start/edit', 'TeamController@order_start_post' );
 
 Route::get('/import-orienteering', 'OrienteeringController@index' );
 Route::post('/import-orienteering/xls', 'OrienteeringController@importuuidcardorienteering' );
 
 Route::get('/import-orienteering/seed', 'OrienteeringController@seed' );
 Route::post('/import-orienteering/seed/insert', 'OrienteeringController@seedorienteering' );
+
 
 //Route::post('/import-orienteering/xls', 'OrienteeringController@importuuidcardorienteering');
 
