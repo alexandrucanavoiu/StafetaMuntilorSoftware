@@ -1,0 +1,8 @@
+.school-missing { padding: 20px; }
+.hide {
+	display: none !important;
+  }
+.show {
+	display: block !important;
+  }
+.padding-left-10 { padding-left: 10px;}
