@@ -25,6 +25,13 @@ class RaidMontanController extends Controller
         $teams = Team::All()->count();
         $participations = Participations::All()->count();
 
+//        $teams = Team::get();
+//        foreach ($teams as $team){
+//            DB::table('teams')
+//                ->where('team_id', $team->team_id)
+//                ->update(['uuid_card_raid' => $team->uuid_card]);
+//        }
+//        die('xxx');
 
         return view('raid_montan.index', ['teams' => $teams, 'participations' => $participations,]);
     }
@@ -75,8 +82,7 @@ class RaidMontanController extends Controller
         foreach ($teams as $team) {
 
             $team_id = $team->team_id;
-            $uuid_card = $team->uuid_id;
-            $uuids_raid_id = $team->uuids_raid_id;
+            $uuid_card_raid = $team->uuid_card_raid;
             $category_id = $team->category_id;
 
             $exists = DB::table('participations')->where('team_id', $team_id)->first();
@@ -103,7 +109,7 @@ class RaidMontanController extends Controller
                             'time_start' => '',
                             'time_finish' => '',
                             'hits' => '1',
-                            'uuid_id' => $uuids_raid_id,
+                            'uuid_id' => $uuid_card_raid,
                         ];
                     } else {
                         $stationsArray[]  = [
@@ -113,7 +119,7 @@ class RaidMontanController extends Controller
                             'time_finish' => '',
                             'hits' => '',
                             'post' => $posts_from_category_raid[$index_post]['post'],
-                            'uuid_id' => $uuids_raid_id,
+                            'uuid_id' => $uuid_card_raid,
                         ];
                         $index_post++;
                     }
@@ -219,7 +225,7 @@ class RaidMontanController extends Controller
 
                         // Verificare daca UUID-ul exista in baza de date sau asociat unei echipe
                         if(!empty($uuid_from_db)) {
-                            $echipa = Team::where('uuids_raid_id',$uuid_from_db['uuid_id'])->first();
+                            $echipa = Team::where('uuid_card_raid',$uuid_from_db['uuid_id'])->first();
                             if($echipa === NULL){
                                 echo "<h2><font color='red'><strong>";
                                 echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db['uuid_id'] . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db['uuid_name'] . ".";
@@ -361,13 +367,13 @@ class RaidMontanController extends Controller
                             continue;
                         }
 
-                        if( empty($valid_posts[$time_and_post['post']]['start']) )
+                        if( empty($valid_posts[$time_and_post['post']]['arrived']) )
                         {
-                            $valid_posts[$time_and_post['post']]['start'] = $time_and_post['time'];
+                            $valid_posts[$time_and_post['post']]['arrived'] = $time_and_post['time'];
                         }
                         else
                         {
-                            $valid_posts[$time_and_post['post']]['end'] = $time_and_post['time'];
+                            $valid_posts[$time_and_post['post']]['go'] = $time_and_post['time'];
                         }
 
                     }
@@ -397,44 +403,39 @@ class RaidMontanController extends Controller
                             $chanllenge_stations_stages = ChallengeStationsStages::where('post',$post)->where('categories_id',$time_and_posts['category_id'])->first();
 
                             $time = ( !empty($chanllenge_stations_stages['time']) ) ? $chanllenge_stations_stages['time'] : null;
-                            $start = ( !empty($valid_post['start']) ) ? $valid_post['start'] : null;
-                            $finish = ( !empty($valid_post['end']) ) ? $valid_post['end'] : null;
+                            $arrived = ( !empty($valid_post['arrived']) ) ? $valid_post['arrived'] : null;
+                            $go = ( !empty($valid_post['go']) ) ? $valid_post['go'] : null;
 
                             if( !empty($time) )
                             {
                                 //timpul de start plus timp de stat in post
-                                $outside_time = strtotime('+'.$time.'minutes',$start);
+                                $outside_time = strtotime('+'.$time.'minutes',$arrived);
 
                                 //daca a stat mai mult in post timpul de plecare il punem cu timpul de start plus timpul care trebuia sa stea
-                                if( $finish > $outside_time )
+                                if( $go > $outside_time )
                                 {
-                                    $finish = $outside_time;
+                                    $go = $outside_time;
                                 }
                             }
 
                             //daca nu are timp de plecare se pune timpul la care a sosit( se crede ca nu a stat in post si a plecat direct )
-                            if( empty($finish) && $post != 252 && $post != 251 )
+                            if( empty($go) && $post != 252 )
                             {
-                                $finish = $start;
-                            }
-
-                            //daca e finish punem timpul care e primul si e salvat ca start pe finish
-                            if( $post == 252 )
-                            {
-                                $finish = $start;
-                                $start = null;
+                                $go = $arrived;
                             }
 
                             $values = [];
 
-                            if( !empty($start) )
+                            $values['time_finish'] = 0;
+                            if( !empty($arrived) )
                             {
-                                $values['time_start'] = date('H:i:s',$start);
+                                $values['time_finish'] = date('H:i:s',$arrived);
                             }
 
-                            if( !empty($finish) )
+                            $values['time_start'] = 0;
+                            if( !empty($go) )
                             {
-                                $values['time_finish'] = date('H:i:s',$finish);
+                                $values['time_start'] = date('H:i:s',$go);
                             }
 
                             //$time_minus_pauses = [];
@@ -461,20 +462,19 @@ class RaidMontanController extends Controller
                                 } else {
                                     if($values['time_start'] === $values['time_finish']){
                                         //echo 'Cod PA: ' . $post .' Sosire: ' .  $values['time_start'];
-                                        echo 'PA: ' . $number_pa .' Sosire: ' .  $values['time_start'];
+                                        echo 'PA: ' . $number_pa .' Sosire: ' .  $values['time_finish'];
 
                                         $finish_pa = strtotime($values['time_finish']);
                                         $start_pa = strtotime($values['time_start']);
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
+                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $start_pa - $finish_pa;
 
                                     } else {
-                                        //echo 'Cod PA: ' . $post .' <strong> -></strong> Sosire: ' .  $values['time_start'] . ' <strong> -></strong> Plecare: ' . $values['time_finish'];
-                                        echo 'PA: ' . $number_pa .' <strong> -></strong> Sosire: ' .  $values['time_start'] . ' <strong> -></strong> Plecare: ' . $values['time_finish'];
+                                        echo 'PA: ' . $number_pa .' <strong> -></strong> Sosire: ' .  $values['time_finish'] . ' <strong> -></strong> Plecare: ' . $values['time_start'];
 
                                         $finish_pa = strtotime($values['time_finish']);
                                         $start_pa = strtotime($values['time_start']);
 
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
+                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $start_pa - $finish_pa;
 
 
                                     }
@@ -522,9 +522,9 @@ class RaidMontanController extends Controller
                         $missing_posts_text = ( empty($missing_posts) ) ? '' : $missing_posts;
                         $count_pa_missings =  'regaseste';
                         if(count($missing_posts) > 1){
-                                $count_pa_missings =  "regasesc";
+                            $count_pa_missings =  "regasesc";
                         } else {
-                                $count_pa_missings =  "regaseste";
+                            $count_pa_missings =  "regaseste";
                         }
                         echo '<br/>';
                         echo "COD PA " . $missing_posts_text . " nu se " . $count_pa_missings . " pe card";

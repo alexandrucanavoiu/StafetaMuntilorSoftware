@@ -21,6 +21,8 @@ class ParticipationsEntries extends \Eloquent
         'time_start',
         'time_finish',
         'hits',
+        'post',
+        'uuid_id',
     ];
 
 }
