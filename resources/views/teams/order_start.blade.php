@@ -50,10 +50,14 @@
                                     </tr>
                                     </tfoot>
                                     <tbody>
-                                    @foreach($results as $result)
+                                    @foreach($results as $key => $result)
                                     <tr>
                                         <td width="3%">{{ $number++ }}</td>
+                                        @if($key == 0)
+                                        <td width="10%">{{ $data_start->format('h:i:s') }}</td>
+                                        @else
                                         <td width="10%">{{ $data_start->addMinutes($minute_start)->format('h:i:s') }}</td>
+                                        @endif
                                         <td>{{ $result['category'] }}</td>
                                         <td>{{ $result['club'] }}</td>
                                         <td>{{ $result['team'] }}</td>

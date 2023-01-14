@@ -14,12 +14,12 @@ class TeamOrderStart extends Model
     protected $dates = [
         'created_at',
         'updated_at',
-        'order_date_start'
     ];
 
     protected $fillable = [
         'id',
         'order_start_minutes',
+        'order_date_start',
     ];
 
 }

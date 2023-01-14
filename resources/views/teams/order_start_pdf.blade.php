@@ -53,15 +53,19 @@
       </tr>
     </thead>
     <tbody>
-      @foreach($results as $result)
-      <tr>
-          <td width="3%">{{ $number++ }}</td>
-          <td width="10%">{{ $data_start->addMinutes($minute_start)->format('h:i:s') }}</td>
-          <td>{{ $result['category'] }}</td>
-          <td>{{ $result['club'] }}</td>
-          <td>{{ $result['team'] }}</td>
-      </tr>
-      @endforeach
+    @foreach($results as $key => $result)
+    <tr>
+        <td width="3%">{{ $number++ }}</td>
+        @if($key == 0)
+        <td width="10%">{{ $data_start->format('h:i:s') }}</td>
+        @else
+        <td width="10%">{{ $data_start->addMinutes($minute_start)->format('h:i:s') }}</td>
+        @endif
+        <td>{{ $result['category'] }}</td>
+        <td>{{ $result['club'] }}</td>
+        <td>{{ $result['team'] }}</td>
+    </tr>
+    @endforeach
     </tbody>
   </table>
   <footer>{{ \App\Helpers\Navigation::trophy_details()->software }}</footer>

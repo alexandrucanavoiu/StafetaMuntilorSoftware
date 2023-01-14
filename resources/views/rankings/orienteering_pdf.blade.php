@@ -53,7 +53,7 @@
         <th width="20%">Nume Echipa</th>
         <th width="5%" class="text-center">Timp</th>
         <th width="5%" class="text-center">Punctaj</th>
-        <th width="5%" class="text-center">Missing</th>
+        <th width="5%" class="text-center">Post Lipsa</th>
          @if($ultra_orienteering == "1")<th width="30%" class="text-center">Ordine Posturi</th>@endif
       </tr>
     </thead>

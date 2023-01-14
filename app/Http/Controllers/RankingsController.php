@@ -619,6 +619,7 @@ class RankingsController extends Controller
                         $teams_list_disqualified[$key]['name'] = $team->name;
                         $teams_list_disqualified[$key]['total_time'] = "00:00:00";
                         $teams_list_disqualified[$key]['abandon'] = 2;
+
                     } else {
                         $teams_list_abandon[$key]['name'] = $team->name;
                         $teams_list_abandon[$key]['total_time'] = "00:00:00";

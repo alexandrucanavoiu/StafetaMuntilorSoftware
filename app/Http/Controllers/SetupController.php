@@ -128,6 +128,7 @@ class SetupController extends Controller
     {
         if( $request->ajax() )
         {
+           
                         $request->merge(['category_1' => (int)$request->input('category_1')]);
                         $request->merge(['category_2' => (int)$request->input('category_2')]);
                         $request->merge(['category_3' => (int)$request->input('category_3')]);
@@ -184,6 +185,7 @@ class SetupController extends Controller
                                     $category->update(['order_start' => $to_insert]);
                                 }
 
+                                
                                 $TeamOrderStart = TeamOrderStart::where('id', 1)->first();
                                 $TeamOrderStart->update(['order_date_start' => $request->input('order_date_start'), 'order_start_minutes' => $request->input('order_start_minutes')]);
 

@@ -499,7 +499,7 @@ class TeamsController extends Controller
         $number = 1;
         $order_start = TeamOrderStart::where('id', 1)->first();
         $data_start = \Carbon\Carbon::parse($order_start->order_date_start);
-        $minute_start = $order_start->minutes;
+        $minute_start = $order_start->order_start_minutes;
 
 
         $categories_data = Category::get();
