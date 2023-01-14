@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-class OrienteeringPosts extends \Eloquent
+class UuidCardRaidMontan extends \Eloquent
 {
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $table = 'orienteering_stages';
+
+    protected $table = 'uuids_raid';
 
     public $fillable = [
-        'id',
-        'categories_id',
-        'post',
+        'uuid_id',
+        'uuid_name',
     ];
 
 }

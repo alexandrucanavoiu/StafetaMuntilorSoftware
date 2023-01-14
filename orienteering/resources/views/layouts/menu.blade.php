@@ -21,7 +21,11 @@
                 <li>
                     {{--<a href="/import-trail-cross"><i class="fa fa-list-alt fa-fw"></i> Import CROSS-TRAILL</a>--}}
                     <a href="/import-orienteering"><i class="fa fa-list-alt fa-fw"></i> Import ORIENTARE</a>
-                    <a href="/configure"><i class="fa fa-list-alt fa-fw"></i> Configurare Posturi</a>
+                    <a href="/configure"><i class="fa fa-list-alt fa-fw"></i> Configurare Posturi Orientare</a>
+                    <br />
+                    <a href="/import-raid-montan"><i class="fa fa-list-alt fa-fw"></i> Import Raid Montan</a>
+                    <a href="/configure-raid-montan"><i class="fa fa-list-alt fa-fw"></i> Configurare Posturi Raid</a>
+                    <br />
                     <a href="/order-start"><i class="fa fa-list-alt fa-fw"></i> Lista Start</a>
                 </li>
             </ul>

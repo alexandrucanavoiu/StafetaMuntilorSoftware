@@ -293,11 +293,11 @@ class OrienteeringController extends Controller
                     $total_posts = count($category);
                     $number_of_posts_taked = count($time_and_posts);
 
+
                     $start_time = 0;
                     $final_time = 0;
 
                     for ($i = 0; $i < $total_posts; $i++) {
-
 
                         foreach ($time_and_posts as $order => $time_and_post) {
 

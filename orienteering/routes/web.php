@@ -17,6 +17,9 @@ Route::post('/configure', 'OrienteeringController@configure_store' );
 //Route::get('/import-trail-cross', 'CrossTrailController@index' );
 //Route::post('/import-trail-cross/xls', 'CrossTrailController@importuuidcardtrail');
 
+Route::get('/configure-raid-montan', 'RaidMontanController@configure' );
+Route::post('/configure-raid-montan', 'RaidMontanController@configure_store' );
+
 Route::get('/order-start', 'TeamController@index' );
 Route::get('/order-start/pdf', 'TeamController@pdf' );
 Route::get('/order-start/edit', 'TeamController@order_start' );
@@ -25,8 +28,14 @@ Route::post('/order-start/edit', 'TeamController@order_start_post' );
 Route::get('/import-orienteering', 'OrienteeringController@index' );
 Route::post('/import-orienteering/xls', 'OrienteeringController@importuuidcardorienteering' );
 
+Route::get('/import-raid-montan', 'RaidMontanController@index' );
+Route::post('/import-raid-montan/xls', 'RaidMontanController@importuuidcardraidmontan' );
+
 Route::get('/import-orienteering/seed', 'OrienteeringController@seed' );
 Route::post('/import-orienteering/seed/insert', 'OrienteeringController@seedorienteering' );
+
+
+Route::post('/import-raid-montan/seed/insert', 'RaidMontanController@seedraidmontan' );
 
 
 //Route::post('/import-orienteering/xls', 'OrienteeringController@importuuidcardorienteering');

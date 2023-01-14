@@ -15,6 +15,7 @@ class Team extends \Eloquent
     public $fillable = [
         'team_id',
         'uuid_card',
+        'uuids_raid_id',
         'team_name',
         'club_id',
         'category_id',

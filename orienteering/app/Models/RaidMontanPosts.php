@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-class OrienteeringPosts extends \Eloquent
+class RaidMontanPosts extends \Eloquent
 {
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $table = 'orienteering_stages';
+    protected $table = 'challenge_stations_stages';
 
     public $fillable = [
         'id',
         'categories_id',
         'post',
+        'time',
     ];
 
 }
