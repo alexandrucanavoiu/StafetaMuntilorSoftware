@@ -1,4 +1,0 @@
-<?php
-
-global $odb, $smarty;
-
