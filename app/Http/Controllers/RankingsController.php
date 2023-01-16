@@ -1251,6 +1251,7 @@ class RankingsController extends Controller
             $ranking_general = [];
             foreach($teams as $key1 => $team) {
 
+                $ranking_general[$team->id]['team_id'] = $team->id;
                 $ranking_general[$team->id]['name'] = $team->name;
                 $ranking_general[$team->id]['scor_knowledge'] = 0;
                 $ranking_general[$team->id]['scor_orienteering'] = 0;
@@ -1286,9 +1287,6 @@ class RankingsController extends Controller
             //         $ranking_general[$key]['scor_total'] = 0;
             //     }
             // }
-
-            // dd($ranking_general);
-
             $ranking_general = collect($ranking_general);
             $ranking_general = $ranking_general->sortBy([
                 ['scor_total', 'desc'],
@@ -1326,7 +1324,14 @@ class RankingsController extends Controller
             $initial_scor = 500;
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
-                    $ranking_general[$key]['scor_stafeta'] = 0;
+                    // check if knowledge or orienteering is not abandon to give them 10 points.
+                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
+                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                    if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
+                        $ranking_general[$key]['scor_stafeta'] = 10;
+                    } else {
+                        $ranking_general[$key]['scor_stafeta'] = 0;
+                    }
                 }
                 elseif($rank['scor_total'] == 0){
                     $ranking_general[$key]['scor_stafeta'] = 0;
@@ -1356,6 +1361,39 @@ class RankingsController extends Controller
                 }
             }
 
+            // sort again for scor_stafeta
+            $ranking_general = collect($ranking_general);
+            $ranking_general = $ranking_general->sortBy([
+                ['scor_stafeta', 'desc'],
+            ]);
+
+            // convert to array + reindex array key to be from 0 to ...
+            $ranking_general  = array_values($ranking_general->toArray());
+
+            // rank
+            $x = 1;
+            $unique_id = 0;
+
+            foreach($ranking_general as $key => $team){
+                // dd($team);
+                $decrease_rank = 0;
+                $ranking_general[$key]['rank'] = $x;
+                    if(isset($ranking_general[$key-1]))
+                    {
+                        if($team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'] && $team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'])
+                        {
+                            $decrease_rank = 1;
+                            $ranking_general[$key]['rank'] = $x-1;
+                        }
+                    }   
+    
+                if($decrease_rank == 0)
+                {
+                    $x++;
+                }
+    
+                $unique_id++;
+            }
             
             return view('rankings.general_category',compact('ranking_general', 'category'));
 
@@ -1638,6 +1676,7 @@ class RankingsController extends Controller
             $ranking_general = [];
             foreach($teams as $key1 => $team) {
 
+                $ranking_general[$team->id]['team_id'] = $team->id;
                 $ranking_general[$team->id]['name'] = $team->name;
                 $ranking_general[$team->id]['scor_knowledge'] = 0;
                 $ranking_general[$team->id]['scor_orienteering'] = 0;
@@ -1702,7 +1741,14 @@ class RankingsController extends Controller
             $initial_scor = 500;
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
-                    $ranking_general[$key]['scor_stafeta'] = 0;
+                    // check if knowledge or orienteering is not abandon to give them 10 points.
+                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
+                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                    if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
+                        $ranking_general[$key]['scor_stafeta'] = 10;
+                    } else {
+                        $ranking_general[$key]['scor_stafeta'] = 0;
+                    }
                 }
                 elseif($rank['scor_total'] == 0){
                     $ranking_general[$key]['scor_stafeta'] = 0;
@@ -1732,6 +1778,40 @@ class RankingsController extends Controller
                     }
 
                 }
+            }
+            
+            // sort again for scor_stafeta
+            $ranking_general = collect($ranking_general);
+            $ranking_general = $ranking_general->sortBy([
+                ['scor_stafeta', 'desc'],
+            ]);
+
+            // convert to array + reindex array key to be from 0 to ...
+            $ranking_general  = array_values($ranking_general->toArray());
+
+            // rank
+            $x = 1;
+            $unique_id = 0;
+
+            foreach($ranking_general as $key => $team){
+                // dd($team);
+                $decrease_rank = 0;
+                $ranking_general[$key]['rank'] = $x;
+                    if(isset($ranking_general[$key-1]))
+                    {
+                        if($team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'] && $team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'])
+                        {
+                            $decrease_rank = 1;
+                            $ranking_general[$key]['rank'] = $x-1;
+                        }
+                    }   
+    
+                if($decrease_rank == 0)
+                {
+                    $x++;
+                }
+    
+                $unique_id++;
             }
 
             $pdf = PDF::loadView('rankings.general_category_pdf', ['ranking_general' => $ranking_general, 'category' => $category]);
@@ -2020,6 +2100,7 @@ class RankingsController extends Controller
                             $ranking_general = [];
                             foreach($teams as $key1 => $team) {
                 
+                                $ranking_general[$team->id]['team_id'] = $team->id;
                                 $ranking_general[$team->id]['name'] = $team->name;
                                 $ranking_general[$team->id]['scor_knowledge'] = 0;
                                 $ranking_general[$team->id]['scor_orienteering'] = 0;
@@ -2084,7 +2165,14 @@ class RankingsController extends Controller
                             $initial_scor = 500;
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
-                                    $ranking_general[$key]['scor_stafeta'] = 0;
+                                    // check if knowledge or orienteering is not abandon to give them 10 points.
+                                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
+                                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                                    if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
+                                        $ranking_general[$key]['scor_stafeta'] = 10;
+                                    } else {
+                                        $ranking_general[$key]['scor_stafeta'] = 0;
+                                    }
                                 }
                                 elseif($rank['scor_total'] == 0){
                                     $ranking_general[$key]['scor_stafeta'] = 0;
@@ -2114,6 +2202,40 @@ class RankingsController extends Controller
                                     }
                 
                                 }
+                            }
+
+                            // sort again for scor_stafeta
+                            $ranking_general = collect($ranking_general);
+                            $ranking_general = $ranking_general->sortBy([
+                                ['scor_stafeta', 'desc'],
+                            ]);
+
+                            // convert to array + reindex array key to be from 0 to ...
+                            $ranking_general  = array_values($ranking_general->toArray());
+
+                            // rank
+                            $x = 1;
+                            $unique_id = 0;
+
+                            foreach($ranking_general as $key => $team){
+                                // dd($team);
+                                $decrease_rank = 0;
+                                $ranking_general[$key]['rank'] = $x;
+                                    if(isset($ranking_general[$key-1]))
+                                    {
+                                        if($team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'] && $team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'])
+                                        {
+                                            $decrease_rank = 1;
+                                            $ranking_general[$key]['rank'] = $x-1;
+                                        }
+                                    }   
+                    
+                                if($decrease_rank == 0)
+                                {
+                                    $x++;
+                                }
+                    
+                                $unique_id++;
                             }
 
                             // add clasament in clubs
@@ -2515,6 +2637,7 @@ class RankingsController extends Controller
                             $ranking_general = [];
                             foreach($teams as $key1 => $team) {
                 
+                                $ranking_general[$team->id]['team_id'] = $team->id;
                                 $ranking_general[$team->id]['name'] = $team->name;
                                 $ranking_general[$team->id]['scor_knowledge'] = 0;
                                 $ranking_general[$team->id]['scor_orienteering'] = 0;
@@ -2579,7 +2702,14 @@ class RankingsController extends Controller
                             $initial_scor = 500;
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
-                                    $ranking_general[$key]['scor_stafeta'] = 0;
+                                    // check if knowledge or orienteering is not abandon to give them 10 points.
+                                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
+                                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                                    if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
+                                        $ranking_general[$key]['scor_stafeta'] = 10;
+                                    } else {
+                                        $ranking_general[$key]['scor_stafeta'] = 0;
+                                    }
                                 }
                                 elseif($rank['scor_total'] == 0){
                                     $ranking_general[$key]['scor_stafeta'] = 0;
@@ -2608,6 +2738,40 @@ class RankingsController extends Controller
                                     }
                 
                                 }
+                            }
+
+                            // sort again for scor_stafeta
+                            $ranking_general = collect($ranking_general);
+                            $ranking_general = $ranking_general->sortBy([
+                                ['scor_stafeta', 'desc'],
+                            ]);
+
+                            // convert to array + reindex array key to be from 0 to ...
+                            $ranking_general  = array_values($ranking_general->toArray());
+
+                            // rank
+                            $x = 1;
+                            $unique_id = 0;
+
+                            foreach($ranking_general as $key => $team){
+                                // dd($team);
+                                $decrease_rank = 0;
+                                $ranking_general[$key]['rank'] = $x;
+                                    if(isset($ranking_general[$key-1]))
+                                    {
+                                        if($team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'] && $team['scor_stafeta'] == $ranking_general[$key-1]['scor_stafeta'])
+                                        {
+                                            $decrease_rank = 1;
+                                            $ranking_general[$key]['rank'] = $x-1;
+                                        }
+                                    }   
+                    
+                                if($decrease_rank == 0)
+                                {
+                                    $x++;
+                                }
+                    
+                                $unique_id++;
                             }
 
                             // add clasament in clubs
