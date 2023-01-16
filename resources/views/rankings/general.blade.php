@@ -1,5 +1,5 @@
 @extends('layouts/app')
-@section('title') Stafeta Muntilor - Clasament - General@endsection
+@section('title', 'Stafeta Muntilor - Clasament - General')
 @section('content')
 <div class="app-content content ">
         <div class="content-overlay"></div>
