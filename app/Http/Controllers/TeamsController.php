@@ -13,6 +13,10 @@ use App\Models\Category;
 use App\Models\UuidOrienteeting;
 use App\Models\UuidRaid;
 use App\Models\TeamOrderStart;
+use App\Models\Knowledge;
+use App\Models\Orienteering;
+use App\Models\RaidmontanParticipations;
+use App\Models\RaidmontanParticipationsEntries;
 use PDF;
 use DB;
 
@@ -294,8 +298,14 @@ class TeamsController extends Controller
                 $ajax_status_response = "error";
                 return response()->json( ['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response] );
             } else {
+                
+                    Knowledge::where('team_id', $team->id)->delete();
+                    Orienteering::where('team_id', $team->id)->delete();
+                    RaidmontanParticipations::where('team_id', $team->id)->delete();
+                    RaidmontanParticipationsEntries::where('team_id', $team->id)->delete();
 
                     $team->delete();
+
                     $ajax_redirect_url = route('teams.index');
                     $ajax_message_response = "Echipa a fost stersa!";
                     $ajax_title_response = "Felicitări!";

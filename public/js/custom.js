@@ -283,9 +283,20 @@ $(document).on("click", ".js--clubs-destroy", function(e){
                 $('#ClubsDestroy').modal('show');
 
             } else {
+                $('.modal-backdrop').remove();
                 $('#ClubsDestroy').modal('hide');
-                $('#ClubsDestroy').modal('toggle');
-                Swal.fire(response.ajax_title_response, response.ajax_message_response, response.ajax_status_response);
+                $('#ClubsDestroy').remove();
+                data = JSON.parse(request.responseText);
+                Swal.fire({
+                    title: data.ajax_title_response,
+                    text: data.ajax_message_response,
+                    icon: data.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
             }
 
         },

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\Club;
 use App\Models\Category;
 use App\Models\Team;
+use App\Models\Cultural;
 use PDF;
 
 class ClubsController extends Controller
@@ -275,12 +276,21 @@ class ClubsController extends Controller
                 return redirect()->route('clubs.index')->with($notification);
             } else {
 
-                    $club->delete();
-                    $ajax_redirect_url = route('clubs.index');
-                    $ajax_message_response = "Clubul a fost sters!";
-                    $ajax_title_response = "Felicitări!";
-                    $ajax_status_response = "success";
-                    return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response]);
+                    $teams = Team::where('club_id', $club->id)->get()->count();
+                    if($teams > 0){
+                        $ajax_message_response = "Clubul nu poate fi sters, exista echipe asociate acestui club. Stergeti mai intai echipele!";
+                        $ajax_title_response = "Eroare!";
+                        $ajax_status_response = "error";
+                        return response()->json(['ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response]);   
+                    } else {
+                        Cultural::where('club_id', $club->id)->delete();
+                        $club->delete();
+                        $ajax_redirect_url = route('clubs.index');
+                        $ajax_message_response = "Clubul a fost sters!";
+                        $ajax_title_response = "Felicitări!";
+                        $ajax_status_response = "success";
+                        return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response]);   
+                    }
             }
         }  else {
             $notification = array(
