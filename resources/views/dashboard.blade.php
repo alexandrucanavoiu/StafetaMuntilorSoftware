@@ -1,4 +1,5 @@
 @extends('layouts/app')
+@section('title') Stafeta Muntilor - Dashboard @endsection
 @section('content')
 <div class="app-content content ">
         <div class="content-overlay"></div>
@@ -345,16 +346,6 @@
                                             <h6 class="mb-0">30/02 Iulie - Trofeul Aventura in Natura</h6>
                                         </div>
                                     </div>
-                                    <div class="mt-3">
-                                        <div class="avatar float-start bg-light-primary rounded me-1">
-                                            <div class="avatar-content">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar avatar-icon font-medium-3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                            </div>
-                                        </div>
-                                        <div class="more-info">
-                                            <h6 class="mb-0">07/09 Iulie - Trofeul Jnepenilor</h6>
-                                        </div>
-                                    </div>
                                     <div class="mt-4">
                                         <div class="avatar float-start bg-light-primary rounded me-1">
                                             <div class="avatar-content">
@@ -363,6 +354,16 @@
                                         </div>
                                         <div class="more-info">
                                             <h6 class="mb-0">21/23 Iulie - Trofeul Muntilor</h6>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="avatar float-start bg-light-primary rounded me-1">
+                                            <div class="avatar-content">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar avatar-icon font-medium-3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                            </div>
+                                        </div>
+                                        <div class="more-info">
+                                            <h6 class="mb-0">04/06 August - Trofeul Jnepenilor</h6>
                                         </div>
                                     </div>
                                     <div class="mt-4">

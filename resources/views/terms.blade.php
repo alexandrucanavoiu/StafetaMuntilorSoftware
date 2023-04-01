@@ -1,4 +1,5 @@
 @extends('layouts/app')
+@section('title') Stafeta Muntilor - Termeni si Conditii @endsection
 @section('content')
 <div class="app-content content ">
         <div class="content-overlay"></div>
