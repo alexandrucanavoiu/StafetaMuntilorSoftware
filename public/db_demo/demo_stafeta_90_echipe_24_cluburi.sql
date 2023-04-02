@@ -172,7 +172,7 @@ TRUNCATE TABLE `organizer_stages`;
 --
 
 INSERT INTO `organizer_stages` (`id`, `name_stage`, `name_organizer`, `stage_number`, `software`, `created_at`, `updated_at`) VALUES
-(1, 'Trofeul Demo 1', 'Asociatia Demo 1', 4, 'Software Stafeta Muntilor v3.0 by Asociatia Drumetii Montane', '2022-10-29 13:33:26', '2022-11-06 17:48:20');
+(1, 'Trofeul Demo 1', 'Asociatia Demo 1', 4, 'Software Stafeta Muntilor v4.1.2 by Asociatia Drumetii Montane', '2022-10-29 13:33:26', '2022-11-06 17:48:20');
 
 --
 -- Truncate table before insert `orienteering`

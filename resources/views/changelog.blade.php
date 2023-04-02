@@ -15,6 +15,18 @@
                 </div>
             </div>
             <div class="content-body">
+            <section>
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">[ v4.1.2 ] - 02.04.2023</h4>
+                        </div>
+                        <div class="card-body">
+                            <br />
+                            <p class="card-text">[Bug Fix]</p>
+                            <p class="card-text">- all fonts to be local</p>
+                        </div>
+                    </div>
+                </section>
                 <section>
                     <div class="card">
                         <div class="card-header">
