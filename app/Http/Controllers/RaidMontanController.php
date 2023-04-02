@@ -123,7 +123,7 @@ class RaidMontanController extends Controller
                     );
                     return redirect()->route('orienteering.index', $categoryid)->with($notification);
                 } else {
-                    
+
                     $rules = [
                         'missing_footwear' => 'required',
                         'missing_equipment_items' => 'required|numeric|between:0,100',
@@ -157,6 +157,12 @@ class RaidMontanController extends Controller
                     $data = $request->only(['missing_footwear', 'minimum_distance_penalty', 'missing_equipment_items', 'created_at', 'updated_at', 'category_id', 'team_id', 'abandon']);
                     $validator = Validator::make($data, $rules);
 
+                    // validate stations Start / Finish to not be empty if status (abandon = 0) is ok.
+                    if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si Finish Time, par sa fie necompletati iar Status este OK');
+                        });
+                    }
 
                     // validate stations PA not to be data wrong
                     $count_pa_stations = count($pa_stations) - 1;
@@ -211,6 +217,13 @@ class RaidMontanController extends Controller
                     $raidmontan_stations_final = [];
                     $pa_stations_count = 0;
                     $pfa_stations_count = 0;
+
+                    // validate stations Start / Finish to not be empty if status (abandon = 0) is ok.
+                    if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si Finish Time, par sa fie necompletati iar Status este OK');
+                        });
+                    }
 
                     if($validator->passes())
                     {
@@ -278,7 +291,7 @@ class RaidMontanController extends Controller
                             $ajax_status_response = "success";
                             return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
                         } else {
-                            // If the team exist in orienteering table update the data without created_at.
+                            // If the team exist in raidmontan table update the data without created_at.
 
                             RaidmontanParticipations::where('team_id', '=', $data['team_id'])->delete();
                             RaidmontanParticipationsEntries::where('team_id', '=', $data['team_id'])->delete();
@@ -293,6 +306,7 @@ class RaidMontanController extends Controller
                                 'created_at' => $data['created_at'],
                                 'updated_at' => $data['updated_at']
                             ]);
+
 
                             $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
 

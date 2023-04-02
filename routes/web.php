@@ -40,6 +40,10 @@ Route::post('/setup/orienteering/stages/{categoryid}/edit', [SetupController::cl
 Route::post('/setup/destroy', [SetupController::class, 'destroy'])->name('setup.destroy');
 Route::get('/setup/export-raid', [SetupController::class, 'convert_raid_to_ultra'])->name('setup.raidmontan.export');
 Route::get('/setup/export-orienteering', [SetupController::class, 'convert_orienteering_to_ultra'])->name('setup.orienteering.export');
+Route::get('/setup/convert-timestamp-datetime', [SetupController::class, 'convert_timestamp_datetime'])->name('setup.convert.timestamp-datetime');
+Route::post('/setup/convert-timestamp-datetime', [SetupController::class, 'convert_timestamp_datetime_confirm'])->name('setup.convert.timestamp-datetime.confirm');
+Route::get('/setup/convert-datetime-timestamp', [SetupController::class, 'convert_datetime_timestamp'])->name('setup.convert.datetime-timestamp');
+Route::post('/setup/convert-datetime-timestamp', [SetupController::class, 'convert_datetime_timestamp_confirm'])->name('setup.convert.datetime-timestamp.confirm');
 
 Route::get('/import-demo-data-1', [SetupController::class, 'demo_data_1'])->name('demo_data_1');
 Route::get('/import-demo-data-2', [SetupController::class, 'demo_data_2'])->name('demo_data_2');

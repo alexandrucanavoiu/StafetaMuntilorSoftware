@@ -11,8 +11,8 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-body">
-                                <p class="card-text">
-                                    Atunci cand importati datele din fisier, datele deja existente vor fi suprascrise. Daca ati facut modificari la o echipa care urmeaza sa o importati automat timpii vor fi suprascrisi. Nu uitati bifati la fiecare echipa in parte PFA-urile lipsa.
+                                <p class="card-text text-danger">
+                                    Atunci cand importati datele din fisier, datele deja existente vor fi suprascrise. Daca ati facut modificari la o echipa care urmeaza sa o importati automat timpii vor fi suprascrisi. Nu uitati sa bifati la fiecare echipa in parte PFA-urile lipsa dupa ce ati importat datele de pe ceasuri.
                                 </p>
                             </div>
                         </div>

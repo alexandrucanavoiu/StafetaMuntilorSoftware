@@ -41,6 +41,152 @@ class SetupController extends Controller
         return view('setup.index',compact('categories'));
     }
 
+    public function convert_datetime_timestamp(Request $request)
+    {
+        if( $request->ajax() )
+        {
+            $year = date('Y');
+            $month = date('m');
+            $day = date('d');
+            $hour = date('H');
+            $minutes = date('i');
+            $secounds = date('s');
+                    $ajax_status_response = "success";
+                    return response()->json( [
+                        'ajax_status_response' => $ajax_status_response,
+                        'view_content' => view('setup.date_time_timestamp', ['year' => $year, 'month' => $month, 'day' => $day, 'hour' => $hour, 'minutes' => $minutes, 'secounds' => $secounds])->render()
+                    ] );
+
+        }  else {
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'Ilegal operation.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('setup.index')->with($notification);
+        }
+    }
+
+
+    public function convert_datetime_timestamp_confirm(Request $request)
+    {
+        if( $request->ajax() )
+        {
+        
+                        $rules = [
+                            'timestamp_year' => 'required|numeric|max:2025|min:2022',
+                            'timestamp_month' => 'required|numeric|max:12|min:01',
+                            'timestamp_day' => 'required|numeric|max:31|min:01',
+                            'timestamp_hour' => 'required|numeric|max:23|min:00',
+                            'timestamp_minutes' => 'required|numeric|max:59|min:00',
+                            'timestamp_secounds' => 'required|numeric|max:59|min:00',
+                        ];
+
+
+                        $data = $request->only(['timestamp_year', 'timestamp_month', 'timestamp_day', 'timestamp_hour', 'timestamp_minutes', 'timestamp_secounds']);
+                        $validator = Validator::make($data, $rules);
+
+                        if($validator->passes())
+                        {
+
+                                    
+                            $concatenation = $data['timestamp_year'] . "-" . $data['timestamp_month'] . "-" . $data['timestamp_day']  . " " . $data['timestamp_hour'] . ":" . $data['timestamp_minutes']  . ":" . $data['timestamp_secounds'];
+                    
+                            $concatenation_output = Carbon::createFromFormat('Y-m-d H:i:s' , $concatenation,'Europe/Bucharest')->timestamp;
+                            $concatenation_output_to_datestring = Carbon::createFromTimestamp($concatenation_output)->toDateTimeString(); 
+                            
+                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success']);
+
+                        } else {
+                            return Response::json(['errors' => $validator->errors()]);
+                        }
+        }  else {
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'Ilegal operation. The administrator was notified.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('dashboard')->with($notification);
+        }
+    }
+
+
+    public function convert_timestamp_datetime(Request $request)
+    {
+        if( $request->ajax() )
+        {
+
+                    $concatenation_output = Carbon::createFromFormat('Y-m-d H:i:s' , date('Y-m-d H:i:s'),'Europe/Bucharest')->timestamp;
+                    $concatenation_output_to_datestring = Carbon::createFromTimestamp($concatenation_output)->toDateTimeString(); 
+
+                    $ajax_status_response = "success";
+                    return response()->json( [
+                        'ajax_status_response' => $ajax_status_response,
+                        'view_content' => view('setup.timestamp_date_time', ['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring])->render()
+                    ] );
+
+        }  else {
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'Ilegal operation.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('setup.index')->with($notification);
+        }
+    }
+
+
+    public function convert_timestamp_datetime_confirm(Request $request)
+    {
+        if( $request->ajax() )
+        {
+        
+                        $rules = [
+                            'timestamp' => 'required|numeric',
+                        ];
+
+
+                        $data = $request->only(['timestamp']);
+                        $validator = Validator::make($data, $rules);
+
+
+                        $concatenation_output_to_datestring = Carbon::createFromTimestamp($data['timestamp'])->toDateTimeString(); 
+                        $concatenation_output = $data['timestamp'];
+
+                        $carbon_time = Carbon::createFromTimestamp($concatenation_output);
+                        $carbon_max_date = Carbon::maxValue();
+
+                        $result = $carbon_time->lt($carbon_max_date);
+
+                        if($result == false){
+                            $validator->after(function ($validator) {
+                                $validator->errors()->add('form_corruption', 'Verificati unixtime-ul introdus, pare ca nu este corect!');
+                            });
+                        }
+
+                        if($validator->passes())
+                        {
+
+
+
+
+                                    
+                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success']);
+
+                        } else {
+                            return Response::json(['errors' => $validator->errors()]);
+                        }
+        }  else {
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'Ilegal operation. The administrator was notified.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('dashboard')->with($notification);
+        }
+    }
+
+
     public function trophy_setup(Request $request)
     {
         if( $request->ajax() )
@@ -61,6 +207,7 @@ class SetupController extends Controller
             return redirect()->route('setup.index', $category->id)->with($notification);
         }
     }
+
 
     public function trophy_setup_update(Request $request)
     {

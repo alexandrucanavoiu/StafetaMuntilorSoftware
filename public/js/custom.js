@@ -11,6 +11,236 @@ function printErrorMsg (msg) {
 }
 
 
+// Timestamp
+
+$(document).on('hidden.bs.modal', '.modal', function () { $("#TimestampDateTime").remove(); $(".modal-dialog").remove(); });
+$(document).on('hidden.bs.modal', '.modal', function () { $("#DateTimeTimestamp").remove(); $(".modal-dialog").remove(); });
+
+$(document).on("click", ".js--setup-convert-datetime-timestamp", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/setup/convert-datetime-timestamp",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#DateTimeTimestamp').length > 0 )
+                {
+                    $('#DateTimeTimestamp').modal('hide');
+                    $('#DateTimeTimestamp').remove();
+                }
+                $('body').append(response.view_content);
+                $('#DateTimeTimestamp').modal('show');
+
+            } else {
+                $('#DateTimeTimestamp').modal('hide');
+                $('#DateTimeTimestamp').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire({
+                title: data.ajax_title_response,
+                text: data.ajax_message_response,
+                icon: data.ajax_status_response,
+                customClass: {
+                confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
+            });
+            return false;
+        }
+    });
+});
+
+
+
+$("body").delegate('.js--setup-convert-datetime-timestamp-confirm', 'click',function(e){
+    e.preventDefault();
+    $( '#timestamp_year-error' ).html( "" );
+    $( '#timestamp_month-error' ).html( "" );
+    $( '#timestamp_day-error' ).html( "" );
+    $( '#timestamp_hour-error' ).html( "" );
+    $( '#timestamp_minutes-error' ).html( "" );
+    $( '#timestamp_secounds-error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var timestamp_year = $( "#timestamp_year" ).val();
+    var timestamp_month = $( "#timestamp_month" ).val();
+    var timestamp_day = $( "#timestamp_day" ).val();
+    var timestamp_hour = $( "#timestamp_hour" ).val();
+    var timestamp_minutes = $( "#timestamp_minutes" ).val();
+    var timestamp_secounds = $( "#timestamp_secounds" ).val();
+
+    formData.append("_token", _token);
+    formData.append("timestamp_year", timestamp_year);
+    formData.append("timestamp_month", timestamp_month);
+    formData.append("timestamp_day", timestamp_day);
+    formData.append("timestamp_hour", timestamp_hour);
+    formData.append("timestamp_minutes", timestamp_minutes);
+    formData.append("timestamp_secounds", timestamp_secounds);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/setup/convert-datetime-timestamp");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    
+                    $('#concatenation_output').html('<strong>'+ data.concatenation_output + '</strong>');
+                    $('#concatenation_output_to_datestring').html('<strong>'+ data.concatenation_output_to_datestring + '</strong>');
+
+
+                } else {
+
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.timestamp_year){
+                    $( '#timestamp_year-error' ).html( data.errors.timestamp_year[0] );
+                }
+                if(data.errors.timestamp_month){
+                    $( '#timestamp_month-error' ).html( data.errors.timestamp_month[0] );
+                }
+                if(data.errors.timestamp_day){
+                    $( '#timestamp_day-error' ).html( data.errors.timestamp_day[0] );
+                }
+                if(data.errors.timestamp_hour){
+                    $( '#timestamp_hour-error' ).html( data.errors.timestamp_hour[0] );
+                }
+                if(data.errors.timestamp_minutes){
+                    $( '#timestamp_minutes-error' ).html( data.errors.timestamp_minutes[0] );
+                }
+                if(data.errors.timestamp_secounds){
+                    $( '#timestamp_secounds-error' ).html( data.errors.timestamp_secounds[0] );
+                }
+            }
+        }
+        if (request.status==405){
+            $('#DateTimeTimestamp').modal('hide');
+            $('#DateTimeTimestamp').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+
+$(document).on("click", ".js--setup-convert-timestamp-datetime", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/setup/convert-timestamp-datetime",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#TimestampDateTime').length > 0 )
+                {
+                    $('#TimestampDateTime').modal('hide');
+                    $('#TimestampDateTime').remove();
+                }
+                $('body').append(response.view_content);
+                $('#TimestampDateTime').modal('show');
+
+            } else {
+                $('#TimestampDateTime').modal('hide');
+                $('#TimestampDateTime').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire({
+                title: data.ajax_title_response,
+                text: data.ajax_message_response,
+                icon: data.ajax_status_response,
+                customClass: {
+                confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
+            });
+            return false;
+        }
+    });
+});
+
+
+$("body").delegate('.js--setup-convert-timestamp-datetime-confirm', 'click',function(e){
+    e.preventDefault();
+    $( '#timestamp_error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var timestamp = $( "#timestamp" ).val();
+
+    formData.append("_token", _token);
+    formData.append("timestamp", timestamp);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/setup/convert-timestamp-datetime");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    
+                    $('#concatenation_output').html('<strong>'+ data.concatenation_output + '</strong>');
+                    $('#concatenation_output_to_datestring').html('<strong>'+ data.concatenation_output_to_datestring + '</strong>');
+
+
+                } else {
+
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.timestamp){
+                    $( '#timestamp-error' ).html( data.errors.timestamp[0] );
+                }
+                if(data.errors.form_corruption){
+                    $('#form_corruption-error').html( data.errors.form_corruption[0] );
+                }
+            }
+        }
+        if (request.status==405){
+            $('#TimestampDateTime').modal('hide');
+            $('#TimestampDateTime').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
 
 // Clubs
 

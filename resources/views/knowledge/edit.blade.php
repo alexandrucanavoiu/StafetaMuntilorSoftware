@@ -37,7 +37,7 @@
                                                 <div class="col-12">
                                                     <div class="form-group row wrong_answers-list">
                                                         <div class="col-md-4">
-                                                            <span>Intrebari Gresite: </span>
+                                                            <span>Nr. Intrebari Gresite: </span>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <input class="form-control wrong_answers" id="wrong_answers" type="text" name="wrong_answers" placeholder="" value="{{ $knowledge_result['wrong_answers'] }}" required>

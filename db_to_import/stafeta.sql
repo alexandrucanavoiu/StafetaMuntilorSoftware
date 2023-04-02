@@ -151,7 +151,7 @@ CREATE TABLE `organizer_stages` (
 
 LOCK TABLES `organizer_stages` WRITE;
 /*!40000 ALTER TABLE `organizer_stages` DISABLE KEYS */;
-INSERT INTO `organizer_stages` VALUES (1,'Trofeul Demo 2','Asociatia Demo 2',4,'Software Stafeta Muntilor v4.0 by Asociatia Drumetii Montane','2022-10-29 13:33:26','2022-11-06 17:48:20');
+INSERT INTO `organizer_stages` VALUES (1,'Trofeul Demo 2','Asociatia Demo 2',4,'Software Stafeta Muntilor v4.1.1 by Asociatia Drumetii Montane','2022-10-29 13:33:26','2022-11-06 17:48:20');
 /*!40000 ALTER TABLE `organizer_stages` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -79,7 +79,7 @@
                                             <tr>
                                                 <th width="10%" class="text-center">#</th>
                                                 <th width="30%">Categorie</th>
-                                                <th width="30%" class="text-center">Statii pentru Raid</th>
+                                                <th width="30%" class="text-center">Statii pentru Orientare</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -186,6 +186,31 @@
                                         </table>
                                         <br />
                                         <div class="text-center">Prin apasarea butonului "Import" toate datele vor fi sterse si inlocuite cu cele demo.</div>
+                                        <br />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="table-bordered">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header"><h4 class="card-title">Unix Timestamp</h4></div>
+                                    <div class="card-body"><p class="card-text"></p></div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Unix Timestamp in Date/Time</td>
+                                                    <td class="text-center"><button type="button" class="btn btn-success waves-effect waves-float waves-light js--setup-convert-timestamp-datetime" data-toggle="modal"  data-target="#TimestampDateTime">Convertire</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Date/Time in Unix Timestamp</td>
+                                                    <td class="text-center"><button type="button" class="btn btn-success waves-effect waves-float waves-light js--setup-convert-datetime-timestamp" data-toggle="modal"  data-target="#DateTimeTimestamp">Convertire</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <br />
+                                        <div class="text-center">Se utilizeaza in caz de erori pentru statii</div>
                                         <br />
                                     </div>
                                 </div>
