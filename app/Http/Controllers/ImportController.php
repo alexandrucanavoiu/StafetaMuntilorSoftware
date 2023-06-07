@@ -496,7 +496,6 @@ class ImportController extends Controller
                                         $go = $outside_time;
                                     }
                                 }
-    
                                 //daca nu are timp de plecare se pune timpul la care a sosit( se crede ca nu a stat in post si a plecat direct )
                                 if( empty($go) && $post != 252 )
                                 {
@@ -505,17 +504,23 @@ class ImportController extends Controller
     
                                 $values = [];
     
-    
-                                $values['time_finish'] = "00:00:00";
+
+                                if($post == 252 )
+                                {
+                                    $go = $arrived;
+                                    $arrived = $go;
+                                }
+                                
+                                $values['time_start'] = "00:00:00";
                                 if( !empty($arrived) )
                                 {
-                                    $values['time_finish'] = date('H:i:s',$arrived);
+                                    $values['time_start'] = date('H:i:s',$arrived);
                                 }
     
-                                $values['time_start'] = "00:00:00";
+                                $values['time_finish'] = "00:00:00";
                                 if( !empty($go) )
                                 {
-                                    $values['time_start'] = date('H:i:s',$go);
+                                    $values['time_finish'] = date('H:i:s',$go);
                                 }
     
                                 //$time_minus_pauses = [];
@@ -551,15 +556,15 @@ class ImportController extends Controller
 
                                         $finish_pa = strtotime($values['time_finish']);
                                         $start_pa = strtotime($values['time_start']);
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $start_pa - $finish_pa;
+                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
 
                                     } else {
-                                        echo 'PA: ' . $number_pa .' <strong> -></strong> Sosire: ' .  $values['time_finish'] . ' <strong> -></strong> Plecare: ' . $values['time_start'];
+                                        echo 'PA: ' . $number_pa .' <strong> -></strong> Sosire: ' .  $values['time_start'] . ' <strong> -></strong> Plecare: ' . $values['time_finish'];
 
                                         $finish_pa = strtotime($values['time_finish']);
                                         $start_pa = strtotime($values['time_start']);
 
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $start_pa - $finish_pa;
+                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
 
 
                                     }
