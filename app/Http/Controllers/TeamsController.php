@@ -756,4 +756,13 @@ class TeamsController extends Controller
             }
 
 
+            public function index_uuids() {
+                $uuid_orienteering = UuidOrienteeting::OrderBy('id', 'ASC')->get();
+                $uuid_raidmontan = UuidRaid::OrderBy('id', 'ASC')->get();
+                
+                return view('teams.uuids.index',compact('uuid_orienteering','uuid_raidmontan'));
+
+            }
+
+
 }

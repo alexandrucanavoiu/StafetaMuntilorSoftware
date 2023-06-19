@@ -147,11 +147,7 @@ class ImportController extends Controller
             
                 RaidmontanParticipationsEntries::insert($raidmontan_stations_final);
 
-
             }
-
-
-
         }
 
         $notification = array(
@@ -160,6 +156,112 @@ class ImportController extends Controller
             'alert-type' => 'success'
         );
         return redirect()->route('import.index')->with($notification);
+
+    }
+
+
+    public function raidmontan_seed_intern()
+    {
+        $teams = Team::with('category')->get();
+
+        $create_date = date('Y-m-d H:i:s');
+        $pa_stations_count = 0;
+        $pfa_stations_count = 0;
+
+        foreach($teams as $team){
+
+            $raidmontan_stations_final = [];
+            $raidmontan_stations_stages_id = [];
+
+            $check = RaidmontanParticipations::get()->first();
+
+            if($team->raidmontan_participations !== null){
+                continue;
+
+            } else {
+
+                RaidmontanParticipationsEntries::where('team_id', $team->id)->delete();
+                // If the team is not in RaidmontanParticipations table insert the data
+                RaidmontanParticipations::insert([
+                    'team_id' => $team->id,
+                    'missing_equipment_items' => 0,
+                    'missing_footwear' => 0,
+                    'minimum_distance_penalty' => 0,
+                    'abandon' => 1,
+                    'created_at' => $create_date,
+                    'updated_at' => $create_date
+                ]);
+    
+    
+                $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
+                $raidmontan_stations = RaidmontanStations::where('category_id', $team->category_id)->get();
+                $raidmontan_stations_stages = RaidmontanStationsStages::where('category_id', $team->category_id)->get();
+
+                $stage_start_id = 0;
+                $stage_finish_id = 0;
+                $stage_pa_id = [];
+                $stage_pa_id_count = 1;
+                $pa_stations_count = 0;
+                foreach($raidmontan_stations_stages as $stage){
+                    if($stage->post == 251){
+                        $stage_start_id = $stage->id;
+                    } elseif($stage->post == 252){
+                        $stage_finish_id = $stage->id;
+                    } else {
+                        $stage_pa_id[$pa_stations_count] = $stage->id;
+                        $pa_stations_count++;
+                    }
+    
+                }
+    
+                $pa_stations_count = 0;
+
+                foreach($raidmontan_stations as $key => $station){
+            
+                    $raidmontan_stations_final[$key]['raidmontan_participations_id'] = $RaidmontanParticipations->id;
+                    $raidmontan_stations_final[$key]['team_id'] = $team->id;
+                    $raidmontan_stations_final[$key]['raidmontan_stations_id'] = $station->id;
+                    $raidmontan_stations_final[$key]['raidmontan_stations_station_type'] = $station->station_type;
+                    
+                    if($station->station_type == 0) {
+                        $raidmontan_stations_final[$key]['raidmontan_stations_stages_id'] = $stage_start_id;
+                        $raidmontan_stations_final[$key]['time_start'] = "00:00:00";
+                        $raidmontan_stations_final[$key]['time_finish'] = NULL;
+                        $raidmontan_stations_final[$key]['hits'] = NULL;
+                    }
+    
+                    if($station->station_type == 1) {
+                        $raidmontan_stations_final[$key]['raidmontan_stations_stages_id'] = $stage_pa_id[$pa_stations_count];
+                        $raidmontan_stations_final[$key]['time_start'] = "00:00:00";
+                        $raidmontan_stations_final[$key]['time_finish'] = "00:00:00";
+                        $raidmontan_stations_final[$key]['hits'] = NULL;
+                        $pa_stations_count++;
+                    }
+    
+                    if($station->station_type == 2) {
+                        $raidmontan_stations_final[$key]['raidmontan_stations_stages_id'] = NULL;
+                        $raidmontan_stations_final[$key]['time_start'] = NULL;
+                        $raidmontan_stations_final[$key]['time_finish'] = NULL;
+                        $raidmontan_stations_final[$key]['hits'] = 1;
+                        $pfa_stations_count++;
+                    }
+    
+                    if($station->station_type == 3) {
+                        $raidmontan_stations_final[$key]['raidmontan_stations_stages_id'] = $stage_finish_id;
+                        $raidmontan_stations_final[$key]['time_start'] = NULL;
+                        $raidmontan_stations_final[$key]['time_finish'] = "00:00:00";
+                        $raidmontan_stations_final[$key]['hits'] = NULL;
+                    }
+    
+                    $raidmontan_stations_final[$key]['created_at'] = $create_date;
+                    $raidmontan_stations_final[$key]['updated_at'] = $create_date;
+                    
+                }
+            
+                RaidmontanParticipationsEntries::insert($raidmontan_stations_final);
+
+            }
+        }
 
     }
 
@@ -313,7 +415,6 @@ class ImportController extends Controller
                             die('');
                         }
 
-
                         // UUID-uri din fisier ca si categorie echipa
 
                         $uuid_categorie = $posts[$echipa['category_id']];
@@ -321,8 +422,6 @@ class ImportController extends Controller
                         $team_id = $echipa->id;
                         $clock_number = $echipa->uuid_card_raid_id;
                         $category_id = $echipa->category_id;
-
-
 
 
                         // Array pentru fiecare UUID
@@ -385,9 +484,15 @@ class ImportController extends Controller
                 fclose($file);
             }
 
-            echo "<pre>";
 
-   
+            // clean up db
+            RaidmontanParticipations::query()->truncate();
+            RaidmontanParticipationsEntries::query()->truncate();
+
+            // add abandon to all
+            $this->raidmontan_seed_intern();
+
+            echo "<pre>";
 
             //check data
             if (!empty($data)) {
@@ -526,7 +631,7 @@ class ImportController extends Controller
                                 //$time_minus_pauses = [];
     
                             }
-                            
+
 
                             if(empty($missing_posts)){
 

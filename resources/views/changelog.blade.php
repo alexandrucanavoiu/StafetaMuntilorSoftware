@@ -18,6 +18,21 @@
             <section>
                     <div class="card">
                         <div class="card-header">
+                            <h4 class="card-title">[ v4.1.4 ] - 19.06.2023</h4>
+                        </div>
+                        <div class="card-body">
+                            <br />
+                            <p class="card-text">[Bug Fix]</p>
+                            <p class="card-text">- Import date Raid Montan, stergere date existente si inlocuire cu cele noi, in cazul in care se reimporta fisierul.</p>
+                            <p class="card-text">[Adaugare]</p>
+                            <p class="card-text">- Lista ceasuri Raid Montan/Orientare in Echipe in caz ca numerele ceasurilor sunt sterse si trebuie sa identificam numarul ceasului dupa UUID.</p>
+                            <p class="card-text">- Modificare timezone din GMT+3 in GMT.</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="card">
+                        <div class="card-header">
                             <h4 class="card-title">[ v4.1.3 ] - 07.06.2023</h4>
                         </div>
                         <div class="card-body">

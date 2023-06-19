@@ -16,6 +16,7 @@
                                     <button class="btn btn-outline-primary waves-effect waves-light js--teams-create" data-toggle="modal"  data-target="#ClubsCreate"><span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-25"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adauga o echipa noua</span></button>
                                     <a href="{{ route('teams.order.start') }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='list'></i> Ordine Start Echipe</a>
                                     <a href="{{ route('import.index') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='upload'></i> Import file</a>
+                                    <a href="{{ route('uuids.index') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='clock'></i> Lista Ceasuri</a>
                                     <a href="{{ route('teams.listbyteams_pdf') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
                                 </div>
                             </div>

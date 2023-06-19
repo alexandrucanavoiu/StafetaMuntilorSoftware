@@ -76,6 +76,7 @@ Route::post('/teams/{id}/destroy', [TeamsController::class, 'destroy_confirm'])-
 Route::get('/teams/pdf', [TeamsController::class, 'teams_listbyteams_pdf'])->name('teams.listbyteams_pdf');
 Route::get('/teams/order-start', [TeamsController::class, 'index_team_order_start'])->name('teams.order.start');
 Route::get('/teams/order-start/pdf', [TeamsController::class, 'index_team_order_start_pdf'])->name('teams.order.start.pdf');
+Route::get('/teams/uuids', [TeamsController::class, 'index_uuids'])->name('uuids.index');
 
 Route::get('/cultural', [CulturalController::class, 'index'])->name('cultural.index');
 Route::get('/cultural/rank-pdf', [CulturalController::class, 'cultural_rank_pdf'])->name('cultural.rank.pdf');
