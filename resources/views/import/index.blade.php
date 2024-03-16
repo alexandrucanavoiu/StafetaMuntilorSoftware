@@ -34,7 +34,7 @@
                                             <div>Numarul de echipe nu corespunde cu numarul echipelor care au datele completate la proba de raid, de aceea trebuie sa inserati date provizorii pentru ca importul sa functioneze</div>
                                             <p>Automat prin apasarea butonului COMPLETARE DATE RAID MONTAN, toate echipele vor fi configurate cu abandon!! Daca aveati deja date introduse manual la Raid, acestea vor fi sterse!:</p>
                                             <p>Dupa ce ati apasat butonul COMPLETARE DATE RAID MONTAN, aceasta sectiune nu va mai aparea si veti puteti importa fisierul TEXT generat cu ajutorul programului Ultra Orienteering</p>                            <div class="table-responsive">
-                                                <form action="{{ route('import.raidmontan_seed') }}" class="form-horizontal" method="post">
+                                                <form action="{{ route('import.raidmontan_seed', [$stageid]) }}" class="form-horizontal" method="post">
                                                     {{ csrf_field() }}
                                                     <br />
                                                     <button class="btn btn-primary btn-sm">Completare Date RAID MONTAN</button>
@@ -56,7 +56,7 @@
                                         <!-- /.panel-heading -->
                                         <div class="panel-body">
                                             <div class="table-responsive">
-                                                <form action="{{ route('import.raidmontan_import_uuids') }}" class="form-horizontal" method="post" enctype="multipart/form-data">
+                                                <form action="{{ route('import.raidmontan_import_uuids', [$stageid]) }}" class="form-horizontal" method="post" enctype="multipart/form-data">
                                                     {{ csrf_field() }}
                                                     <br />
                                                     <div><input type="file" name="import_file" /></div>
@@ -94,7 +94,7 @@
                                                 <p>Nume Participant: - / Start: 00:00:00 / Finish: 00:00:00 / Total: 00:00:00 / Abandon: DA</p>
                                             <p>Dupa ce ati apasat butonul COMPLETARE DATE ORIENTARE si tabela ORIENTARE a fost populata, aceasta sectiune nu va mai aparea si puteti importa linistiti fisierul TEXT generat cu ajutorul programului Ultra Orienteering</p>
                                             <div class="table-responsive">
-                                                <form action="{{ route('import.orienteering_seed') }}" class="form-horizontal" method="post">
+                                                <form action="{{ route('import.orienteering_seed', [$stageid]) }}" class="form-horizontal" method="post">
                                                     {{ csrf_field() }}
                                                     <button class="btn btn-primary btn-sm">Completare Date Orientare</button>
                                                 </form>
@@ -114,7 +114,7 @@
                                         <!-- /.panel-heading -->
                                         <div class="panel-body">
                                             <div class="table-responsive">
-                                                <form action="{{ route('import.orienteering_import_uuids') }}" class="form-horizontal" method="post" enctype="multipart/form-data">
+                                                <form action="{{ route('import.orienteering_import_uuids', [$stageid]) }}" class="form-horizontal" method="post" enctype="multipart/form-data">
                                                     {{ csrf_field() }}
                                                     <br />
                                                     <div><input type="file" name="import_file" /></div>

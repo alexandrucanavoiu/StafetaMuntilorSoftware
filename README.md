@@ -5,7 +5,7 @@ Created to help NGOs from Romania to organize events in National Championship of
 
 The software is based on the Competition Rules of the National Championship of Sports Tourism Stafeta Muntilor - [www.stafetamuntilor.ro](https://www.stafetamuntilor.ro).
 
-StafetaMuntilorSoftware was made with the help of volunteers Sergiu Valentin Vlad and Alexandru Canavoiu in the year 2015 and continued by Alexandru Canavoiu. At this moment the framework used is Laravel.
+StafetaMuntilorSoftware was made with the help of volunteers Sergiu Valentin Vlad and Alexandru Canavoiu in the year 2015 and continued by Alexandru Canavoiu & Cristian Urdea. At this moment the framework used is Laravel.
 
 The language used is Romanian (all pages in the web application software are in Romanian).
 
@@ -43,9 +43,8 @@ The language used is Romanian (all pages in the web application software are in 
 
 4. Run the following commands in the directory where you put the files
 ```
-$ php artisan clear-compiled 
-$ composer install
-$ composer dump-autoload
+$ php composer update
+$ php artisan optimize:clear
 $ cp .env_example .env
 ```
 

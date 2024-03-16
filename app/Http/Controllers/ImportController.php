@@ -16,13 +16,13 @@ use App\Models\RaidmontanStationsStages;
 use App\Models\OrienteeringStationsStages;
 use App\Models\RaidmontanParticipations;
 use App\Models\RaidmontanParticipationsEntries;
-use App\Models\OrganizerStage;
 use App\Models\UuidRaid;
 use App\Models\UuidOrienteeting;
 use DB;
 use Illuminate\Validation\Rule;
 use Excel;
 use PDF;
+use App\Models\Stages;
 
 class ImportController extends Controller
 {
@@ -37,19 +37,40 @@ class ImportController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($stageid)
     {
-        $teams = Team::All()->count();
-        $participations_raidmontan = RaidmontanParticipations::All()->count();
-        $participations_orienteering = Orienteering::All()->count();
 
-        return view('import.index',compact('teams', 'participations_raidmontan', 'participations_orienteering'));
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+        $teams = Team::where('stage_id', $stageid)->count();
+        $participations_raidmontan = RaidmontanParticipations::where('stage_id', $stageid)->count();
+        $participations_orienteering = Orienteering::where('stage_id', $stageid)->count();
+
+        return view('import.index',compact('teams', 'participations_raidmontan', 'participations_orienteering', 'stageid'));
     }
 
 
-    public function raidmontan_seed()
+    public function raidmontan_seed($stageid)
     {
-        $teams = Team::with('category')->get();
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $teams = Team::where('stage_id', $stageid)->with('category')->get();
 
         $create_date = date('Y-m-d H:i:s');
         $pa_stations_count = 0;
@@ -60,16 +81,17 @@ class ImportController extends Controller
             $raidmontan_stations_final = [];
             $raidmontan_stations_stages_id = [];
 
-            $check = RaidmontanParticipations::get()->first();
+            $check = RaidmontanParticipations::where('stage_id', $stageid)->get()->first();
 
             if($team->raidmontan_participations !== null){
                 continue;
 
             } else {
 
-                RaidmontanParticipationsEntries::where('team_id', $team->id)->delete();
+                RaidmontanParticipationsEntries::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
                 // If the team is not in RaidmontanParticipations table insert the data
                 RaidmontanParticipations::insert([
+                    'stage_id' => $stageid,
                     'team_id' => $team->id,
                     'missing_equipment_items' => 0,
                     'missing_footwear' => 0,
@@ -80,9 +102,9 @@ class ImportController extends Controller
                 ]);
     
     
-                $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
-                $raidmontan_stations = RaidmontanStations::where('category_id', $team->category_id)->get();
-                $raidmontan_stations_stages = RaidmontanStationsStages::where('category_id', $team->category_id)->get();
+                $RaidmontanParticipations = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->first();
+                $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $team->category_id)->get();
+                $raidmontan_stations_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $team->category_id)->get();
 
                 $stage_start_id = 0;
                 $stage_finish_id = 0;
@@ -105,6 +127,7 @@ class ImportController extends Controller
 
                 foreach($raidmontan_stations as $key => $station){
             
+                    $raidmontan_stations_final[$key]['stage_id'] = $stageid;
                     $raidmontan_stations_final[$key]['raidmontan_participations_id'] = $RaidmontanParticipations->id;
                     $raidmontan_stations_final[$key]['team_id'] = $team->id;
                     $raidmontan_stations_final[$key]['raidmontan_stations_id'] = $station->id;
@@ -155,14 +178,25 @@ class ImportController extends Controller
             'message' => '(RaidMontan) Toate echipele au fost marcate ca Abandon, va rugam sa importati fisierul.',
             'alert-type' => 'success'
         );
-        return redirect()->route('import.index')->with($notification);
+        return redirect()->route('import.index', [$stageid])->with($notification);
 
     }
 
 
-    public function raidmontan_seed_intern()
+    public function raidmontan_seed_intern($stageid)
     {
-        $teams = Team::with('category')->get();
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $teams = Team::where('stage_id', $stageid)->with('category')->get();
 
         $create_date = date('Y-m-d H:i:s');
         $pa_stations_count = 0;
@@ -173,8 +207,6 @@ class ImportController extends Controller
             $raidmontan_stations_final = [];
             $raidmontan_stations_stages_id = [];
 
-            $check = RaidmontanParticipations::get()->first();
-
             if($team->raidmontan_participations !== null){
                 continue;
 
@@ -183,6 +215,7 @@ class ImportController extends Controller
                 RaidmontanParticipationsEntries::where('team_id', $team->id)->delete();
                 // If the team is not in RaidmontanParticipations table insert the data
                 RaidmontanParticipations::insert([
+                    'stage_id' => $stageid,
                     'team_id' => $team->id,
                     'missing_equipment_items' => 0,
                     'missing_footwear' => 0,
@@ -193,9 +226,9 @@ class ImportController extends Controller
                 ]);
     
     
-                $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
-                $raidmontan_stations = RaidmontanStations::where('category_id', $team->category_id)->get();
-                $raidmontan_stations_stages = RaidmontanStationsStages::where('category_id', $team->category_id)->get();
+                $RaidmontanParticipations = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->first();
+                $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $team->category_id)->get();
+                $raidmontan_stations_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $team->category_id)->get();
 
                 $stage_start_id = 0;
                 $stage_finish_id = 0;
@@ -218,6 +251,7 @@ class ImportController extends Controller
 
                 foreach($raidmontan_stations as $key => $station){
             
+                    $raidmontan_stations_final[$key]['stage_id'] = $stageid;
                     $raidmontan_stations_final[$key]['raidmontan_participations_id'] = $RaidmontanParticipations->id;
                     $raidmontan_stations_final[$key]['team_id'] = $team->id;
                     $raidmontan_stations_final[$key]['raidmontan_stations_id'] = $station->id;
@@ -266,17 +300,29 @@ class ImportController extends Controller
     }
 
 
-    public function orienteering_seed()
+    public function orienteering_seed($stageid)
     {
-        $teams = Team::with('category')->get();
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $teams = Team::where('stage_id', $stageid)->with('category')->get();
         $create_date = date('Y-m-d H:i:s');
 
         foreach($teams as $team){
 
-            $team_orienteering = Orienteering::where('team_id', $team->id)->first();
+            $team_orienteering = Orienteering::where('stage_id', $stageid)->where('team_id', $team->id)->first();
 
             if($team_orienteering == null){
                 Orienteering::insert([
+                    'stage_id' => $stageid,
                     'team_id' => $team->id,
                     'start_time' => "00:00:00",
                     'finish_time' => "00:00:00",
@@ -298,22 +344,29 @@ class ImportController extends Controller
             'message' => '(Orientare) Toate echipele au fost marcate ca Abandon, va rugam sa importati fisierul.',
             'alert-type' => 'success'
         );
-        return redirect()->route('import.index')->with($notification);
+        return redirect()->route('import.index', [$stageid])->with($notification);
 
     }
 
 
-    public function raidmontan_import_uuids(Request $request)
+    public function raidmontan_import_uuids($stageid, Request $request)
     {
 
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
 
         $this->validate($request, [
-
             'import_file' => 'required'
-
         ]);
 
-        $teams = Team::all();
+        $teams = Team::where('stage_id', $stageid)->get();
 
         $posts = [];
 //        $posts[1]= [ 251,31,32,33,252 ]; //Family
@@ -330,7 +383,7 @@ class ImportController extends Controller
         }
 
 
-        $get_posts = RaidmontanStationsStages::All();
+        $get_posts = RaidmontanStationsStages::where('stage_id', $stageid)->get();
 
         foreach ($get_posts as $key => $gets){
 
@@ -391,7 +444,7 @@ class ImportController extends Controller
 
                         // Verificare daca UUID-ul exista in baza de date sau asociat unei echipe
                         if(!empty($uuid_from_db)) {
-                            $echipa = Team::where('uuid_card_raid_id',$uuid_from_db->id)->first();
+                            $echipa = Team::where('stage_id', $stageid)->where('uuid_card_raid_id',$uuid_from_db->id)->first();
                             if($echipa === NULL){
                                 echo "<h2><font color='red'><strong>";
                                 echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db->id . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db->name . ".";
@@ -425,6 +478,7 @@ class ImportController extends Controller
 
 
                         // Array pentru fiecare UUID
+                        $data[$uuid_from_file]['stage_id'] = $stageid;
                         $data[$uuid_from_file]['category'] = $uuid_categorie;
                         $data[$uuid_from_file]['category_id'] = $category_id;
                         $data[$uuid_from_file]['team_name'] = $team_name;
@@ -486,11 +540,11 @@ class ImportController extends Controller
 
 
             // clean up db
-            RaidmontanParticipations::query()->truncate();
-            RaidmontanParticipationsEntries::query()->truncate();
+            RaidmontanParticipations::where('stage_id', $stageid)->delete();
+            RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
 
             // add abandon to all
-            $this->raidmontan_seed_intern();
+            $this->raidmontan_seed_intern($stageid);
 
             echo "<pre>";
 
@@ -537,11 +591,10 @@ class ImportController extends Controller
                     $final_time = 0;
 
             
-          
                     foreach ( $time_and_posts as $order => $time_and_post )
                     {
         
-                        if($order == "category_id" || $order == "team_id")
+                        if($order == "category_id" || $order == "team_id" || $order == "stage_id")
                         {
                             //invalid post
                             continue;
@@ -570,11 +623,11 @@ class ImportController extends Controller
                         $uuid_raid_id = $uuid_raid->uuid_id;
                     }
 
-                    $participants = RaidmontanParticipations::where('team_id',$time_and_posts['team_id'])->get();
+                    $participants = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id',$time_and_posts['team_id'])->get();
 
                     foreach ( $participants as $participant )
                     {
-                        $participation_entries = RaidmontanParticipationsEntries::where('team_id',$participant->team_id)->where('hits', '=',NULL)->get();
+                        $participation_entries = RaidmontanParticipationsEntries::where('stage_id', $stageid)->where('team_id',$participant->team_id)->where('hits', '=',NULL)->get();
 
                         $index = 0;
                         foreach ( $valid_posts as $post => $valid_post )
@@ -583,7 +636,7 @@ class ImportController extends Controller
                             if(count($missing_posts) == 0){
 
 
-                                $chanllenge_stations_stages = RaidmontanStationsStages::where('post',$post)->where('category_id',$time_and_posts['category_id'])->first();
+                                $chanllenge_stations_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('post',$post)->where('category_id',$time_and_posts['category_id'])->first();
 
                                 $time = ( !empty($chanllenge_stations_stages['time']) ) ? $chanllenge_stations_stages['time'] : null;
                                 $arrived = ( !empty($valid_post['arrived']) ) ? $valid_post['arrived'] : null;
@@ -639,11 +692,13 @@ class ImportController extends Controller
 
                                 //update
                                 DB::table('raidmontan_participations_entries')
+                                    ->where('stage_id', $stageid)
                                     ->where('team_id', $time_and_posts['team_id'])
                                     ->where('raidmontan_stations_stages_id', $raidmontan_stations_stages_id)
                                     ->update($values);
 
                                 DB::table('raidmontan_participations')
+                                    ->where('stage_id', $stageid)
                                     ->where('team_id', $time_and_posts['team_id'])
                                     ->update(['abandon' => 0]);
 
@@ -676,7 +731,6 @@ class ImportController extends Controller
                                 }
 
                                 echo "<br />";
-
                                 $number_pa++;
                             }
                             $index++;
@@ -755,9 +809,8 @@ class ImportController extends Controller
     }
 
 
-    public function orienteering_import_uuids(Request $request)
+    public function orienteering_import_uuids($stageid, Request $request)
     {
-
 
         $this->validate($request, [
 
@@ -766,7 +819,7 @@ class ImportController extends Controller
         ]);
 
         $uuidlist = UuidOrienteeting::All();
-        $teams = Team::all();
+        $teams = Team::where('stage_id', $stageid)->get();
 
 //        $posts[1]= [ 251,31,32,33,252 ]; //Family
 //        $posts[2]= [ 251,31,33,33,252 ]; //Juniori
@@ -782,8 +835,7 @@ class ImportController extends Controller
         }
 
 
-        $get_posts = OrienteeringStationsStages::All();
-
+        $get_posts = OrienteeringStationsStages::where('stage_id', $stageid)->get();
 
         foreach ($get_posts as $key => $gets){
             if($gets->category_id == 1){
@@ -829,14 +881,15 @@ class ImportController extends Controller
                     if(substr( $line, 0, 5 ) === "Card:"){
 
                         $uuid_from_file = substr($line,6,11);
-                        $uuid_from_db = UuidOrienteeting::where('name',$uuid_from_file)->first();
+                        $uuid_from_db = UuidOrienteeting::where('name', $uuid_from_file)->first();
 
                         // Verificare daca UUID-ul exista in baza de date sau asociat unei echipe
                         if(!empty($uuid_from_db)) {
-                            $echipa = Team::with('orienteering')->where('uuid_card_orienteering_id',$uuid_from_db->id)->first();
+                            $echipa = Team::where('stage_id', $stageid)->with('orienteering')->where('uuid_card_orienteering_id',$uuid_from_db->id)->first();
+                         
                             if($echipa === NULL){
                                 echo "<h2><font color='red'><strong>";
-                                echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db['uuid_id'] . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db['uuid_name'] . ".";
+                                echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db['id'] . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db['name'] . ".";
                                 echo "<br />";
                                 echo "Va rugam sa verificati ceasul si sa il asociati unei echipe sau sa stergeti inregistrarea din fisierul text.";
                                 echo "<br />";
@@ -865,6 +918,7 @@ class ImportController extends Controller
 
 
                         // Array pentru fiecare UUID
+                        // $data[$uuid_from_file]['stage_id'] = $stageid;
                         $data[$uuid_from_file]['category'] = $uuid_categorie;
                         $data[$uuid_from_file]['team_name'] = $team_name;
                         $data[$uuid_from_file]['team_id'] = $team_id;
@@ -925,6 +979,7 @@ class ImportController extends Controller
 
             $team_id = 0;
             //check data
+
             if (!empty($data)) {
 
                 foreach ($data as $cardUuid => $time_and_posts ) {
@@ -976,7 +1031,6 @@ class ImportController extends Controller
 
                     $posts_order = $category;
                     $posts_order_final = [];
-
 
                     // search if the order of posts are correct
                     foreach($time_and_posts as $key => $post){
@@ -1102,18 +1156,18 @@ class ImportController extends Controller
 
 //                    $missing_posts_text = ( empty($missing_posts) ) ? '' : json_encode($missing_posts);
                     $missing_posts_text = ( empty($missing_posts) ) ? '' : $missing_posts;
-
+                
                     if(empty($missing_posts_text)){
                         DB::table('orienteering')
+                            ->where('stage_id', $stageid)
                             ->where('team_id', $team_id)
                             ->update(['start_time' => date('H:i:s',$start_time), 'finish_time' => date('H:i:s',$final_time), 'total_time' => date('H:i:s',$final_time - $start_time), 'abandon' => 0, 'missed_posts' => $missing_posts_text, 'order_posts' => json_encode($time_and_posts)]);
                     } else {
                         DB::table('orienteering')
+                            ->where('stage_id', $stageid)
                             ->where('team_id', $team_id)
                             ->update(['start_time' => date('H:i:s',$start_time), 'finish_time' => date('H:i:s',$final_time), 'total_time' => date('H:i:s',$final_time - $start_time), 'abandon' => 2, 'missed_posts' => $missing_posts_text, 'order_posts' => json_encode($time_and_posts)]);
                     }
-
-
 
                     echo "<br />";
                     echo "\n########################################  END ########################################";

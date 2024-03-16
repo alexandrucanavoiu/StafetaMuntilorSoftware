@@ -18,10 +18,10 @@ class Knowledge extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'team_id',
         'wrong_answers',
         'time',
-        'scor',
         'abandon',
         'wrong_questions'
     ];

@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Stages;
 use App\Models\Category;
 use App\Models\RaidmontanStations;
 use App\Models\RaidmontanStationsStages;
@@ -15,25 +16,21 @@ use Illuminate\Support\HtmlString;
 class Navigation
 {
 
+    public static function trophy($stageid)
+    {
+        $trophy = Stages::where('id', $stageid)->first();
+        return $trophy;
+    }
+
     public static function trophy_details()
     {
         $trophy_details = OrganizerStage::where('id', 1)->first();
         return $trophy_details;
     }
 
-    public static function setup_trophy()
+    public static function setup_orienteering_stations_stages($stageid, $category_id)
     {
-        $trophy_setup = OrganizerStage::where('id', 1)->first();
-        if ($trophy_setup->name_stage == "Trofeul Stafeta Muntilor" || $trophy_setup->name_organizer == "Asociatia Stafeta Muntilor") {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public static function setup_orienteering_stations_stages($category_id)
-    {
-        $orienteering_setup_stages = OrienteeringStationsStages::where('category_id', $category_id)->get();
+        $orienteering_setup_stages = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $category_id)->get();
         if ($orienteering_setup_stages->isEmpty()) {
             return false;
         } else {
@@ -41,9 +38,9 @@ class Navigation
         }
     }
 
-    public static function setup_raid_montan_stages($category_id)
+    public static function setup_raid_montan_stages($stageid, $category_id)
     {
-        $raidmontan_setup_stages = RaidmontanStationsStages::where('category_id', $category_id)->get();
+        $raidmontan_setup_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $category_id)->get();
         if ($raidmontan_setup_stages->isEmpty()) {
             return false;
         } else {
@@ -51,9 +48,9 @@ class Navigation
         }
     }
 
-    public static function setup_raid_montan($category_id)
+    public static function setup_raid_montan($stageid, $category_id)
     {
-        $raidmontan_setup = RaidmontanStations::where('category_id', $category_id)->get();
+        $raidmontan_setup = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category_id)->get();
         if ($raidmontan_setup->isEmpty()) {
             return false;
         } else {
@@ -66,6 +63,16 @@ class Navigation
         $categories = Category::OrderBy('id', 'ASC')->get();
         if (!is_array($categories)) {
             return $categories;
+        } else {
+            return '';
+        }
+    }
+
+    public static function stages()
+    {
+        $stages = Stages::OrderBy('id', 'ASC')->get();
+        if (!is_array($stages)) {
+            return $stages;
         } else {
             return '';
         }
@@ -106,4 +113,6 @@ class Navigation
         }
         return $randomString;
     }
+
+
 }

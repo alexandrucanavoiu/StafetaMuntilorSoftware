@@ -18,6 +18,7 @@ class TeamOrderStart extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'order_start_minutes',
         'order_date_start',
     ];

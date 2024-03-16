@@ -18,6 +18,7 @@ class RaidmontanParticipations extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'team_id',
         'missing_equipment_items',
         'missing_footwear',

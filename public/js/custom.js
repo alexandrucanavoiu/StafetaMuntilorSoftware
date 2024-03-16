@@ -1,5 +1,24 @@
-// District Applications
-
+$(document).ready(function(){
+    // Attach change event listener to select element
+    $('#switch_stage').change(function(){
+        // Get the selected value
+        var selectedValue = $(this).val();
+        
+        // Make an AJAX GET request with the selected value
+        $.ajax({
+            type: 'GET',
+            url: '/switch/' + selectedValue,
+            success: function(response) {
+                // Redirect to the appropriate route
+                window.location.href = response.redirect_url;
+            },
+            error: function(xhr, status, error) {
+                // Handle error here
+                console.error('Error:', status, error);
+            }
+        });
+    });
+});
 
 function printErrorMsg (msg) {
     $(".print-error-msg").find("ul").html('');
@@ -20,7 +39,7 @@ $(document).on("click", ".js--setup-convert-datetime-timestamp", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/convert-datetime-timestamp",
+        url: "/" + $(this).data('stageid') + "/setup/convert-datetime-timestamp",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -96,7 +115,7 @@ $("body").delegate('.js--setup-convert-datetime-timestamp-confirm', 'click',func
     formData.append("timestamp_secounds", timestamp_secounds);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/convert-datetime-timestamp");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/convert-datetime-timestamp");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -107,7 +126,6 @@ $("body").delegate('.js--setup-convert-datetime-timestamp-confirm', 'click',func
                     
                     $('#concatenation_output').html('<strong>'+ data.concatenation_output + '</strong>');
                     $('#concatenation_output_to_datestring').html('<strong>'+ data.concatenation_output_to_datestring + '</strong>');
-
 
                 } else {
 
@@ -147,7 +165,7 @@ $(document).on("click", ".js--setup-convert-timestamp-datetime", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/convert-timestamp-datetime",
+        url: "/" + $(this).data('stageid') + "/setup/convert-timestamp-datetime",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -207,7 +225,7 @@ $("body").delegate('.js--setup-convert-timestamp-datetime-confirm', 'click',func
     formData.append("timestamp", timestamp);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/convert-timestamp-datetime");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/convert-timestamp-datetime");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -252,7 +270,7 @@ $(document).on("click", ".js--clubs-create", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/clubs/create",
+        url: "/" + $(this).data('stageid') + "/clubs/create",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -312,7 +330,7 @@ $("body").delegate('.js--clubs-create-store', 'click',function(e){
     formData.append("clubs", clubs);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/clubs/create");
+    request.open("POST", "/" + $(this).data('stageid') + "/clubs/create");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -380,7 +398,7 @@ $(document).on("click", ".js--clubs-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/clubs/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/clubs/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -430,7 +448,7 @@ $("body").delegate('.js--clubs-update', 'click',function(e){
     formData.append("name", name);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/clubs/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/clubs/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -498,7 +516,7 @@ $(document).on("click", ".js--clubs-destroy", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/clubs/"+ $(this).data('id') +"/destroy",
+        url: "/" + $(this).data('stageid') + "/clubs/"+ $(this).data('id') +"/destroy",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -546,7 +564,7 @@ $("body").delegate('.js--clubs-destroy-confirm', 'click',function(e){
     var _token = $("input[name='_token']").val();
     formData.append("_token", _token);
     var request = new XMLHttpRequest();
-    request.open("POST", "/clubs/"+ $(this).data('id') +"/destroy");
+    request.open("POST", "/" + $(this).data('stageid') + "/clubs/"+ $(this).data('id') +"/destroy");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -602,7 +620,7 @@ $(document).on("click", ".js--teams-create", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/teams/create",
+        url: "/" + $(this).data('stageid') + "/teams/create",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -676,7 +694,7 @@ $("body").delegate('.js--teams-create-store', 'click',function(e){
     formData.append("uuid_card_raid_id", parseInt(uuid_card_raid_id));
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/teams/create");
+    request.open("POST", "/" + $(this).data('stageid') + "/teams/create");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -758,7 +776,7 @@ $(document).on("click", ".js--teams-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/teams/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/teams/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -823,7 +841,7 @@ $("body").delegate('.js--teams-update', 'click',function(e){
     formData.append("uuid_card_raid_id", parseInt(uuid_card_raid_id));
     
     var request = new XMLHttpRequest();
-    request.open("POST", "/teams/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/teams/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -906,7 +924,7 @@ $(document).on("click", ".js--teams-destroy", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/teams/"+ $(this).data('id') +"/destroy",
+        url: "/" + $(this).data('stageid') + "/teams/"+ $(this).data('id') +"/destroy",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -943,7 +961,7 @@ $("body").delegate('.js--teams-destroy-confirm', 'click',function(e){
     var _token = $("input[name='_token']").val();
     formData.append("_token", _token);
     var request = new XMLHttpRequest();
-    request.open("POST", "/teams/"+ $(this).data('id') +"/destroy");
+    request.open("POST", "/" + $(this).data('stageid') + "/teams/"+ $(this).data('id') +"/destroy");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -998,7 +1016,7 @@ $(document).on("click", ".js--cultural-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/cultural/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/cultural/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1048,7 +1066,7 @@ $("body").delegate('.js--cultural-update', 'click',function(e){
     formData.append("scor", parseInt(scor));
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/cultural/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/cultural/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1113,7 +1131,7 @@ $(document).on("click", ".js--knowledge-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/knowledge/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
+        url: "/" + $(this).data('stageid') + "/knowledge/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1170,7 +1188,7 @@ $("body").delegate('.js--knowledge-update', 'click',function(e){
     formData.append("abandon", abandon);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/knowledge/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",);
+    request.open("POST", "/" + $(this).data('stageid') + "/knowledge/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",);
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1244,7 +1262,7 @@ $(document).on("click", ".js--orienteering-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/orienteering/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
+        url: "/" + $(this).data('stageid') + "/orienteering/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1301,7 +1319,7 @@ $("body").delegate('.js--orienteering-update', 'click',function(e){
     formData.append("abandon", abandon);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/orienteering/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",);
+    request.open("POST", "/" + $(this).data('stageid') + "/orienteering/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",);
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1380,7 +1398,7 @@ $(document).on("click", ".js--raidmontan-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/raidmontan/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
+        url: "/" + $(this).data('stageid') + "/raidmontan/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1457,7 +1475,7 @@ $("body").delegate('.js--raidmontan-update', 'click',function(e){
     formData.append("abandon", abandon);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/raidmontan/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/raidmontan/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1546,7 +1564,7 @@ $(document).on("click", ".js--setup-raid-montan-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/raid-montan/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/setup/raid-montan/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1603,7 +1621,7 @@ $("body").delegate('.js--setup-raid-montan-update', 'click',function(e){
     formData.append("stations_finish", stations_finish);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/raid-montan/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/raid-montan/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1675,7 +1693,7 @@ $(document).on("click", ".js--setup-raid-montan-stages-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/raid-montan/stages/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/setup/raid-montan/stages/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1729,7 +1747,7 @@ $("body").delegate('.js--setup-raid-montan-stages-update', 'click',function(e){
     formData.append("time", time);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/raid-montan/stages/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/raid-montan/stages/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1793,7 +1811,7 @@ $(document).on("click", ".js--setup-orienteering-stages-edit", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/orienteering/stages/"+ $(this).data('id') +"/edit",
+        url: "/" + $(this).data('stageid') + "/setup/orienteering/stages/"+ $(this).data('id') +"/edit",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1844,7 +1862,7 @@ $("body").delegate('.js--setup-orienteering-stages', 'click',function(e){
     formData.append("post", post);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/orienteering/stages/"+ $(this).data('id') +"/edit");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/orienteering/stages/"+ $(this).data('id') +"/edit");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -1905,7 +1923,7 @@ $(document).on("click", ".js--trophy-setup", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/trophy",
+        url: "/" + $(this).data('stageid') + "/setup/trophy",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -1944,24 +1962,21 @@ $(document).on("click", ".js--trophy-setup", function(e){
 
 $("body").delegate('.js--trophy-setup-update', 'click',function(e){
     e.preventDefault();
-    $( '#name_stage-error' ).html( "" );
-    $( '#name_organizer-error' ).html( "" );
-    $( '#stage_number-error' ).html( "" );
+    $( '#name-error' ).html( "" );
+    $( '#ong-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var name_stage = $("input[name='name_stage']").val();
-    var name_organizer = $("input[name='name_organizer']").val();
-    var stage_number = $("#stage_number").val();
+    var name = $("input[name='name']").val();
+    var ong = $("input[name='ong']").val();
 
     formData.append("_token", _token);
-    formData.append("name_stage", name_stage);
-    formData.append("name_organizer", name_organizer);
-    formData.append("stage_number", stage_number);
+    formData.append("name", name);
+    formData.append("ong", ong);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/trophy");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/trophy");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -2001,14 +2016,11 @@ $("body").delegate('.js--trophy-setup-update', 'click',function(e){
                 }
             } else {
                 printErrorMsg(data.error);
-                if(data.errors.name_stage){
-                    $( '#name_stage-error' ).html( data.errors.name_stage[0] );
+                if(data.errors.name){
+                    $( '#name-error' ).html( data.errors.name[0] );
                 }
-                if(data.errors.name_organizer){
-                    $( '#name_organizer-error' ).html( data.errors.name_organizer[0] );
-                }
-                if(data.errors.stage_number){
-                    $( '#stage_number-error' ).html( data.errors.stage_number[0] );
+                if(data.errors.ong){
+                    $( '#ong-error' ).html( data.errors.ong[0] );
                 }
                 $("#TrophyCreate").scrollTop( 0 );
             }
@@ -2026,7 +2038,7 @@ $(document).on("click", ".js--team-order-start", function(e){
     e.preventDefault();
     $.ajax({
         type: "GET",
-        url: "/setup/order-start",
+        url: "/" + $(this).data('stageid') + "/setup/order-start",
         dataType: 'html',
         success: function (view) {
             var response = jQuery.parseJSON(view);
@@ -2100,7 +2112,7 @@ $("body").delegate('.js--team-order-start-update', 'click',function(e){
     formData.append("order_start_minutes", order_start_minutes);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/order-start");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/order-start");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -2188,7 +2200,6 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var delete_clubs = $("#delete_clubs").is(":checked")
     var delete_teams = $("#delete_teams").is(":checked")
     var delete_config_raid_montan = $("#delete_config_raid_montan").is(":checked")
     var delete_config_orienteering = $("#delete_config_orienteering").is(":checked")
@@ -2198,7 +2209,6 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
     var delete_rezults_cultural = $("#delete_rezults_cultural").is(":checked")
 
     formData.append("_token", _token);
-    formData.append("delete_clubs", delete_clubs);
     formData.append("delete_teams", delete_teams);
     formData.append("delete_config_raid_montan", delete_config_raid_montan);
     formData.append("delete_config_orienteering", delete_config_orienteering);
@@ -2208,7 +2218,7 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
     formData.append("delete_rezults_cultural", delete_rezults_cultural);
 
     var request = new XMLHttpRequest();
-    request.open("POST", "/setup/destroy");
+    request.open("POST", "/" + $(this).data('stageid') + "/setup/destroy");
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.send(formData);
     request.onreadystatechange=function(){
@@ -2240,9 +2250,6 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
                 }
             } else {
                 printErrorMsg(data.error);
-                if(data.errors.delete_clubs){
-                    $( '#delete_clubs-error' ).html( data.errors.delete_clubs[0] );
-                }
                 if(data.errors.delete_teams){
                     $( '#delete_teams-error' ).html( data.errors.delete_teams[0] );
                 }
@@ -2268,6 +2275,596 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
             }
         }
         if (request.status==405){
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+// Participants
+
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ParticipantsCreate").remove(); $(".modal-dialog").remove(); });
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ParticipantsEdit").remove(); $(".modal-dialog").remove(); });
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ParticipantsDestroy").remove(); $(".modal-dialog").remove(); });
+
+$(document).on("click", ".js--participants-create", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/participants/create",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ParticipantsCreate').length > 0 )
+                {
+                    $('#ParticipantsCreate').modal('hide');
+                    $('#ParticipantsCreate').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ParticipantsCreate').modal('show');
+
+            } else {
+                $('#ParticipantsCreate').modal('hide');
+                $('#ParticipantsCreate').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire({
+                title: data.ajax_title_response,
+                text: data.ajax_message_response,
+                icon: data.ajax_status_response,
+                customClass: {
+                confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
+            });
+            return false;
+        }
+    });
+});
+
+
+$("body").delegate('.js--participants-create-store', 'click',function(e){
+    e.preventDefault();
+    $( '#participants-error' ).html( "" );
+    $( '#cnp-error' ).html( "" );
+    $( '#name-error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var cnp = $("#cnp").val();
+    var name = $("#name").val();
+
+    formData.append("_token", _token);
+    formData.append("cnp", cnp);
+    formData.append("name", name);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/participants/create");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    $('#participants-list').DataTable().ajax.reload();
+                    $('#ParticipantsCreate').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ParticipantsCreate').modal('hide');
+                    $('#ParticipantsCreate').modal('toggle');
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    $('#participants-list').DataTable().ajax.reload();
+                    $('#ParticipantsCreate').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ParticipantsCreate').modal('hide');
+                    $('#ParticipantsCreate').modal('toggle');
+                    data = JSON.parse(request.responseText);
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.name){
+                    $( '#name-error' ).html( data.errors.name[0] );
+                }
+                if(data.errors.cnp){
+                    $( '#cnp-error' ).html( data.errors.cnp[0] );
+                }
+                if(data.errors.form_corruption){
+                    $('#form_corruption-error').html( data.errors.form_corruption[0] );
+                }
+                $("#ParticipantsCreate").scrollTop(0);
+            }
+        }
+        if (request.status==405){
+            $('#ParticipantsCreate').modal('hide');
+            $('#ParticipantsCreate').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+
+$(document).on("click", ".js--participants-edit", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/participants/"+ $(this).data('id') +"/edit",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ParticipantsEdit').length > 0 )
+                {
+                    $('#ParticipantsEdit').modal('hide');
+                    $('#ParticipantsEdit').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ParticipantsEdit').modal('show');
+
+            } else {
+                $('#ParticipantsEdit').modal('hide');
+                $('#ParticipantsEdit').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-success'
+                    },
+                    buttonsStyling: false
+                });
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+        }
+    });
+});
+
+
+$("body").delegate('.js--participants-update', 'click',function(e){
+    e.preventDefault();
+    $( '#participants-error' ).html( "" );
+    $( '#cnp-error' ).html( "" );
+    $( '#name-error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var cnp = $("#cnp").val();
+    var name = $("#name").val();
+
+    formData.append("_token", _token);
+    formData.append("cnp", cnp);
+    formData.append("name", name);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/participants/"+ $(this).data('id') +"/edit");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    $('#participants-list').DataTable().ajax.reload();
+                    $('#ParticipantsEdit').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ParticipantsEdit').modal('hide');
+                    $('#ParticipantsEdit').modal('toggle');
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    $('#participants-list').DataTable().ajax.reload();
+                    $('#ParticipantsEdit').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ParticipantsEdit').modal('hide');
+                    $('#ParticipantsEdit').modal('toggle');
+                    data = JSON.parse(request.responseText);
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.name){
+                    $( '#name-error' ).html( data.errors.name[0] );
+                }
+                if(data.errors.cnp){
+                    $( '#cnp-error' ).html( data.errors.cnp[0] );
+                }
+                if(data.errors.form_corruption){
+                    $('#form_corruption-error').html( data.errors.form_corruption[0] );
+                }
+                $("#ParticipantsEdit").scrollTop( 0 );
+            }
+        }
+        if (request.status==405){
+            $('#ParticipantsEdit').modal('hide');
+            $('#ParticipantsEdit').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+
+$(document).on("click", ".js--participants-destroy", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/participants/"+ $(this).data('id') +"/destroy",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ParticipantsDestroy').length > 0 )
+                {
+                    $('#ParticipantsDestroy').modal('hide');
+                    $('#ParticipantsDestroy').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ParticipantsDestroy').modal('show');
+
+            } else {
+                $('.modal-backdrop').remove();
+                $('#ParticipantsDestroy').modal('hide');
+                $('#ParticipantsDestroy').remove();
+                data = JSON.parse(request.responseText);
+                Swal.fire({
+                    title: data.ajax_title_response,
+                    text: data.ajax_message_response,
+                    icon: data.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+        }
+    });
+});
+
+
+$("body").delegate('.js--participants-destroy-confirm', 'click',function(e){
+    e.preventDefault();
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    formData.append("_token", _token);
+    var request = new XMLHttpRequest();
+    request.open("POST", "/participants/"+ $(this).data('id') +"/destroy");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    $('#participants-list').DataTable().ajax.reload();
+                    $('#ParticipantsDestroy').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ParticipantsDestroy').modal('hide');
+                    $('#ParticipantsDestroy').modal('toggle');
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    data = JSON.parse(request.responseText);
+                    Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.form_corruption){
+                    $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
+                }
+                $("#ParticipantsDestroy").scrollTop( 0 );
+            }
+        }
+        if (request.status==405){
+            $('#ParticipantsDestroy').modal('hide');
+            $('#ParticipantsDestroy').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+
+// Participants Stages
+
+// Participants
+
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ParticipantsStagesEdit").remove(); $(".modal-dialog").remove(); });
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ParticipantsStagesDestroy").remove(); $(".modal-dialog").remove(); });
+
+
+$(document).on("click", ".js--participants-stages-edit", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/participants/"+ $(this).data('stageid') +"/"+ $(this).data('id') +"/edit",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ParticipantsStagesEdit').length > 0 )
+                {
+                    $('#ParticipantsStagesEdit').modal('hide');
+                    $('#ParticipantsStagesEdit').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ParticipantsStagesEdit').modal('show');
+                $(".select2").select2();
+                $(".max-length-3").select2({
+                    maximumSelectionLength: 3,
+                    placeholder: "Poți selecta maxim 3 participanti"
+                });
+
+            } else {
+                $('#ParticipantsStagesEdit').modal('hide');
+                $('#ParticipantsStagesEdit').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-success'
+                    },
+                    buttonsStyling: false
+                });
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+        }
+    });
+});
+
+
+$("body").delegate('.js--participants-stages-update', 'click',function(e){
+    e.preventDefault();
+    $( '#participants-error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var participants = $("#participants").val();
+
+    formData.append("_token", _token);
+    formData.append("participants", participants);
+
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/participants/"+ $(this).data('stageid') +"/"+ $(this).data('id') +"/edit");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    $('#participants-stages-list').DataTable().ajax.reload();
+                    $('.modal-backdrop').remove();
+                    if( $('#ParticipantsStagesEdit').length > 0 )
+                    {
+                        $('#ParticipantsStagesEdit').modal('hide');
+                        $('#ParticipantsStagesEdit').remove();
+                    }
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    $('#participants-stages-list').DataTable().ajax.reload();
+                    $('.modal-backdrop').remove();
+                    if( $('#ParticipantsStagesEdit').length > 0 )
+                    {
+                        $('#ParticipantsStagesEdit').modal('hide');
+                        $('#ParticipantsStagesEdit').remove();
+                    }
+                    data = JSON.parse(request.responseText);
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.participants){
+                    $( '#participants-error' ).html( data.errors.participants[0] );
+                }
+                if(data.errors.form_corruption){
+                    $('#form_corruption-error').html( data.errors.form_corruption[0] );
+                }
+                $("#ParticipantsEdit").scrollTop( 0 );
+            }
+        }
+        if (request.status==405){
+            $('#ParticipantsEdit').modal('hide');
+            $('#ParticipantsEdit').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
+$(document).on("click", ".js--participants-stages-destroy", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/participants/"+ $(this).data('stageid') +"/"+ $(this).data('id') +"/destroy",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ParticipantsStagesDestroy').length > 0 )
+                {
+                    $('#ParticipantsStagesDestroy').modal('hide');
+                    $('#ParticipantsStagesDestroy').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ParticipantsStagesDestroy').modal('show');
+
+            } else {
+                $('.modal-backdrop').remove();
+                $('#ParticipantsStagesDestroy').modal('hide');
+                $('#ParticipantsStagesDestroy').remove();
+                data = JSON.parse(request.responseText);
+                Swal.fire({
+                    title: data.ajax_title_response,
+                    text: data.ajax_message_response,
+                    icon: data.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+                return false;
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+        }
+    });
+});
+
+
+$("body").delegate('.js--participants-stages-confirm', 'click',function(e){
+    e.preventDefault();
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    formData.append("_token", _token);
+    var request = new XMLHttpRequest();
+    request.open("POST", "/participants/"+ $(this).data('stageid') +"/"+ $(this).data('id') +"/destroy");
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    $('#participants-stages-list').DataTable().ajax.reload();
+                    $('.modal-backdrop').remove();
+                    if( $('#ParticipantsStagesDestroy').length > 0 )
+                    {
+                        $('#ParticipantsStagesDestroy').modal('hide');
+                        $('#ParticipantsStagesDestroy').remove();
+                    }
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    data = JSON.parse(request.responseText);
+                    Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+                }
+            } else {
+                printErrorMsg(data.error);
+                if(data.errors.form_corruption){
+                    $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
+                }
+                $("#ParticipantsStagesDestroy").scrollTop( 0 );
+            }
+        }
+        if (request.status==405){
+            $('#ParticipantsStagesDestroy').modal('hide');
+            $('#ParticipantsStagesDestroy').modal('toggle');
             Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
         }
     }

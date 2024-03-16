@@ -16,6 +16,24 @@
             </div>
             <div class="content-body">
             <section>
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">[ v5.0.0 ] - 16.03.2024</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Generare clasamente doar daca toate echipele au datele completate corect.</p>
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- Actualizare Software in baza regulamentului din 2024</p>
+                        <p class="card-text">- Afisarea siglei Federatiei Romane de Turism Sportiv la exportul clasamentelor in PDF pentru afisare.</p>
+                        <p class="card-text">- Sectiune pentru a putea asocia persoane la o echipa.</p>
+                        <p class="card-text">- Pastrare Cluburi de la o etapa la alta</p>
+                        <p class="card-text">- Generare Clasament Cluburi Etape.</p>
+                        <p class="card-text">- Generare Clasament Individual dupa fiecare etapa si cumularea punctelor pe parcursul etapelor.</p>
+                        <p class="card-text">- Buton de export baza de date in sectiunea Configurare</p>
+                    </div>
+                </div>
                     <div class="card">
                         <div class="card-header">
                             <h4 class="card-title">[ v4.1.4 ] - 19.06.2023</h4>

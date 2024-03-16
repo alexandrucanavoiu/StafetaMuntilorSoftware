@@ -12,9 +12,9 @@
                         <div class="card">
                             <div class="card-content">
                                 <div class="card-body">
-                                    <a href="{{ route('rankings.index_category', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
-                                    <a href="{{ route('rankings.category.orienteering.pdf', $category->id) }}?posts=1" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF cu Ordine Posturi</a>
-                                    <a href="{{ route('rankings.category.orienteering.pdf', $category->id) }}?posts=0" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF fara Ordine Posturi</a>
+                                    <a href="{{ route('rankings.index_category', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
+                                    <a href="{{ route('rankings.category.orienteering.pdf', [$stageid, $category->id]) }}?posts=1" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF cu Ordine Posturi</a>
+                                    <a href="{{ route('rankings.category.orienteering.pdf', [$stageid, $category->id]) }}?posts=0" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF fara Ordine Posturi</a>
                                 </div>
                             </div>
                         </div>

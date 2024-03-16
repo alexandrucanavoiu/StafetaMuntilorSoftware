@@ -18,6 +18,7 @@ class OrienteeringStationsStages  extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'category_id',
         'post',
     ];

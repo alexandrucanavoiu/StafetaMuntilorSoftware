@@ -18,6 +18,7 @@ class Club extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'name',
     ];
 

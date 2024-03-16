@@ -170,6 +170,7 @@ return [
         'timestamp_hour' => 'Ora',
         'timestamp_minutes' => 'Minute',
         'timestamp_secounds' => 'Secunde',
-        'timestamp' => 'Unixtime/Timestamp'
+        'timestamp' => 'Unixtime/Timestamp',
+        'cnp' => 'CNP'
     ],
 ];

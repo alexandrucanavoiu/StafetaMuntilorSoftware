@@ -18,6 +18,7 @@ class Orienteering extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'team_id',
         'start_time',
         'finish_time',

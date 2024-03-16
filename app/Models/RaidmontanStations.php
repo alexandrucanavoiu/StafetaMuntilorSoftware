@@ -18,6 +18,7 @@ class RaidmontanStations extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'category_id',
         'station_type',
         'maximum_time',

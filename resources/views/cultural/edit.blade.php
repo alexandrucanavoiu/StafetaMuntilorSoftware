@@ -34,7 +34,7 @@
 
                                                 <div class="col-md-8 offset-md-4 pt-50">
                                                     <button type="button" class="btn btn-primary me-1 mr-1 mb-1" type="reset" data-bs-dismiss="modal" aria-label="Close">Inchide</button>
-                                                    <button type="submit" class="js--cultural-update btn btn-success mr-1 mb-1" data-id="{{ $club->id }}">Adauga</button>
+                                                    <button type="submit" class="js--cultural-update btn btn-success mr-1 mb-1" data-stageid="{{ $stageid }}" data-id="{{ $club->id }}">Adauga</button>
                                                 </div>
                                             </div>
                                         </div>

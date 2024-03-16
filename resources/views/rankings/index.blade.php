@@ -31,23 +31,23 @@
                                         
                                         <tr>
                                             <td>Cunostinte Turistice (Categoria {{ $category->name }})</td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.knowledge', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.knowledge.pdf', $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.knowledge', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.knowledge.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
                                         </tr>
                                         <tr>
                                             <td>Orientare Categoria (Categoria {{ $category->name }})</td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.orienteering', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.orienteering.pdf', $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.orienteering', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.orienteering.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
                                         </tr>
                                         <tr>
                                             <td>Raid Montan Categoria (Categoria {{ $category->name }})</td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.raidmontan', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.raidmontan.pdf', $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.raidmontan', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.raidmontan.pdf', [$stageid, $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
                                         </tr>
                                         <tr>
                                             <td>Clasament General (Categoria {{ $category->name }})</td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.general', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
-                                            <td class="text-center"><a href="{{ route('rankings.category.general_pdf', $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.general', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.general_pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
                                         </tr>
 
                                     </tbody>

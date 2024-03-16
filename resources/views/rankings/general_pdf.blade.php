@@ -32,10 +32,10 @@
         <td valign="right" class="text-center"><img src="logo.png" alt="" width="150"/></td>
         <td class="text-center">
             <h1>Clasament General</h1>
-            <div>{{ \App\Helpers\Navigation::trophy_details()->name_stage }}</div>
-            <div>Organizator {{ \App\Helpers\Navigation::trophy_details()->name_organizer }}</div>
+            <h3>{{ \App\Helpers\Navigation::trophy($stageid)->name }}</h3>
+            <h3>{{ \App\Helpers\Navigation::trophy($stageid)->ong }}</h3>
         </td>
-        <td valign="right" class="text-center"><img src="logo.png" alt="" width="150"/></td>
+        <td valign="right" class="text-center"><img src="logo2.png" alt="" width="150"/></td>
     </tr>
 
   </table>

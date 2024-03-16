@@ -16,11 +16,14 @@ use App\Models\RaidmontanStationsStages;
 use App\Models\OrienteeringStationsStages;
 use App\Models\RaidmontanParticipations;
 use App\Models\RaidmontanParticipationsEntries;
-use App\Models\OrganizerStage;
 use App\Models\Knowledge;
 use App\Models\Cultural;
 use App\Models\TeamOrderStart;
+use App\Models\Stages;
+use App\Models\ClubsStageRankings;
+use App\Models\ParticipantsStageRankings;
 use DB;
+use Illuminate\Support\Facades\Artisan;
 
 class SetupController extends Controller
 {
@@ -35,16 +38,49 @@ class SetupController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+
+     public function export_db($stageid)
+     {
+
+        \Spatie\DbDumper\Databases\MySql::create()
+        ->setDbName(env('DB_DATABASE'))
+        ->setUserName(env('DB_USERNAME'))
+        ->setPassword(env('DB_PASSWORD'))
+        ->dumpToFile(storage_path('backupDataBASE'. $stageid .'.sql'));
+        return response()->download(storage_path('backupDataBASE'. $stageid .'.sql'));
+
+     }
+
+    public function index($stageid)
     {
         $categories = Category::OrderBy('id', 'ASC')->get();
-        return view('setup.index',compact('categories'));
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+        return view('setup.index',compact('categories', 'stageid'));
     }
 
-    public function convert_datetime_timestamp(Request $request)
+    public function convert_datetime_timestamp($stageid, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $year = date('Y');
             $month = date('m');
             $day = date('d');
@@ -54,7 +90,7 @@ class SetupController extends Controller
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.date_time_timestamp', ['year' => $year, 'month' => $month, 'day' => $day, 'hour' => $hour, 'minutes' => $minutes, 'secounds' => $secounds])->render()
+                        'view_content' => view('setup.date_time_timestamp', ['year' => $year, 'month' => $month, 'day' => $day, 'hour' => $hour, 'minutes' => $minutes, 'secounds' => $secounds, 'stageid' => $stageid])->render()
                     ] );
 
         }  else {
@@ -68,11 +104,20 @@ class SetupController extends Controller
     }
 
 
-    public function convert_datetime_timestamp_confirm(Request $request)
+    public function convert_datetime_timestamp_confirm($stageid, Request $request)
     {
         if( $request->ajax() )
         {
         
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
                         $rules = [
                             'timestamp_year' => 'required|numeric|max:2025|min:2022',
                             'timestamp_month' => 'required|numeric|max:12|min:01',
@@ -95,7 +140,7 @@ class SetupController extends Controller
                             $concatenation_output = Carbon::createFromFormat('Y-m-d H:i:s' , $concatenation,'Europe/Bucharest')->timestamp;
                             $concatenation_output_to_datestring = Carbon::createFromTimestamp($concatenation_output)->toDateTimeString(); 
                             
-                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success']);
+                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success', 'stageid' => $stageid]);
 
                         } else {
                             return Response::json(['errors' => $validator->errors()]);
@@ -111,18 +156,27 @@ class SetupController extends Controller
     }
 
 
-    public function convert_timestamp_datetime(Request $request)
+    public function convert_timestamp_datetime($stageid, Request $request)
     {
         if( $request->ajax() )
         {
 
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
                     $concatenation_output = Carbon::createFromFormat('Y-m-d H:i:s' , date('Y-m-d H:i:s'),'Europe/Bucharest')->timestamp;
                     $concatenation_output_to_datestring = Carbon::createFromTimestamp($concatenation_output)->toDateTimeString(); 
 
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.timestamp_date_time', ['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring])->render()
+                        'view_content' => view('setup.timestamp_date_time', ['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'stageid' => $stageid])->render()
                     ] );
 
         }  else {
@@ -136,11 +190,20 @@ class SetupController extends Controller
     }
 
 
-    public function convert_timestamp_datetime_confirm(Request $request)
+    public function convert_timestamp_datetime_confirm($stageid, Request $request)
     {
         if( $request->ajax() )
         {
         
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
                         $rules = [
                             'timestamp' => 'required|numeric',
                         ];
@@ -166,12 +229,8 @@ class SetupController extends Controller
 
                         if($validator->passes())
                         {
-
-
-
-
-                                    
-                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success']);
+     
+                            return response()->json(['concatenation_output' => $concatenation_output, 'concatenation_output_to_datestring' => $concatenation_output_to_datestring, 'ajax_status_response' => 'success', 'stageid' => $stageid]);
 
                         } else {
                             return Response::json(['errors' => $validator->errors()]);
@@ -187,16 +246,25 @@ class SetupController extends Controller
     }
 
 
-    public function trophy_setup(Request $request)
+    public function trophy_setup($stageid, Request $request)
     {
         if( $request->ajax() )
         {
-                $trophy_setup = OrganizerStage::where('id', 1)->first();
-                    $ajax_status_response = "success";
-                    return response()->json( [
-                        'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.trophy', ['trophy_setup' => $trophy_setup])->render()
-                    ] );
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+            $trophy_setup = Stages::where('id', $stageid)->first();
+                $ajax_status_response = "success";
+                return response()->json( [
+                    'ajax_status_response' => $ajax_status_response,
+                    'view_content' => view('setup.trophy', ['trophy_setup' => $trophy_setup, 'stageid' => $stageid])->render()
+                ] );
 
         }  else {
             $notification = array(
@@ -204,36 +272,43 @@ class SetupController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('setup.index', $category->id)->with($notification);
+            return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
         }
     }
 
 
-    public function trophy_setup_update(Request $request)
+    public function trophy_setup_update($stageid, Request $request)
     {
         if( $request->ajax() )
         {
-            $trophy_setup = OrganizerStage::where('id', 1)->first();
+
+            $trophy_setup = Stages::where('id', $stageid)->first();
                         $rules = [
-                            'name_stage' => 'required|max:255|min:1',
-                            'name_organizer' => 'required|max:255|min:1',
-                            'stage_number' => 'required|numeric|max:255|min:0'
+                            'name' => 'required|max:255|min:1',
+                            'ong' => 'required|max:255|min:1',
                         ];
 
                         $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
                         $request->merge(['created_at' => date('Y-m-d H:i:s')]);
 
-                        $data = $request->only(['name_stage', 'name_organizer', 'stage_number', 'created_at', 'updated_at']);
+                        $data = $request->only(['name', 'ong', 'stage_id', 'created_at', 'updated_at']);
                         $validator = Validator::make($data, $rules);
+                        
+                        $stage = Stages::where('id', $stageid)->first();
+                        if($stage == null){
+                            $validator->after(function ($validator) {
+                                $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                            });
+                        }
 
                         if($validator->passes())
                         {
                                 $trophy_setup->update($data);
-                                $ajax_redirect_url = route('setup.index');
+                                $ajax_redirect_url = route('setup.index', [$stageid]);
                                 $ajax_message_response = "Datele au fost actualizate.";
                                 $ajax_title_response = "Felicitări!";
                                 $ajax_status_response = "success";
-                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                         } else {
                             return Response::json(['errors' => $validator->errors()]);
                         }
@@ -248,17 +323,25 @@ class SetupController extends Controller
     }
 
 
-    public function team_order_start(Request $request)
+    public function team_order_start($stageid, Request $request)
     {
         if( $request->ajax() )
         {
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
                 $categories = Category::orderBy('id', 'ASC')->get();
-                $team_order_start = TeamOrderStart::where('id', 1)->first();
-                
+                $team_order_start = TeamOrderStart::where('stage_id', $stageid)->first();
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.team_order_start', ['categories' => $categories, 'team_order_start' => $team_order_start])->render()
+                        'view_content' => view('setup.team_order_start', ['categories' => $categories, 'team_order_start' => $team_order_start, 'stageid' => $stageid])->render()
                     ] );
 
         }  else {
@@ -271,11 +354,11 @@ class SetupController extends Controller
         }
     }
 
-    public function team_order_start_update(Request $request)
+    public function team_order_start_update($stageid, Request $request)
     {
         if( $request->ajax() )
         {
-           
+
                         $request->merge(['category_1' => (int)$request->input('category_1')]);
                         $request->merge(['category_2' => (int)$request->input('category_2')]);
                         $request->merge(['category_3' => (int)$request->input('category_3')]);
@@ -311,6 +394,13 @@ class SetupController extends Controller
                         $array_categories[] = $request->input('category_6');
                         $array_categories[] = $request->input('category_7');
 
+                        $stage = Stages::where('id', $stageid)->first();
+                        if($stage == null){
+                            $validator->after(function ($validator) {
+                                $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                            });
+                        }
+
                         if(count($array_categories) != count(array_unique($array_categories))){
                             $validator->after(function ($validator) {
                                 $validator->errors()->add('form_corruption', 'Verificati ordinea de start pentru categorii, doua sau mai multe categorii au aceeasi ora de start!');
@@ -331,12 +421,11 @@ class SetupController extends Controller
                                     $to_insert = (int)$request->input($category_id);
                                     $category->update(['order_start' => $to_insert]);
                                 }
-
                                 
-                                $TeamOrderStart = TeamOrderStart::where('id', 1)->first();
+                                $TeamOrderStart = TeamOrderStart::where('stage_id', $stageid)->first();
                                 $TeamOrderStart->update(['order_date_start' => $request->input('order_date_start'), 'order_start_minutes' => $request->input('order_start_minutes')]);
 
-                                $ajax_redirect_url = route('setup.index');
+                                $ajax_redirect_url = route('setup.index', [$stageid]);
                                 $ajax_message_response = "Datele au fost actualizate.";
                                 $ajax_title_response = "Felicitări!";
                                 $ajax_status_response = "success";
@@ -354,10 +443,21 @@ class SetupController extends Controller
         }
     }
 
-    public function raid_montan_setup($id, Request $request)
+    public function raid_montan_setup($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $category = Category::FindOrFail($id);
             if($category == null) {
                 $notification = array(
@@ -365,21 +465,21 @@ class SetupController extends Controller
                     'message' => 'Categoria sau Echipa nu exista in baza de date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('setup.index', $category->id)->with($notification);
+                return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
             } else {
-                $raid_montan_setup = RaidmontanStations::where('category_id', $id)->get();
+                $raid_montan_setup = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $id)->get();
                 if($raid_montan_setup->isEmpty()){
                     $raid_montan_setup = [];
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.raidmontan_edit', ['raid_montan_setup' => $raid_montan_setup, 'category' => $category])->render()
+                        'view_content' => view('setup.raidmontan_edit', ['raid_montan_setup' => $raid_montan_setup, 'category' => $category, 'stageid' => $stageid])->render()
                     ] );
                 } else {
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('setup.raidmontan_update', ['raid_montan_setup' => $raid_montan_setup, 'category' => $category])->render()
+                        'view_content' => view('setup.raidmontan_update', ['raid_montan_setup' => $raid_montan_setup, 'category' => $category, 'stageid' => $stageid])->render()
                     ] );
                 }
             }
@@ -390,27 +490,24 @@ class SetupController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('setup.index', $category->id)->with($notification);
+            return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
         }
     }
 
 
-    public function raid_montan_setup_update($id, Request $request)
-
+    public function raid_montan_setup_update($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
             $category = Category::FindOrFail($id);
-
                 if($category == null ) {
                     $notification = array(
                         'success_title' => 'Eroare!!',
                         'message' => 'Categoria nu exista in baza de date!',
                         'alert-type' => 'error'
                     );
-                    return redirect()->route('setup.index', $category->id)->with($notification);
+                    return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
                 } else {
-
                     $rules = [
                         'stations_pa' => 'required|array|min:1|max:30',
                         'stations_pa.*' => 'required|numeric|max:1000|min:1',
@@ -438,6 +535,13 @@ class SetupController extends Controller
                     $data = $request->only(['stations_start', 'stations_pa', 'stations_pfa', 'stations_finish', 'missed_posts', 'abandon', 'created_at', 'updated_at', 'team_id']);
                     $validator = Validator::make($data, $rules);
 
+                    $stage = Stages::where('id', $stageid)->first();
+                    if($stage == null){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                        });
+                    }
+
                     foreach($stations_pa as $stationpa){
                         if(is_numeric($stationpa) == false){
                             $validator->after(function ($validator) {
@@ -456,13 +560,12 @@ class SetupController extends Controller
 
                     if($validator->passes())
                     {
-
-
                             $raidmontan_stations_start = [];
                             $raidmontan_stations_pa = [];
                             $raidmontan_stations_pfa = [];
                             $raidmontan_stations_finish = [];
 
+                            $raidmontan_stations_start['stage_id'] = $stageid;
                             $raidmontan_stations_start['category_id'] = $category->id;
                             $raidmontan_stations_start['station_type'] = 0;
                             $raidmontan_stations_start['maximum_time'] = null;
@@ -471,6 +574,7 @@ class SetupController extends Controller
                             $raidmontan_stations_start['updated_at'] = $data['updated_at'];
 
                             foreach($stations_pa as $key => $pa){
+                                $raidmontan_stations_pa[$key]['stage_id'] = $stageid;
                                 $raidmontan_stations_pa[$key]['category_id'] = $category->id;
                                 $raidmontan_stations_pa[$key]['station_type'] = 1;
                                 $raidmontan_stations_pa[$key]['maximum_time'] = $pa;
@@ -480,6 +584,7 @@ class SetupController extends Controller
                             }
 
                             foreach($stations_pfa as $key => $pfa){
+                                $raidmontan_stations_pfa[$key]['stage_id'] = $stageid;
                                 $raidmontan_stations_pfa[$key]['category_id'] = $category->id;
                                 $raidmontan_stations_pfa[$key]['station_type'] = 2;
                                 $raidmontan_stations_pfa[$key]['maximum_time'] = null;
@@ -488,6 +593,7 @@ class SetupController extends Controller
                                 $raidmontan_stations_pfa[$key]['updated_at'] = $data['updated_at'];
                             }
 
+                            $raidmontan_stations_finish['stage_id'] = $stageid;
                             $raidmontan_stations_finish['category_id'] = $category->id;
                             $raidmontan_stations_finish['station_type'] = 3;
                             $raidmontan_stations_finish['maximum_time'] = $data['stations_finish'];
@@ -499,16 +605,16 @@ class SetupController extends Controller
                             // dd($raidmontan_stations_pa);
                             // dd($raidmontan_stations_pfa);
                             // dd($raidmontan_stations_finish);
-                            $count_raidmontan_stations_pa = RaidmontanStations::where('category_id', $category->id)->where('station_type', 1)->count();
-                            $count_raidmontan_stations_pfa = RaidmontanStations::where('category_id', $category->id)->where('station_type', 2)->count();
+                            $count_raidmontan_stations_pa = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 1)->count();
+                            $count_raidmontan_stations_pfa = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 2)->count();
                             
                             if(count($raidmontan_stations_pa) == $count_raidmontan_stations_pa && $count_raidmontan_stations_pfa == count($raidmontan_stations_pfa)){
                                 
-                                $raidmontan_start = RaidmontanStations::where('category_id', $category->id)->where('station_type', 0)->first();
-                                $raidmontan_finish = RaidmontanStations::where('category_id', $category->id)->where('station_type', 3)->first();
+                                $raidmontan_start = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 0)->first();
+                                $raidmontan_finish = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 3)->first();
 
-                                $raidmontan_pa = RaidmontanStations::where('category_id', $category->id)->where('station_type', 1)->get();
-                                $raidmontan_pfa = RaidmontanStations::where('category_id', $category->id)->where('station_type', 2)->get();
+                                $raidmontan_pa = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 1)->get();
+                                $raidmontan_pfa = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->where('station_type', 2)->get();
 
                                 $raidmontan_start->update($raidmontan_stations_start);
 
@@ -524,11 +630,11 @@ class SetupController extends Controller
 
                                 $raidmontan_finish->update($raidmontan_stations_finish);      
                             } else {
-                            RaidmontanStationsStages::where('category_id', $id)->delete();
-                            RaidmontanStations::where('category_id', $category->id)->delete();
+                            RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $id)->delete();
+                            RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->delete();
 
                             // clean up Raid Montan teams records
-                            $team = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category->id)->get();
+                            $team = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
                             foreach($team as $value){
                                 
                                 if($value->raidmontan_participations !== null){
@@ -551,11 +657,11 @@ class SetupController extends Controller
                             }
 
 
-                            $ajax_redirect_url = route('setup.index', $category->id);
+                            $ajax_redirect_url = route('setup.index', [$stageid, $category->id]);
                             $ajax_message_response = "Datele au fost adaugate.";
                             $ajax_title_response = "Felicitări!";
                             $ajax_status_response = "success";
-                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                     } else {
                         return Response::json(['errors' => $validator->errors()]);
                     }
@@ -571,10 +677,21 @@ class SetupController extends Controller
     }
 
 
-    public function raid_montan_setup_stages($id, Request $request)
+    public function raid_montan_setup_stages($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $category = Category::FindOrFail($id);
             if($category == null) {
                 $notification = array(
@@ -582,29 +699,29 @@ class SetupController extends Controller
                     'message' => 'Categoria sau Echipa nu exista in baza de date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('setup.index', $category->id)->with($notification);
+                return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
             } else {
-
-                $setup_raid_montan = RaidmontanStations::where('category_id', $category->id)->get();
+                
+                $setup_raid_montan = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 if($setup_raid_montan->isEmpty()){
                     $ajax_message_response = "Nu puteti configura statiile pana cand nu configurati traseul de Raid Montan cu timpii!";
                     $ajax_title_response = "Eroare!";
                     $ajax_status_response = "error";
-                    return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                    return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                 } else  {
-                    $raid_montan_setup_stages = RaidmontanStationsStages::where('category_id', $id)->get();
-                    $raid_montan_setup = RaidmontanStations::where('category_id', $id)->where('station_type', 1)->get();
+                    $raid_montan_setup_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $id)->get();
+                    $raid_montan_setup = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $id)->where('station_type', 1)->get();
                     if($raid_montan_setup_stages->isEmpty() == true){
                         $ajax_status_response = "success";
                         return response()->json( [
                             'ajax_status_response' => $ajax_status_response,
-                            'view_content' => view('setup.raidmontan_stages', ['raid_montan_setup' => $raid_montan_setup, 'raid_montan_setup_stages' => $raid_montan_setup_stages, 'category' => $category])->render()
+                            'view_content' => view('setup.raidmontan_stages', ['raid_montan_setup' => $raid_montan_setup, 'raid_montan_setup_stages' => $raid_montan_setup_stages, 'category' => $category, 'stageid' => $stageid])->render()
                         ] );
                     } else {
                         $ajax_status_response = "success";
                         return response()->json( [
                             'ajax_status_response' => $ajax_status_response,
-                            'view_content' => view('setup.raidmontan_stages_update', ['raid_montan_setup' => $raid_montan_setup, 'raid_montan_setup_stages' => $raid_montan_setup_stages, 'category' => $category])->render()
+                            'view_content' => view('setup.raidmontan_stages_update', ['raid_montan_setup' => $raid_montan_setup, 'raid_montan_setup_stages' => $raid_montan_setup_stages, 'category' => $category, 'stageid' => $stageid])->render()
                         ] );
                     }
                 }
@@ -616,34 +733,42 @@ class SetupController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('setup.index', $category->id)->with($notification);
+            return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
         }
     }
 
-
-    public function raid_montan_setup_stages_update($id, Request $request)
+    public function raid_montan_setup_stages_update($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
             $category = Category::FindOrFail($id);
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             if($category == null) {
                 $notification = array(
                     'success_title' => 'Eroare!!',
                     'message' => 'Categoria sau Echipa nu exista in baza de date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('setup.index', $category->id)->with($notification);
+                return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
             } else {
 
-                $setup_raid_montan = RaidmontanStations::where('category_id', $category->id)->get();
+                $setup_raid_montan = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 if($setup_raid_montan->isEmpty()){
                     $ajax_message_response = "Nu puteti configura statiile pana cand nu configurati traseul de Raid Montan cu timpii!";
                     $ajax_title_response = "Eroare!";
                     $ajax_status_response = "error";
-                    return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                    return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stage_id' => $stageid], 200);
                 } else  {
-
-
                     $rules = [
                         'time' => 'required|array|min:1|max:30',
                         'time.*' => 'required|max:255|min:1',
@@ -702,9 +827,9 @@ class SetupController extends Controller
 
                         $stations = [];
                         $number = 0;
-
-
+                    
                         foreach($data['time'] as $key => $time) {
+                            $stations[$key]['stage_id'] = $stageid; 
                             $stations[$key]['category_id'] = $category->id;
                             $stations[$key]['post'] = $post[$key];
                             $stations[$key]['time'] = $time;
@@ -712,28 +837,30 @@ class SetupController extends Controller
                             $stations[$key]['updated_at'] = $data['updated_at'];
                         }
 
+                        $stations_start['stage_id'] = $stageid;
                         $stations_start['category_id'] = $category->id;
                         $stations_start['post'] = 251;
                         $stations_start['time'] = null;
                         $stations_start['created_at'] = $data['created_at'];
                         $stations_start['updated_at'] = $data['updated_at'];
 
+                        $stations_finish['stage_id'] = $stageid;
                         $stations_finish['category_id'] = $category->id;
                         $stations_finish['post'] = 252;
                         $stations_finish['time'] = null;
                         $stations_finish['created_at'] = $data['created_at'];
                         $stations_finish['updated_at'] = $data['updated_at'];
 
-                        RaidmontanStationsStages::where('category_id', $id)->delete();
+                        RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $id)->delete();
                         RaidmontanStationsStages::insert($stations_start);
                         RaidmontanStationsStages::insert($stations);
                         RaidmontanStationsStages::insert($stations_finish);
 
-                        $ajax_redirect_url = route('setup.index', $category->id);
+                        $ajax_redirect_url = route('setup.index', [$stageid, $category->id]);
                         $ajax_message_response = "Datele au fost adaugate.";
                         $ajax_title_response = "Felicitări!";
                         $ajax_status_response = "success";
-                        return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                        return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                     } else {
                         return Response::json(['errors' => $validator->errors()]);
                     }
@@ -747,16 +874,24 @@ class SetupController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('setup.index', $category->id)->with($notification);
+            return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
         }
     }
 
-
-
-    public function orienteering_setup_stages($id, Request $request)
+    public function orienteering_setup_stages($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $category = Category::FindOrFail($id);
             if($category == null) {
                 $notification = array(
@@ -764,21 +899,21 @@ class SetupController extends Controller
                     'message' => 'Categoria sau Echipa nu exista in baza de date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('setup.index', $category->id)->with($notification);
+                return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
             } else {
 
-                    $orienteering_setup_stages = OrienteeringStationsStages::where('category_id', $id)->get();
+                    $orienteering_setup_stages = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $id)->get();
                     if($orienteering_setup_stages->isEmpty() == true){
                         $ajax_status_response = "success";
                         return response()->json( [
                             'ajax_status_response' => $ajax_status_response,
-                            'view_content' => view('setup.orienteering_stages', ['orienteering_setup_stages' => $orienteering_setup_stages, 'category' => $category])->render()
+                            'view_content' => view('setup.orienteering_stages', ['orienteering_setup_stages' => $orienteering_setup_stages, 'category' => $category, 'stageid' => $stageid])->render()
                         ] );
                     } else {
                         $ajax_status_response = "success";
                         return response()->json( [
                             'ajax_status_response' => $ajax_status_response,
-                            'view_content' => view('setup.orienteering_stages_update', ['orienteering_setup_stages' => $orienteering_setup_stages, 'category' => $category])->render()
+                            'view_content' => view('setup.orienteering_stages_update', ['orienteering_setup_stages' => $orienteering_setup_stages, 'category' => $category, 'stageid' => $stageid])->render()
                         ] );
                     }
             }
@@ -789,24 +924,24 @@ class SetupController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('setup.index', $category->id)->with($notification);
+            return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
         }
     }
 
-    public function orienteering_setup_stages_update($id, Request $request)
-
+    public function orienteering_setup_stages_update($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
-            $category = Category::FindOrFail($id);
 
+            $stage = Stages::where('id', $stageid)->first();
+            $category = Category::FindOrFail($id);
                 if($category == null ) {
                     $notification = array(
                         'success_title' => 'Eroare!!',
                         'message' => 'Categoria nu exista in baza de date!',
                         'alert-type' => 'error'
                     );
-                    return redirect()->route('setup.index', $category->id)->with($notification);
+                    return redirect()->route('setup.index', [$stage->id, $category->id])->with($notification);
                 } else {
 
                     $rules = [
@@ -825,6 +960,12 @@ class SetupController extends Controller
 
                     $data = $request->only(['post', 'created_at', 'updated_at']);
                     $validator = Validator::make($data, $rules);
+
+                    if($stage == null){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                        });
+                    }
 
                     if(count($post) == 0){
                         $validator->after(function ($validator) {
@@ -845,20 +986,21 @@ class SetupController extends Controller
 
                         $stages_array = [];
                         foreach($post as $key => $stage){
+                            $stages_array[$key]['stage_id'] =  $stageid;
                             $stages_array[$key]['category_id'] =  $category->id;
                             $stages_array[$key]['post'] =  $stage;
                             $stages_array[$key]['created_at'] =  $data['created_at'];
                             $stages_array[$key]['updated_at'] =  $data['updated_at'];
                         }
 
-                        OrienteeringStationsStages::where('category_id', $id)->delete();
+                        OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $id)->delete();
                         OrienteeringStationsStages::insert($stages_array);
 
-                            $ajax_redirect_url = route('setup.index', $category->id);
+                            $ajax_redirect_url = route('setup.index', [$stageid, $category->id]);
                             $ajax_message_response = "Datele au fost adaugate.";
                             $ajax_title_response = "Felicitări!";
                             $ajax_status_response = "success";
-                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                     } else {
                         return Response::json(['errors' => $validator->errors()]);
                     }
@@ -873,11 +1015,19 @@ class SetupController extends Controller
         }
     }
 
-
-    public function destroy(Request $request)
+    public function destroy($stageid, Request $request)
     {
         if( $request->ajax() )
         {
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
 
             if($request->input('delete_clubs') == "true"){
                 $data['delete_clubs'] = true;
@@ -951,50 +1101,52 @@ class SetupController extends Controller
             {
 
                 if($data['delete_clubs'] == true){
-                    Club::query()->truncate();
-                    Team::query()->truncate();
-                    RaidmontanParticipations::query()->truncate();
-                    RaidmontanParticipationsEntries::query()->truncate();
-                    Orienteering::query()->truncate();
-                    Knowledge::query()->truncate();
-                    Cultural::query()->truncate();
+                    Team::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipations::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
+                    Orienteering::where('stage_id', $stageid)->delete();
+                    Knowledge::where('stage_id', $stageid)->delete();
+                    Cultural::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_teams'] == true){
-                    Team::query()->truncate();
-                    RaidmontanParticipations::query()->truncate();
-                    RaidmontanParticipationsEntries::query()->truncate();
-                    Orienteering::query()->truncate();
-                    Knowledge::query()->truncate();
+                    Team::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipations::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
+                    Orienteering::where('stage_id', $stageid)->delete();
+                    Knowledge::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_config_raid_montan'] == true){
-                    RaidmontanStations::query()->truncate();
-                    RaidmontanStationsStages::query()->truncate();
-                    RaidmontanParticipations::query()->truncate();
-                    RaidmontanParticipationsEntries::query()->truncate();
+                    RaidmontanStations::where('stage_id', $stageid)->delete();
+                    RaidmontanStationsStages::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipations::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_config_orienteering'] == true){
-                    OrienteeringStationsStages::query()->truncate();
+                    OrienteeringStationsStages::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_rezults_raid_montan'] == true){
-                    RaidmontanParticipations::query()->truncate();
-                    RaidmontanParticipationsEntries::query()->truncate();
+                    RaidmontanParticipations::where('stage_id', $stageid)->delete();
+                    RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_rezults_orienteering'] == true){
-                    Orienteering::query()->truncate();
+                    Orienteering::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_rezults_knowledge'] == true){
-                    Knowledge::query()->truncate();
+                    Knowledge::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_rezults_cultural'] == true){
-                    Cultural::query()->truncate();
+                    Cultural::where('stage_id', $stageid)->delete();
                 }
+
+                ClubsStageRankings::where('stage_id', $stageid)->delete();
+                ParticipantsStageRankings::where('stage_id', $stageid)->delete();
 
                 $ajax_message_response = "Datele au fost sterse.";
                 $ajax_title_response = "Felicitări!";
@@ -1016,17 +1168,26 @@ class SetupController extends Controller
         }
     }
 
-    public function demo_data_1()
+    public function demo_data_1($stageid)
     {
-        Club::query()->truncate();
-        Team::query()->truncate();
-        RaidmontanParticipations::query()->truncate();
-        RaidmontanParticipationsEntries::query()->truncate();
-        Orienteering::query()->truncate();
-        Knowledge::query()->truncate();
-        Cultural::query()->truncate();
-        RaidmontanStations::query()->truncate();
-        RaidmontanStationsStages::query()->truncate();
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+        Club::where('stage_id', $stageid)->delete();
+        Team::where('stage_id', $stageid)->delete();
+        RaidmontanParticipations::where('stage_id', $stageid)->delete();
+        RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
+        Orienteering::where('stage_id', $stageid)->delete();
+        Knowledge::where('stage_id', $stageid)->delete();
+        Cultural::where('stage_id', $stageid)->delete();
+        RaidmontanStations::where('stage_id', $stageid)->delete();
+        RaidmontanStationsStages::where('stage_id', $stageid)->delete();
         DB::unprepared(file_get_contents('db_demo/demo_stafeta_100_echipe_31_cluburi.sql'));
         $notification = array(
             'success_title' => 'Success!!',
@@ -1036,17 +1197,26 @@ class SetupController extends Controller
         return redirect()->route('dashboard')->with($notification);
     }
 
-    public function demo_data_2()
+    public function demo_data_2($stageid)
     {
-        Club::query()->truncate();
-        Team::query()->truncate();
-        RaidmontanParticipations::query()->truncate();
-        RaidmontanParticipationsEntries::query()->truncate();
-        Orienteering::query()->truncate();
-        Knowledge::query()->truncate();
-        Cultural::query()->truncate();
-        RaidmontanStations::query()->truncate();
-        RaidmontanStationsStages::query()->truncate();
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+        Club::where('stage_id', $stageid)->delete();
+        Team::where('stage_id', $stageid)->delete();
+        RaidmontanParticipations::where('stage_id', $stageid)->delete();
+        RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
+        Orienteering::where('stage_id', $stageid)->delete();
+        Knowledge::where('stage_id', $stageid)->delete();
+        Cultural::where('stage_id', $stageid)->delete();
+        RaidmontanStations::where('stage_id', $stageid)->delete();
+        RaidmontanStationsStages::where('stage_id', $stageid)->delete();
         DB::unprepared(file_get_contents('db_demo/demo_stafeta_90_echipe_24_cluburi.sql'));
         $notification = array(
             'success_title' => 'Success!!',
@@ -1056,13 +1226,23 @@ class SetupController extends Controller
         return redirect()->route('dashboard')->with($notification);
     }
 
-    public function convert_raid_to_ultra()
+    public function convert_raid_to_ultra($stageid)
     {
-        $teams = Team::with('uuid_raid')->with('raidmontan_participations')->with('raidmontan_participations_entries')->get();
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $teams = Team::where('stage_id', $stageid)->with('uuid_raid')->with('raidmontan_participations')->with('raidmontan_participations_entries')->get();
 
         foreach($teams as $key => $team){
 
-            $raidmontan_stations_stages = RaidmontanStationsStages::where('category_id', $team->category_id)->whereNotIn('post', [251,252])->get();
+            $raidmontan_stations_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $team->category_id)->whereNotIn('post', [251,252])->get();
             $stage_result = [];
             foreach($raidmontan_stations_stages as $stage){
                 $stage_result[] = $stage->post;
@@ -1101,13 +1281,23 @@ class SetupController extends Controller
 
     }
 
-
-    public function convert_orienteering_to_ultra()
+    public function convert_orienteering_to_ultra($stageid)
     {
-        $teams = Team::with('uuid_orienteering')->with('orienteering')->get();
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $teams = Team::where('stage_id', $stageid)->with('uuid_orienteering')->with('orienteering')->get();
 
         foreach($teams as $key => $team){
-            $orienteering_stations_stages = OrienteeringStationsStages::where('category_id', $team->category_id)->whereNotIn('post', [251,252])->get();
+            $orienteering_stations_stages = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $team->category_id)->whereNotIn('post', [251,252])->get();
             $stage_result = [];
             foreach($orienteering_stations_stages as $stage){
                 $stage_result[] = $stage->post;
@@ -1144,6 +1334,5 @@ class SetupController extends Controller
         }
 
     }
-
 
 }

@@ -13,11 +13,11 @@
                         <div class="card">
                             <div class="card-content">
                                 <div class="card-body">
-                                    <button class="btn btn-outline-primary waves-effect waves-light js--teams-create" data-toggle="modal"  data-target="#ClubsCreate"><span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-25"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adauga o echipa noua</span></button>
-                                    <a href="{{ route('teams.order.start') }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='list'></i> Ordine Start Echipe</a>
-                                    <a href="{{ route('import.index') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='upload'></i> Import file</a>
-                                    <a href="{{ route('uuids.index') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='clock'></i> Lista Ceasuri</a>
-                                    <a href="{{ route('teams.listbyteams_pdf') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
+                                    <button class="btn btn-outline-primary waves-effect waves-light js--teams-create" data-stageid="{{ $stageid }}" data-toggle="modal"  data-target="#ClubsCreate"><span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-25"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adauga o echipa noua</span></button>
+                                    <a href="{{ route('teams.order.start', [$stageid]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='list'></i> Ordine Start Echipe</a>
+                                    <a href="{{ route('import.index', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='upload'></i> Import file</a>
+                                    <a href="{{ route('uuids.index', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='clock'></i> Lista Ceasuri</a>
+                                    <a href="{{ route('teams.listbyteams_pdf', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
                                 </div>
                             </div>
                         </div>
@@ -60,11 +60,11 @@
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                                                     </button>
                                                     <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item js--teams-edit" href="#" data-id="{{ $team->id }}" data-toggle="modal"  data-target="#TeamsEdit">
+                                                        <a class="dropdown-item js--teams-edit" href="#" data-stageid="{{ $stageid }}" data-id="{{ $team->id }}" data-toggle="modal"  data-target="#TeamsEdit">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2 me-50"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                                                             <span>Edit</span>
                                                         </a>
-                                                        <a class="dropdown-item js--teams-destroy" href="#" data-id="{{ $team->id }}" data-toggle="modal"  data-target="#TeamsDestroy">
+                                                        <a class="dropdown-item js--teams-destroy" href="#" data-stageid="{{ $stageid }}" data-id="{{ $team->id }}" data-toggle="modal"  data-target="#TeamsDestroy">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash me-50"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                             <span>Delete</span>
                                                         </a>

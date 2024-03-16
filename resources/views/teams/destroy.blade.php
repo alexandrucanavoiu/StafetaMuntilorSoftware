@@ -13,7 +13,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-white type="reset" data-bs-dismiss="modal" aria-label="Close">Anuleaza</button>
-                <button type="button" class="btn btn-danger js--teams-destroy-confirm" data-id="{{ $team->id }}">Confirma</button>
+                <button type="button" class="btn btn-danger js--teams-destroy-confirm" data-stageid="{{ $stageid }}" data-id="{{ $team->id }}">Confirma</button>
             </div>
         </div>
     </div>

@@ -18,9 +18,6 @@ class OrganizerStage extends Model
 
     protected $fillable = [
         'id',
-        'name_stage',
-        'name_organizer',
-        'stage_number',
         'software'
     ];
 

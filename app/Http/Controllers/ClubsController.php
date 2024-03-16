@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Team;
 use App\Models\Cultural;
 use PDF;
+use App\Models\Stages;
 
 class ClubsController extends Controller
 {
@@ -26,24 +27,45 @@ class ClubsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($stageid)
     {
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }        
+
         $number = 1;
         $clubs = Club::OrderBy('id', 'ASC')->get();
-        return view('clubs.index',compact('clubs', 'number'));
+        return view('clubs.index',compact('clubs', 'number', 'stageid'));
     }
 
-    public function create(Request $request)
+    public function create($stageid, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
 
             $current_date = \Carbon\Carbon::now();
 
                 $ajax_status_response = "success";
                 return response()->json( [
                     'ajax_status_response' => $ajax_status_response,
-                    'view_content' => view('clubs.create')->render()
+                    'view_content' => view('clubs.create', compact('stageid'))->render()
                 ] );
 
 
@@ -57,7 +79,7 @@ class ClubsController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store($stageid, Request $request)
     {
         if( $request->ajax() )
         {
@@ -78,6 +100,13 @@ class ClubsController extends Controller
 
             $data = $request->only(['clubs', 'created_at', 'updated_at']);
             $validator = Validator::make($data, $rules);
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $validator->after(function ($validator) {
+                    $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                });
+            }
 
             if($request->input('clubs') == null){
                 $validator->after(function ($validator) {
@@ -113,11 +142,11 @@ class ClubsController extends Controller
                     }
                 }
 
-                $ajax_redirect_url = route('clubs.index');
+                $ajax_redirect_url = route('clubs.index', [$stageid]);
                 $ajax_message_response = "Datele au fost salvate.";
                 $ajax_title_response = "Felicitări!";
                 $ajax_status_response = "success";
-                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
 
             } else {
                 return Response::json(['errors' => $validator->errors()]);
@@ -133,21 +162,32 @@ class ClubsController extends Controller
     }
 
 
-    public function edit($id, Request $request)
+    public function edit($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $club = Club::FindOrFail($id);
             if($club == null) {
                 $ajax_message_response = "Eroare la validarea datelor!";
                 $ajax_title_response = "Eroare!";
                 $ajax_status_response = "error";
-                return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
             } else {
                 $ajax_status_response = "success";
                 return response()->json( [
                     'ajax_status_response' => $ajax_status_response,
-                    'view_content' => view('clubs.edit', ['club' => $club])->render()
+                    'view_content' => view('clubs.edit', ['club' => $club, 'stageid' => $stageid])->render()
                 ] );
             }
 
@@ -162,7 +202,7 @@ class ClubsController extends Controller
     }
 
 
-    public function update($id, Request $request)
+    public function update($stageid, $id, Request $request)
 
     {
         if( $request->ajax() )
@@ -175,17 +215,23 @@ class ClubsController extends Controller
                         'message' => 'Ilegal operation. The administrator was notified.',
                         'alert-type' => 'error'
                     );
-                    return redirect()->route('clubs.index')->with($notification);
+                    return redirect()->route('clubs.index', [$stageid])->with($notification);
                 } else {
 
                     $rules = [
                         'name' => 'required|max:255|min:2',
                     ];
 
-
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
                     $data = $request->only(['name', 'updated_at']);
                     $validator = Validator::make($data, $rules);
+
+                    $stage = Stages::where('id', $stageid)->first();
+                    if($stage == null){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                        });
+                    }
 
                     if($validator->passes())
                     {
@@ -194,26 +240,26 @@ class ClubsController extends Controller
 
                         if($data['name'] === $club->name){
                             Club::findOrFail($id)->update($data);
-                            $ajax_redirect_url = route('clubs.index');
+                            $ajax_redirect_url = route('clubs.index', [$stageid]);
                             $ajax_message_response = "Datele au fost salvate.";
                             $ajax_title_response = "Felicitări!";
                             $ajax_status_response = "success";
-                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url,'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url,'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                         } else {
                             $find_club = Club::where('name', $data['name'])->first();
                             if($find_club !== null){
-                                $ajax_redirect_url = route('clubs.index');
+                                $ajax_redirect_url = route('clubs.index', [$stageid]);
                                 $ajax_message_response = "Datele nu pot fi salvate, clubul " . $data['name'] . " exista in baza de date.";
                                 $ajax_title_response = "Eroare!";
                                 $ajax_status_response = "danger";
-                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                             } else {
                                 Club::findOrFail($id)->update($data);
-                                $ajax_redirect_url = route('clubs.index');
+                                $ajax_redirect_url = route('clubs.index', [$stageid]);
                                 $ajax_message_response = "Datele au fost salvate.";
                                 $ajax_title_response = "Felicitări!";
                                 $ajax_status_response = "success";
-                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url,'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                                return response()->json(['ajax_redirect_url' => $ajax_redirect_url,'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                             }
                         }
                 
@@ -231,10 +277,21 @@ class ClubsController extends Controller
         }
     }
 
-    public function destroy($id, Request $request)
+    public function destroy($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
             $club = Club::FindOrFail($id);
 
             if ($club == null) {
@@ -243,12 +300,12 @@ class ClubsController extends Controller
                     'message' => 'Eroare la validarea datelor.',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('clubs.index')->with($notification);
+                return redirect()->route('clubs.index', [$stageid])->with($notification);
             } else {
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('clubs.destroy', compact('club'))->render()
+                        'view_content' => view('clubs.destroy', compact('club', 'stageid'))->render()
                     ] );
             }
         }  else {
@@ -261,11 +318,21 @@ class ClubsController extends Controller
         }
     }
 
-    public function destroy_confirm($id, Request $request)
+    public function destroy_confirm($stageid, $id, Request $request)
     {
         if( $request->ajax() )
         {
             $club = Club::FindOrFail($id);
+
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
 
             if ($club == null) {
                 $notification = array(
@@ -273,7 +340,7 @@ class ClubsController extends Controller
                     'message' => 'Eroare la validarea datelor.',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('clubs.index')->with($notification);
+                return redirect()->route('clubs.index', [$stageid])->with($notification);
             } else {
 
                     $teams = Team::where('club_id', $club->id)->get()->count();
@@ -281,15 +348,15 @@ class ClubsController extends Controller
                         $ajax_message_response = "Clubul nu poate fi sters, exista echipe asociate acestui club. Stergeti mai intai echipele!";
                         $ajax_title_response = "Eroare!";
                         $ajax_status_response = "error";
-                        return response()->json(['ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response]);   
+                        return response()->json(['ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response, 'stageid' => $stageid]);   
                     } else {
-                        Cultural::where('club_id', $club->id)->delete();
+                        Cultural::where('stage_id', $stageid)->where('club_id', $club->id)->delete();
                         $club->delete();
-                        $ajax_redirect_url = route('clubs.index');
+                        $ajax_redirect_url = route('clubs.index', [$stageid]);
                         $ajax_message_response = "Clubul a fost sters!";
                         $ajax_title_response = "Felicitări!";
                         $ajax_status_response = "success";
-                        return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response]);   
+                        return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'ajax_status_response' => $ajax_status_response, 'stageid' => $stageid]);   
                     }
             }
         }  else {
@@ -303,7 +370,7 @@ class ClubsController extends Controller
     }
 
 
-    public function clubs_listbyteams()
+    public function clubs_listbyteams($stageid)
     {
         $clubs = Club::with('teams')->get();
         $categories = Category::get();
@@ -320,7 +387,7 @@ class ClubsController extends Controller
             } else {
                 foreach($club->teams as $team){
                     foreach($categories as $category){
-                        $count_teams = Team::where('club_id', $club->id)->where('category_id', $category->id)->get()->count();
+                        $count_teams = Team::where('stage_id', $stageid)->where('club_id', $club->id)->where('category_id', $category->id)->get()->count();
                             $club_list[$key][$category->name] = $count_teams;
                     }
                 }
@@ -338,10 +405,10 @@ class ClubsController extends Controller
         // convert to array + reindex array key to be from 0 to ...
         $club_list  = array_values($club_list->toArray());
 
-        return view('clubs.listbyteams',compact('club_list', 'number'));
+        return view('clubs.listbyteams',compact('club_list', 'number', 'stageid'));
     }
 
-    public function clubs_listbyteams_pdf()
+    public function clubs_listbyteams_pdf($stageid)
     {
         $clubs = Club::with('teams')->get();
 
@@ -360,7 +427,7 @@ class ClubsController extends Controller
                 } else {
                     foreach($club->teams as $team){
                         foreach($categories as $category){
-                            $count_teams = Team::where('club_id', $club->id)->where('category_id', $category->id)->get()->count();
+                            $count_teams = Team::where('stage_id', $stageid)->where('club_id', $club->id)->where('category_id', $category->id)->get()->count();
                                 $club_list[$key][$category->name] = $count_teams;
                         }
                     }
@@ -379,7 +446,7 @@ class ClubsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $club_list  = array_values($club_list->toArray());
 
-            $pdf = PDF::loadView('clubs.listbyteams_pdf', ['club_list' => $club_list, 'number' => $number]);
+            $pdf = PDF::loadView('clubs.listbyteams_pdf', ['club_list' => $club_list, 'number' => $number, 'stageid' => $stageid]);
 
             $pdf->setPaper('A4', 'landscape');
             $listbyteams = 'listbyteams.pdf';
@@ -390,7 +457,7 @@ class ClubsController extends Controller
                 'alert-type' => 'warning'
             );
 
-            return redirect()->route('clubs.index')->with($notification);
+            return redirect()->route('clubs.index', [$stageid])->with($notification);
         }
 
     }

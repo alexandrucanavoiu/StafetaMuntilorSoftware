@@ -15,7 +15,10 @@ use App\Models\RaidmontanStations;
 use App\Models\OrienteeringStationsStages;
 use App\Models\Knowledge;
 use App\Models\RaidmontanParticipations;
+use App\Models\ClubsStageRankings;
 use PDF;
+use App\Models\Stages;
+use App\Models\ParticipantsStageRankings;
 
 class RankingsController extends Controller
 {
@@ -30,30 +33,62 @@ class RankingsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($stageid)
     {
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
         $categories = Category::get();
-            return view('rankings.index',compact('categories'));
+        return view('rankings.index',compact('categories', 'stageid'));
     }
 
-    public function index_category($category_id)
+    public function index_category($stageid, $category_id)
     {
-            $category = Category::FindOrFail($category_id);
-            return view('rankings.index_category',compact('category'));
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
+        $category = Category::FindOrFail($category_id);
+        return view('rankings.index_category',compact('category', 'stageid'));
     }
 
-    public function ranking_knowledge($category_id)
+    public function ranking_knowledge($stageid, $category_id)
     {
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
         // Create rank for knowledge
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('knowledge')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
             $teams_list = [];
             $teams_list_abandon = [];
@@ -66,21 +101,21 @@ class RankingsController extends Controller
                         $teams_list[$key]['wrong_answers'] = $team->knowledge->wrong_answers;
                         $teams_list[$key]['wrong_questions'] = $team->knowledge->wrong_questions;
                         $teams_list[$key]['time'] = $team->knowledge->time;
-                        $teams_list[$key]['scor'] = $team->knowledge->scor;
+                        // $teams_list[$key]['scor'] = 0;
                         $teams_list[$key]['abandon'] = $team->knowledge->abandon;
                     } elseif($team->knowledge->abandon == 1) {
                         $teams_list_abandon[$key]['name'] = $team->name;
                         $teams_list_abandon[$key]['wrong_answers'] = "0";
                         $teams_list_abandon[$key]['wrong_questions'] = "0";
                         $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_list_abandon[$key]['scor'] = 0;
+                        // $teams_list_abandon[$key]['scor'] = 0;
                         $teams_list_abandon[$key]['abandon'] = 1;
                     } else {
                         $teams_list_abandon[$key]['name'] = $team->name;
                         $teams_list_abandon[$key]['wrong_answers'] = "0";
                         $teams_list_abandon[$key]['wrong_questions'] = "0";
                         $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_list_abandon[$key]['scor'] = 0;
+                        // $teams_list_abandon[$key]['scor'] = 0;
                         $teams_list_abandon[$key]['abandon'] = 2;
                     }
                 }
@@ -88,11 +123,58 @@ class RankingsController extends Controller
 
                 $collection_knowledge = collect($teams_list);
                 $sorted_knowledge = $collection_knowledge->sortBy([
-                    ['scor', 'desc'],
+                    ['wrong_answers', 'asc'],
                     ['time', 'asc'],
                 ]);
 
-                $sorted_knowledge  = $sorted_knowledge->toArray();
+                // convert to array + reindex array key to be from 0 to ...
+                $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+
+                if(empty($sorted_knowledge)) {
+                    $notification = array(
+                        'success_title' => 'Eroare!!',
+                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+                }
+
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
+
+                foreach ($sorted_knowledge as $key => &$item) 
+                {
+                    // Calculate "scor" based on key
+                    if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                        $item['scor'] = $scor;
+                    } 
+                    else 
+                    {
+
+                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                            $item['scor'] = $scor;
+                        }
+                        else 
+                        {
+                            if($fifty_minus > 0  )
+                            {
+                                $scor = $scor - 50;
+                                $item['scor'] = $scor;
+                                $fifty_minus--;
+                            }
+                            else 
+                            {
+                                $scor = $scor - 30;
+                                $item['scor'] = $scor;
+                            }
+                        }
+                        
+                    }
+
+                    $last_score = $item;
+
+                }
 
                 $rankings = array();
                 $x = 1;
@@ -126,21 +208,21 @@ class RankingsController extends Controller
                 }
 
             
-            return view('rankings.knowledge',compact('rankings', 'teams_list_abandon', 'category'));
+            return view('rankings.knowledge',compact('rankings', 'teams_list_abandon', 'category', 'stageid'));
         }
     }
 
-    public function ranking_knowledge_pdf($category_id)
+    public function ranking_knowledge_pdf($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('knowledge')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
             $teams_list = [];
             $teams_list_abandon = [];
@@ -173,13 +255,60 @@ class RankingsController extends Controller
                 }
             }
 
-                $collection_knowledge = collect($teams_list);
-                $sorted_knowledge = $collection_knowledge->sortBy([
-                    ['scor', 'desc'],
-                    ['time', 'asc'],
-                ]);
+            $collection_knowledge = collect($teams_list);
+            $sorted_knowledge = $collection_knowledge->sortBy([
+                ['wrong_answers', 'asc'],
+                ['time', 'asc'],
+            ]);
 
-                $sorted_knowledge  = $sorted_knowledge->toArray();
+            // convert to array + reindex array key to be from 0 to ...
+            $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+
+            if(empty($sorted_knowledge)) {
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            }
+
+            $scor = 1500;
+            $best_score = $sorted_knowledge[0];
+            $fifty_minus = 2;
+
+            foreach ($sorted_knowledge as $key => &$item) 
+            {
+                // Calculate "scor" based on key
+                if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                    $item['scor'] = $scor;
+                } 
+                else 
+                {
+
+                    if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                        $item['scor'] = $scor;
+                    }
+                    else 
+                    {
+                        if($fifty_minus > 0  )
+                        {
+                            $scor = $scor - 50;
+                            $item['scor'] = $scor;
+                            $fifty_minus--;
+                        }
+                        else 
+                        {
+                            $scor = $scor - 30;
+                            $item['scor'] = $scor;
+                        }
+                    }
+                    
+                }
+
+                $last_score = $item;
+
+            }
 
                 $rankings = array();
                 $x = 1;
@@ -212,7 +341,7 @@ class RankingsController extends Controller
     
                 }
 
-                $pdf = PDF::loadView('rankings.knowledge_pdf', ['rankings' => $rankings, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category]);
+                $pdf = PDF::loadView('rankings.knowledge_pdf', ['rankings' => $rankings, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
                 $pdf->setPaper('A4', 'landscape');
                 // $pdf->setPaper('A4', 'portrait');
                 $listrankknowledge = 'rankings.knowledge_pdf';
@@ -221,17 +350,17 @@ class RankingsController extends Controller
     }
 
 
-    public function ranking_orienteering($category_id)
+    public function ranking_orienteering($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('orienteering')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('orienteering')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
 
             $teams_list = [];
@@ -338,7 +467,7 @@ class RankingsController extends Controller
                 }
 
             $rankings = $collection_orienteering;
-            $orienteering_stations_stage = OrienteeringStationsStages::where('category_id', $category->id)->get();
+            $orienteering_stations_stage = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
             $orienteering_stations_stage_result = "";
             foreach($orienteering_stations_stage as $station){
                     if($station->post == 251){
@@ -350,22 +479,22 @@ class RankingsController extends Controller
                     }
             }
 
-            return view('rankings.orienteering',compact('rankings', 'teams_list_disqualified', 'teams_list_abandon', 'category', 'orienteering_stations_stage_result'));
+            return view('rankings.orienteering',compact('rankings', 'teams_list_disqualified', 'teams_list_abandon', 'category', 'orienteering_stations_stage_result', 'stageid'));
         }
     }
 
 
-    public function ranking_orienteering_pdf($category_id)
+    public function ranking_orienteering_pdf($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('orienteering')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('orienteering')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
             
             //if you want to show the Order Posts in pdf.
@@ -486,7 +615,7 @@ class RankingsController extends Controller
 
             $rankings = $collection_orienteering;
 
-            $orienteering_stations_stage = OrienteeringStationsStages::where('category_id', $category->id)->get();
+            $orienteering_stations_stage = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
             $orienteering_stations_stage_result = "";
             foreach($orienteering_stations_stage as $station){
                     if($station->post == 251){
@@ -498,7 +627,7 @@ class RankingsController extends Controller
                     }
             }
 
-            $pdf = PDF::loadView('rankings.orienteering_pdf', ['ultra_orienteering' => $ultra_orienteering, 'rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'orienteering_stations_stage_result' => $orienteering_stations_stage_result]);
+            $pdf = PDF::loadView('rankings.orienteering_pdf', ['ultra_orienteering' => $ultra_orienteering, 'rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'orienteering_stations_stage_result' => $orienteering_stations_stage_result, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
             $listrankknowledge = 'rankings.knowledge_pdf';
             return $pdf->stream($listrankknowledge);
@@ -507,17 +636,17 @@ class RankingsController extends Controller
     }
 
 
-    public function ranking_raidmontan($category_id)
+    public function ranking_raidmontan($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
 
             // raidmontan score/penality 
@@ -561,7 +690,7 @@ class RankingsController extends Controller
 
                         $key_count = 0;
                         foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                            $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                            $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                             if($participation_entries->raidmontan_stations_station_type == 0){
                                 $teams_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                 $teams_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -734,22 +863,22 @@ class RankingsController extends Controller
     
             $rankings = $collection_raidmontan;
 
-            return view('rankings.raidmontan',compact('rankings', 'teams_list_disqualified', 'teams_list_abandon', 'category'));
+            return view('rankings.raidmontan',compact('rankings', 'teams_list_disqualified', 'teams_list_abandon', 'category', 'stageid'));
         }
     }
 
 
-    public function ranking_raidmontan_pdf($category_id)
+    public function ranking_raidmontan_pdf($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
         if($teams->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Nu exista echipe in baza de date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('rankings.index_category', $category_id)->with($notification);
+            return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
         } else {
 
             // raidmontan score/penality 
@@ -793,7 +922,7 @@ class RankingsController extends Controller
 
                         $key_count = 0;
                         foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                            $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                            $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                             if($participation_entries->raidmontan_stations_station_type == 0){
                                 $teams_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                 $teams_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -965,7 +1094,7 @@ class RankingsController extends Controller
     
             $rankings = $collection_raidmontan;
 
-            $pdf = PDF::loadView('rankings.raidmontan_pdf', ['rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category]);
+            $pdf = PDF::loadView('rankings.raidmontan_pdf', ['rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
             $raidmontan_pdf = 'rankings.raidmontan_pdf';
             return $pdf->stream($raidmontan_pdf);
@@ -974,47 +1103,145 @@ class RankingsController extends Controller
     }
 
 
-    public function ranking_category($category_id)
+    public function ranking_category($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->where('category_id', $category_id)->get();
     
         // rank for knowledge
-        $teams_knowledge = Team::with('knowledge')->where('category_id', $category_id)->get();
+        $teams_knowledge = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
         if($teams_knowledge->isEmpty()) { 
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Eroare validare date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         } else {
             $teams_knowledge_list = [];
             $teams_knowledge_list_abandon = [];
             foreach($teams_knowledge as $key => $team){
                 if($team->knowledge == null){
                     continue;
-                } else {
+                } else {     
                     if($team->knowledge->abandon == 0){
                         $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = $team->knowledge->scor;
+                        $teams_knowledge_list[$key]['scor'] = 0;
+                        $teams_knowledge_list[$key]['wrong_answers'] = $team->knowledge->wrong_answers;
+                        $teams_knowledge_list[$key]['wrong_questions'] = $team->knowledge->wrong_questions;
+                        $teams_knowledge_list[$key]['time'] = $team->knowledge->time;
                         $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
                     } elseif($team->knowledge->abandon == 1) {
-                        $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = 0;
-                        $teams_knowledge_list[$key]['abandon'] = 1;
+                        $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                        $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                        $teams_list_abandon[$key]['wrong_answers'] = "0";
+                        $teams_list_abandon[$key]['wrong_questions'] = "0";
+                        $teams_list_abandon[$key]['time'] = "00:00:00";
+                        $teams_knowledge_list_abandon[$key]['abandon'] = 1;
                     } else {
-                        $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = 0;
-                        $teams_knowledge_list[$key]['abandon'] = 2;
+                        $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                        $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                        $teams_list_abandon[$key]['wrong_answers'] = "0";
+                        $teams_list_abandon[$key]['wrong_questions'] = "0";
+                        $teams_list_abandon[$key]['time'] = "00:00:00";
+                        $teams_knowledge_list_abandon[$key]['abandon'] = 2;
                     }
                 }
             }
+
+            $collection_knowledge = collect($teams_knowledge_list);
+            $sorted_knowledge = $collection_knowledge->sortBy([
+                ['wrong_answers', 'asc'],
+                ['time', 'asc'],
+            ]);
+
+            // convert to array + reindex array key to be from 0 to ...
+            $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+
+            if(empty($sorted_knowledge)) {
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            }
+
+            $scor = 1500;
+            $best_score = $sorted_knowledge[0];
+            $fifty_minus = 2;
+
+            foreach ($sorted_knowledge as $key => &$item) 
+            {
+                // Calculate "scor" based on key
+                if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                    $item['scor'] = $scor;
+                } 
+                else 
+                {
+
+                    if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                        $item['scor'] = $scor;
+                    }
+                    else 
+                    {
+                        if($fifty_minus > 0  )
+                        {
+                            $scor = $scor - 50;
+                            $item['scor'] = $scor;
+                            $fifty_minus--;
+                        }
+                        else 
+                        {
+                            $scor = $scor - 30;
+                            $item['scor'] = $scor;
+                        }
+                    }
+                    
+                }
+
+                $last_score = $item;
+
+            }
+
+            $rankings = array();
+            $x = 1;
+            $unique_id = 0;
+
+            foreach($sorted_knowledge as $key => $team){
+                $decrease_rank = 0;
+                $rankings[$unique_id]['name'] = $team['name'];
+                $rankings[$unique_id]['wrong_answers'] = $team['wrong_answers'];
+                $rankings[$unique_id]['wrong_questions'] = $team['wrong_questions'];
+                $rankings[$unique_id]['time'] = $team['time'];
+                $rankings[$unique_id]['abandon'] = $team['abandon'];
+                $rankings[$unique_id]['scor'] = $team['scor'];
+                $rankings[$unique_id]['rank'] = $x;
+                    if(isset($sorted_knowledge[$key-1]))
+                    {
+                        if($team['time'] == $sorted_knowledge[$key-1]['time'])
+                        {
+                            $decrease_rank = 1;
+                            $rankings[$unique_id]['rank'] = $x-1;
+                        }
+                    }   
+    
+                if($decrease_rank == 0)
+                {
+                    $x++;
+                }
+    
+                $unique_id++;
+
+            }
+            
+            $teams_knowledge_list = $rankings;
+
         }
 
         // rank for orienteering
 
-        $teams_orienteering = Team::with('orienteering')->where('category_id', $category_id)->get();
+        $teams_orienteering = Team::where('stage_id', $stageid)->with('orienteering')->where('category_id', $category_id)->get();
         
         if($teams_orienteering->isEmpty()) {
             $notification = array(
@@ -1022,7 +1249,7 @@ class RankingsController extends Controller
                 'message' => 'Eroare validare date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         } else {
             $teams_orienteering_list = [];
             foreach($teams_orienteering as $key => $team){
@@ -1074,14 +1301,14 @@ class RankingsController extends Controller
 
             // rank for raid montan
 
-            $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
+            $teams_raidmontan = Team::where('stage_id', $stageid)->with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
             if($teams_raidmontan->isEmpty()) {
                 $notification = array(
                     'success_title' => 'Eroare!!',
                     'message' => 'Eroare validare date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('dashboard')->with($notification);
+                return redirect()->route('dashboard', $stageid)->with($notification);
             } else {
     
                 // raidmontan score/penality 
@@ -1125,7 +1352,7 @@ class RankingsController extends Controller
     
                             $key_count = 0;
                             foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                                $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                                $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                                 if($participation_entries->raidmontan_stations_station_type == 0){
                                     $teams_raidmontan_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                     $teams_raidmontan_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -1248,9 +1475,11 @@ class RankingsController extends Controller
 
             }
 
+
             $ranking_general = [];
             foreach($teams as $key1 => $team) {
 
+                $ranking_general[$team->id]['club_id'] = $team->club_id;
                 $ranking_general[$team->id]['team_id'] = $team->id;
                 $ranking_general[$team->id]['name'] = $team->name;
                 $ranking_general[$team->id]['scor_knowledge'] = 0;
@@ -1325,8 +1554,8 @@ class RankingsController extends Controller
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
                     // check if knowledge or orienteering is not abandon to give them 10 points.
-                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
-                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                    $knowledge_check_abandon = Knowledge::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
+                    $orienteering_check_abandon = Orienteering::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
 
                     if($knowledge_check_abandon == null ){
                         $notification = array(
@@ -1334,7 +1563,7 @@ class RankingsController extends Controller
                             'message' => 'Una sau mai multe echipe la Proba Cunostinte Trustice nu au datele completate.',
                             'alert-type' => 'error'
                         );
-                        return redirect()->route('dashboard')->with($notification);
+                        return redirect()->route('dashboard', $stageid)->with($notification);
                     }
 
                     if($orienteering_check_abandon == null ){
@@ -1343,7 +1572,7 @@ class RankingsController extends Controller
                             'message' => 'Una sau mai multe echipe la Proba Orientare nu au datele completate.',
                             'alert-type' => 'error'
                         );
-                        return redirect()->route('dashboard')->with($notification);
+                        return redirect()->route('dashboard', $stageid)->with($notification);
                     }
 
                     if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
@@ -1393,9 +1622,16 @@ class RankingsController extends Controller
             $x = 1;
             $unique_id = 0;
 
+
+            // delete from db
+            ParticipantsStageRankings::where('stage_id', $stageid)->where('category_id', $category_id)->delete();
+
             foreach($ranking_general as $key => $team){
                 // dd($team);
                 $decrease_rank = 0;
+                $ranking_general[$key]['stage_id'] = $stageid;
+                $ranking_general[$key]['category_id'] = $category_id;
+                $ranking_general[$key]['category_name'] = $category->name;
                 $ranking_general[$key]['rank'] = $x;
                     if(isset($ranking_general[$key-1]))
                     {
@@ -1412,53 +1648,155 @@ class RankingsController extends Controller
                 }
     
                 $unique_id++;
+
+                // insert in db for participants ranking
+                ParticipantsStageRankings::insert(['stage_id' => $stageid, 'club_id' => $ranking_general[$key]['club_id'], 'team_id' => $ranking_general[$key]['team_id'], 'category_id' => $category_id, 'category_name' => $category->name, 'scor' => $ranking_general[$key]['scor_total'], 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
             }
             
-            return view('rankings.general_category',compact('ranking_general', 'category'));
+            
+            
+            return view('rankings.general_category',compact('ranking_general', 'category', 'stageid'));
 
     }
 
-    public function ranking_category_pdf($category_id)
+    public function ranking_category_pdf($stageid, $category_id)
     {
         $category = Category::FindOrFail($category_id);
-        $teams = Team::where('category_id', $category_id)->get();
+        $teams = Team::where('stage_id', $stageid)->where('category_id', $category_id)->get();
     
         // rank for knowledge
-        $teams_knowledge = Team::with('knowledge')->where('category_id', $category_id)->get();
+        $teams_knowledge = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
         if($teams_knowledge->isEmpty()) {
             $notification = array(
                 'success_title' => 'Eroare!!',
                 'message' => 'Eroare validare date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         } else {
             $teams_knowledge_list = [];
             $teams_knowledge_list_abandon = [];
             foreach($teams_knowledge as $key => $team){
                 if($team->knowledge == null){
                     continue;
-                } else {
+                } else {     
                     if($team->knowledge->abandon == 0){
                         $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = $team->knowledge->scor;
+                        $teams_knowledge_list[$key]['scor'] = 0;
+                        $teams_knowledge_list[$key]['wrong_answers'] = $team->knowledge->wrong_answers;
+                        $teams_knowledge_list[$key]['wrong_questions'] = $team->knowledge->wrong_questions;
+                        $teams_knowledge_list[$key]['time'] = $team->knowledge->time;
                         $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
                     } elseif($team->knowledge->abandon == 1) {
-                        $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = 0;
-                        $teams_knowledge_list[$key]['abandon'] = 1;
+                        $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                        $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                        $teams_list_abandon[$key]['wrong_answers'] = "0";
+                        $teams_list_abandon[$key]['wrong_questions'] = "0";
+                        $teams_list_abandon[$key]['time'] = "00:00:00";
+                        $teams_knowledge_list_abandon[$key]['abandon'] = 1;
                     } else {
-                        $teams_knowledge_list[$key]['name'] = $team->name;
-                        $teams_knowledge_list[$key]['scor'] = 0;
-                        $teams_knowledge_list[$key]['abandon'] = 2;
+                        $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                        $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                        $teams_list_abandon[$key]['wrong_answers'] = "0";
+                        $teams_list_abandon[$key]['wrong_questions'] = "0";
+                        $teams_list_abandon[$key]['time'] = "00:00:00";
+                        $teams_knowledge_list_abandon[$key]['abandon'] = 2;
                     }
                 }
             }
+
+            $collection_knowledge = collect($teams_knowledge_list);
+            $sorted_knowledge = $collection_knowledge->sortBy([
+                ['wrong_answers', 'asc'],
+                ['time', 'asc'],
+            ]);
+
+            // convert to array + reindex array key to be from 0 to ...
+            $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+
+            if(empty($sorted_knowledge)) {
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            }
+
+            $scor = 1500;
+            $best_score = $sorted_knowledge[0];
+            $fifty_minus = 2;
+
+            foreach ($sorted_knowledge as $key => &$item) 
+            {
+                // Calculate "scor" based on key
+                if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                    $item['scor'] = $scor;
+                } 
+                else 
+                {
+
+                    if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                        $item['scor'] = $scor;
+                    }
+                    else 
+                    {
+                        if($fifty_minus > 0  )
+                        {
+                            $scor = $scor - 50;
+                            $item['scor'] = $scor;
+                            $fifty_minus--;
+                        }
+                        else 
+                        {
+                            $scor = $scor - 30;
+                            $item['scor'] = $scor;
+                        }
+                    }
+                    
+                }
+
+                $last_score = $item;
+
+            }
+
+            $rankings = array();
+            $x = 1;
+            $unique_id = 0;
+
+            foreach($sorted_knowledge as $key => $team){
+                $decrease_rank = 0;
+                $rankings[$unique_id]['name'] = $team['name'];
+                $rankings[$unique_id]['wrong_answers'] = $team['wrong_answers'];
+                $rankings[$unique_id]['wrong_questions'] = $team['wrong_questions'];
+                $rankings[$unique_id]['time'] = $team['time'];
+                $rankings[$unique_id]['abandon'] = $team['abandon'];
+                $rankings[$unique_id]['scor'] = $team['scor'];
+                $rankings[$unique_id]['rank'] = $x;
+                    if(isset($sorted_knowledge[$key-1]))
+                    {
+                        if($team['time'] == $sorted_knowledge[$key-1]['time'])
+                        {
+                            $decrease_rank = 1;
+                            $rankings[$unique_id]['rank'] = $x-1;
+                        }
+                    }   
+    
+                if($decrease_rank == 0)
+                {
+                    $x++;
+                }
+    
+                $unique_id++;
+
+            }
+            
+            $teams_knowledge_list = $rankings;
         }
 
         // rank for orienteering
 
-        $teams_orienteering = Team::with('orienteering')->where('category_id', $category_id)->get();
+        $teams_orienteering = Team::where('stage_id', $stageid)->with('orienteering')->where('category_id', $category_id)->get();
         
         if($teams_orienteering->isEmpty()) {
             $notification = array(
@@ -1466,7 +1804,7 @@ class RankingsController extends Controller
                 'message' => 'Eroare validare date!',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         } else {
             $teams_orienteering_list = [];
             foreach($teams_orienteering as $key => $team){
@@ -1483,7 +1821,6 @@ class RankingsController extends Controller
                     }
                 }
             }
-
 
                 $collection_orienteering = collect($teams_orienteering_list);
                 $collection_orienteering = $collection_orienteering->sortBy([
@@ -1515,17 +1852,15 @@ class RankingsController extends Controller
 
             $teams_orienteering_list = $collection_orienteering;
 
-
             // rank for raid montan
-
-            $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
+            $teams_raidmontan = Team::where('stage_id', $stageid)->with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category_id)->get();
             if($teams_raidmontan->isEmpty()) {
                 $notification = array(
                     'success_title' => 'Eroare!!',
                     'message' => 'Eroare validare date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('dashboard')->with($notification);
+                return redirect()->route('dashboard', $stageid)->with($notification);
             } else {
     
                 // raidmontan score/penality 
@@ -1569,7 +1904,7 @@ class RankingsController extends Controller
     
                             $key_count = 0;
                             foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                                $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                                $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                                 if($participation_entries->raidmontan_stations_station_type == 0){
                                     $teams_raidmontan_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                     $teams_raidmontan_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -1761,8 +2096,8 @@ class RankingsController extends Controller
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
                     // check if knowledge or orienteering is not abandon to give them 10 points.
-                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
-                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                    $knowledge_check_abandon = Knowledge::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
+                    $orienteering_check_abandon = Orienteering::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
 
 
                     if($knowledge_check_abandon == null ){
@@ -1771,7 +2106,7 @@ class RankingsController extends Controller
                             'message' => 'Una sau mai multe echipe la Proba Cunostinte Trustice nu au datele completate.',
                             'alert-type' => 'error'
                         );
-                        return redirect()->route('dashboard')->with($notification);
+                        return redirect()->route('dashboard', $stageid)->with($notification);
                     }
 
                     if($orienteering_check_abandon == null ){
@@ -1780,7 +2115,7 @@ class RankingsController extends Controller
                             'message' => 'Una sau mai multe echipe la Proba Orientare nu au datele completate.',
                             'alert-type' => 'error'
                         );
-                        return redirect()->route('dashboard')->with($notification);
+                        return redirect()->route('dashboard', $stageid)->with($notification);
                     }
 
                     if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
@@ -1853,7 +2188,7 @@ class RankingsController extends Controller
                 $unique_id++;
             }
 
-            $pdf = PDF::loadView('rankings.general_category_pdf', ['ranking_general' => $ranking_general, 'category' => $category]);
+            $pdf = PDF::loadView('rankings.general_category_pdf', ['ranking_general' => $ranking_general, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
             $general_category_pdf = 'rankings.general_category_pdf';
             return $pdf->stream($general_category_pdf);
@@ -1862,10 +2197,27 @@ class RankingsController extends Controller
 
 
 
-    public function ranking_cumulat()
+    public function ranking_cumulat($stageid, ClubsStageRankings $ClubsStageRankings)
     {
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
 
         $clubs = Club::with('teams')->get();
+        if($clubs->isEmpty()) {
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'Verificati daca exista cluburi!',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('dashboard', $stageid)->with($notification);
+        }
 
         // $category = Category::FindOrFail($category_id);
 
@@ -1874,41 +2226,148 @@ class RankingsController extends Controller
             $categories = Category::get();
 
             foreach($categories as $category){
-
     
                 // rank for knowledge
-                $teams_knowledge = Team::with('knowledge')->where('category_id', $category->id)->get();
+                $teams_knowledge = Team::with('knowledge')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
+                if($teams_knowledge->isEmpty()) {
+                    $notification = array(
+                        'success_title' => 'Eroare!!',
+                        'message' => 'Verificati daca exista cluburi cu proba de Cunostinte Turstice completata!',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('dashboard', $stageid)->with($notification);
+                }
         
-                    $teams_knowledge_list = [];
-                    foreach($teams_knowledge as $key => $team){
-                        if($team->knowledge == null){
-                            $notification = array(
-                                'success_title' => 'Eroare!!',
-                                'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Teste Teoretice.",
-                                'alert-type' => 'error'
-                            );
-                            return redirect()->route('knowledge.index', $category->id)->with($notification);
+                $teams_knowledge_list = [];
+                $teams_knowledge_list_abandon = [];
+                foreach($teams_knowledge as $key => $team){
+                    if($team->knowledge == null){
+                        continue;
+                    } else {     
+                        if($team->knowledge->abandon == 0){
+                            $teams_knowledge_list[$key]['name'] = $team->name;
+                            $teams_knowledge_list[$key]['scor'] = 0;
+                            $teams_knowledge_list[$key]['wrong_answers'] = $team->knowledge->wrong_answers;
+                            $teams_knowledge_list[$key]['wrong_questions'] = $team->knowledge->wrong_questions;
+                            $teams_knowledge_list[$key]['time'] = $team->knowledge->time;
+                            $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
+                        } elseif($team->knowledge->abandon == 1) {
+                            $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                            $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['wrong_answers'] = "0";
+                            $teams_list_abandon[$key]['wrong_questions'] = "0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_knowledge_list_abandon[$key]['abandon'] = 1;
                         } else {
-                            if($team->knowledge->abandon == 0){
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = $team->knowledge->scor;
-                                $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
-                            } elseif($team->knowledge->abandon == 1) {
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = 0;
-                                $teams_knowledge_list[$key]['abandon'] = 1;
-                            } else {
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = 0;
-                                $teams_knowledge_list[$key]['abandon'] = 2;
-                            }
+                            $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                            $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['wrong_answers'] = "0";
+                            $teams_list_abandon[$key]['wrong_questions'] = "0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_knowledge_list_abandon[$key]['abandon'] = 2;
                         }
                     }
+                }
+    
+                $collection_knowledge = collect($teams_knowledge_list);
+                $sorted_knowledge = $collection_knowledge->sortBy([
+                    ['wrong_answers', 'asc'],
+                    ['time', 'asc'],
+                ]);
+    
+                // convert to array + reindex array key to be from 0 to ...
+                $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+    
+                if(empty($sorted_knowledge)) {
+                    $notification = array(
+                        'success_title' => 'Eroare!!',
+                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('dashboard', [$stageid])->with($notification);
+                }
+
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
+    
+                foreach ($sorted_knowledge as $key => &$item) 
+                {
+                    // Calculate "scor" based on key
+                    if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                        $item['scor'] = $scor;
+                    } 
+                    else 
+                    {
+    
+                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                            $item['scor'] = $scor;
+                        }
+                        else 
+                        {
+                            if($fifty_minus > 0  )
+                            {
+                                $scor = $scor - 50;
+                                $item['scor'] = $scor;
+                                $fifty_minus--;
+                            }
+                            else 
+                            {
+                                $scor = $scor - 30;
+                                $item['scor'] = $scor;
+                            }
+                        }
+                        
+                    }
+    
+                    $last_score = $item;
+    
+                }
+    
+                $rankings = array();
+                $x = 1;
+                $unique_id = 0;
+    
+                foreach($sorted_knowledge as $key => $team){
+                    $decrease_rank = 0;
+                    $rankings[$unique_id]['name'] = $team['name'];
+                    $rankings[$unique_id]['wrong_answers'] = $team['wrong_answers'];
+                    $rankings[$unique_id]['wrong_questions'] = $team['wrong_questions'];
+                    $rankings[$unique_id]['time'] = $team['time'];
+                    $rankings[$unique_id]['abandon'] = $team['abandon'];
+                    $rankings[$unique_id]['scor'] = $team['scor'];
+                    $rankings[$unique_id]['rank'] = $x;
+                        if(isset($sorted_knowledge[$key-1]))
+                        {
+                            if($team['time'] == $sorted_knowledge[$key-1]['time'])
+                            {
+                                $decrease_rank = 1;
+                                $rankings[$unique_id]['rank'] = $x-1;
+                            }
+                        }   
+        
+                    if($decrease_rank == 0)
+                    {
+                        $x++;
+                    }
+        
+                    $unique_id++;
+    
+                }
+                
+                $teams_knowledge_list = $rankings;
                 
                 // rank for orienteering
 
-                $teams_orienteering = Team::with('orienteering')->where('category_id', $category->id)->get();
-                
+                $teams_orienteering = Team::with('orienteering')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
+                if($teams_knowledge->isEmpty()) {
+                    $notification = array(
+                        'success_title' => 'Eroare!!',
+                        'message' => 'Verificati daca echipele au proba de Orientare completata!',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('dashboard', $stageid)->with($notification);
+                }
                     $teams_orienteering_list = [];
                     foreach($teams_orienteering as $key => $team){
                         if($team->orienteering == null){
@@ -1917,7 +2376,7 @@ class RankingsController extends Controller
                                 'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Orientare.",
                                 'alert-type' => 'error'
                             );
-                            return redirect()->route('orienteering.index', $category->id)->with($notification);
+                            return redirect()->route('orienteering.index', [$stageid, $category->id])->with($notification);
                         } else {
                             $order_posts_result = "";
                             if($team->orienteering->abandon == 0){
@@ -1961,8 +2420,17 @@ class RankingsController extends Controller
 
                     // rank for raid montan
 
-                    $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category->id)->get();
-            
+                    $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
+
+                    if($teams_knowledge->isEmpty()) {
+                        $notification = array(
+                            'success_title' => 'Eroare!!',
+                            'message' => 'Verificati daca exista echipe cu proba de Raid Montan completata!',
+                            'alert-type' => 'error'
+                        );
+                        return redirect()->route('dashboard', $stageid)->with($notification);
+                    }
+
                         // raidmontan score/penality 
                         $raid_montan_score_initial = 10000;
                         $raid_montan_penality_per_minute = 10;
@@ -1982,7 +2450,7 @@ class RankingsController extends Controller
                                     'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Raid Montan.",
                                     'alert-type' => 'error'
                                 );
-                                return redirect()->route('raidmontan.index', $category->id)->with($notification);
+                                return redirect()->route('raidmontan.index', [$stageid, $category->id])->with($notification);
                             }
 
                             $hits_count = 1;
@@ -2014,7 +2482,7 @@ class RankingsController extends Controller
             
                                     $key_count = 0;
                                     foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                                        $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                                        $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                                         if($participation_entries->raidmontan_stations_station_type == 0){
                                             $teams_raidmontan_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                             $teams_raidmontan_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -2134,8 +2602,7 @@ class RankingsController extends Controller
     
                         }
 
-
-                            $teams = Team::where('category_id', $category->id)->get();
+                            $teams = Team::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                             $ranking_general = [];
                             foreach($teams as $key1 => $team) {
                 
@@ -2205,8 +2672,8 @@ class RankingsController extends Controller
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
                                     // check if knowledge or orienteering is not abandon to give them 10 points.
-                                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
-                                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                                    $knowledge_check_abandon = Knowledge::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
+                                    $orienteering_check_abandon = Orienteering::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
                                     if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
                                         $ranking_general[$key]['scor_stafeta'] = 10;
                                     } else {
@@ -2295,11 +2762,12 @@ class RankingsController extends Controller
         // check if bonus is present Articolul 12 - 12.2 - c.
         foreach($clubs as $club){
             $list_clubs[$club->name]['bonus'] = 0;
+            $list_clubs[$club->name]['id'] = $club->id;
             foreach($club->teams as $team){
 
-            $knowledge_bonus = Knowledge::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
-            $orienteering_bonus = Orienteering::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
-            $raidmontanparticipations_bonus = RaidmontanParticipations::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $knowledge_bonus = Knowledge::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $orienteering_bonus = Orienteering::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $raidmontanparticipations_bonus = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
 
                 if($knowledge_bonus == 1 && $orienteering_bonus == 1 && $raidmontanparticipations_bonus == 1){
                     $list_clubs[$club->name]['bonus'] += 10;
@@ -2307,11 +2775,10 @@ class RankingsController extends Controller
             }
         }
 
-  
-
         $rankings = [];
         foreach($list_clubs as $club_key => $club){
             $rankings[$club_key]['bonus'] = $club['bonus'];
+            $rankings[$club_key]['id'] = $club['id'];
             // start with bonus total_sm
             $rankings[$club_key]['total_sm'] = $club['bonus'];
             $rankings[$club_key]['club_name'] = $club_key;
@@ -2351,9 +2818,8 @@ class RankingsController extends Controller
 
 
         // reset array key in order to do rank
-        // dd($rankings);
         $rankings = array_values($rankings);
-
+        // dd($rankings);
 
         // order by total_sm desc
         $rankings = collect($rankings);
@@ -2388,17 +2854,36 @@ class RankingsController extends Controller
             }
 
             $unique_id++;
+
+            $clubstagerankings_insert[$key]['stage_id'] = $stageid;
+            $clubstagerankings_insert[$key]['club_id'] = $team['id'];
+            $clubstagerankings_insert[$key]['scor'] = $team['total_sm'];
+
         }
 
-        // dd($rankings);
-        return view('rankings.general',compact('rankings','categories'));
+        
+            // insert in db score for cumulat clubs
+            ClubsStageRankings::where('stage_id', $stageid)->delete();
+            $ClubsStageRankings->create($clubstagerankings_insert);
 
+ 
+        return view('rankings.general',compact('rankings','categories', 'stageid'));
 
     }
 
 
-    public function ranking_cumulat_pdf()
+    public function ranking_cumulat_pdf($stageid)
     {
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
 
         $clubs = Club::with('teams')->get();
 
@@ -2412,37 +2897,130 @@ class RankingsController extends Controller
 
     
                 // rank for knowledge
-                $teams_knowledge = Team::with('knowledge')->where('category_id', $category->id)->get();
+                $teams_knowledge = Team::with('knowledge')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
         
-                    $teams_knowledge_list = [];
-                    foreach($teams_knowledge as $key => $team){
-                        if($team->knowledge == null){
-                            $notification = array(
-                                'success_title' => 'Eroare!!',
-                                'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Teste Teoretice.",
-                                'alert-type' => 'error'
-                            );
-                            return redirect()->route('knowledge.index', $category->id)->with($notification);
+                $teams_knowledge_list = [];
+                $teams_knowledge_list_abandon = [];
+                foreach($teams_knowledge as $key => $team){
+                    if($team->knowledge == null){
+                        continue;
+                    } else {     
+                        if($team->knowledge->abandon == 0){
+                            $teams_knowledge_list[$key]['name'] = $team->name;
+                            $teams_knowledge_list[$key]['scor'] = 0;
+                            $teams_knowledge_list[$key]['wrong_answers'] = $team->knowledge->wrong_answers;
+                            $teams_knowledge_list[$key]['wrong_questions'] = $team->knowledge->wrong_questions;
+                            $teams_knowledge_list[$key]['time'] = $team->knowledge->time;
+                            $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
+                        } elseif($team->knowledge->abandon == 1) {
+                            $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                            $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['wrong_answers'] = "0";
+                            $teams_list_abandon[$key]['wrong_questions'] = "0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_knowledge_list_abandon[$key]['abandon'] = 1;
                         } else {
-                            if($team->knowledge->abandon == 0){
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = $team->knowledge->scor;
-                                $teams_knowledge_list[$key]['abandon'] = $team->knowledge->abandon;
-                            } elseif($team->knowledge->abandon == 1) {
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = 0;
-                                $teams_knowledge_list[$key]['abandon'] = 1;
-                            } else {
-                                $teams_knowledge_list[$key]['name'] = $team->name;
-                                $teams_knowledge_list[$key]['scor'] = 0;
-                                $teams_knowledge_list[$key]['abandon'] = 2;
-                            }
+                            $teams_knowledge_list_abandon[$key]['name'] = $team->name;
+                            $teams_knowledge_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['wrong_answers'] = "0";
+                            $teams_list_abandon[$key]['wrong_questions'] = "0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_knowledge_list_abandon[$key]['abandon'] = 2;
                         }
                     }
+                }
+    
+                $collection_knowledge = collect($teams_knowledge_list);
+                $sorted_knowledge = $collection_knowledge->sortBy([
+                    ['wrong_answers', 'asc'],
+                    ['time', 'asc'],
+                ]);
+    
+                // convert to array + reindex array key to be from 0 to ...
+                $sorted_knowledge  = array_values($sorted_knowledge->toArray());
+
+                if(empty($sorted_knowledge)) {
+                    $notification = array(
+                        'success_title' => 'Eroare!!',
+                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('dashboard', [$stageid])->with($notification);
+                }
+                
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
+    
+                foreach ($sorted_knowledge as $key => &$item) 
+                {
+                    // Calculate "scor" based on key
+                    if ($item['time'] == $best_score['time'] && $item['wrong_answers'] == $best_score['wrong_answers'] ) {
+                        $item['scor'] = $scor;
+                    } 
+                    else 
+                    {
+    
+                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['wrong_answers'] == $last_score['wrong_answers'] ){
+                            $item['scor'] = $scor;
+                        }
+                        else 
+                        {
+                            if($fifty_minus > 0  )
+                            {
+                                $scor = $scor - 50;
+                                $item['scor'] = $scor;
+                                $fifty_minus--;
+                            }
+                            else 
+                            {
+                                $scor = $scor - 30;
+                                $item['scor'] = $scor;
+                            }
+                        }
+                        
+                    }
+    
+                    $last_score = $item;
+    
+                }
+    
+                $rankings = array();
+                $x = 1;
+                $unique_id = 0;
+    
+                foreach($sorted_knowledge as $key => $team){
+                    $decrease_rank = 0;
+                    $rankings[$unique_id]['name'] = $team['name'];
+                    $rankings[$unique_id]['wrong_answers'] = $team['wrong_answers'];
+                    $rankings[$unique_id]['wrong_questions'] = $team['wrong_questions'];
+                    $rankings[$unique_id]['time'] = $team['time'];
+                    $rankings[$unique_id]['abandon'] = $team['abandon'];
+                    $rankings[$unique_id]['scor'] = $team['scor'];
+                    $rankings[$unique_id]['rank'] = $x;
+                        if(isset($sorted_knowledge[$key-1]))
+                        {
+                            if($team['time'] == $sorted_knowledge[$key-1]['time'])
+                            {
+                                $decrease_rank = 1;
+                                $rankings[$unique_id]['rank'] = $x-1;
+                            }
+                        }   
+        
+                    if($decrease_rank == 0)
+                    {
+                        $x++;
+                    }
+        
+                    $unique_id++;
+    
+                }
+                
+                $teams_knowledge_list = $rankings;
                 
                 // rank for orienteering
 
-                $teams_orienteering = Team::with('orienteering')->where('category_id', $category->id)->get();
+                $teams_orienteering = Team::with('orienteering')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 
                     $teams_orienteering_list = [];
                     foreach($teams_orienteering as $key => $team){
@@ -2452,7 +3030,7 @@ class RankingsController extends Controller
                                 'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Orientare.",
                                 'alert-type' => 'error'
                             );
-                            return redirect()->route('orienteering.index', $category->id)->with($notification);
+                            return redirect()->route('orienteering.index', [$stageid, $category->id])->with($notification);
                         } else {
                             $order_posts_result = "";
                             if($team->orienteering->abandon == 0){
@@ -2497,7 +3075,7 @@ class RankingsController extends Controller
 
                     // rank for raid montan
 
-                    $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $category->id)->get();
+                    $teams_raidmontan = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
             
                         // raidmontan score/penality 
                         $raid_montan_score_initial = 10000;
@@ -2519,7 +3097,7 @@ class RankingsController extends Controller
                                     'message' => 'Datele nu pot fi generate, echipa ' . $team->name . ' nu are datele completate in categoria ' . $category->name . ", proba Raid Montan.",
                                     'alert-type' => 'error'
                                 );
-                                return redirect()->route('raidmontan.index', $category->id)->with($notification);
+                                return redirect()->route('raidmontan.index', [$stageid, $category->id])->with($notification);
                             }
 
                             $hits_count = 1;
@@ -2551,7 +3129,7 @@ class RankingsController extends Controller
             
                                     $key_count = 0;
                                     foreach($team->raidmontan_participations_entries as $key => $participation_entries) {
-                                        $raidmontan_stations = RaidmontanStations::where('id', $participation_entries->raidmontan_stations_id)->first();
+                                        $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('id', $participation_entries->raidmontan_stations_id)->first();
                                         if($participation_entries->raidmontan_stations_station_type == 0){
                                             $teams_raidmontan_list[$participation_entries->team_id]['start'] = $participation_entries->time_start;
                                             $teams_raidmontan_list[$participation_entries->team_id]['start_in_seconds'] = strtotime($participation_entries->time_start);
@@ -2672,7 +3250,7 @@ class RankingsController extends Controller
                         }
 
 
-                            $teams = Team::where('category_id', $category->id)->get();
+                            $teams = Team::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                             $ranking_general = [];
                             foreach($teams as $key1 => $team) {
                 
@@ -2742,8 +3320,8 @@ class RankingsController extends Controller
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
                                     // check if knowledge or orienteering is not abandon to give them 10 points.
-                                    $knowledge_check_abandon = Knowledge::where('team_id', $rank['team_id'])->first();
-                                    $orienteering_check_abandon = Orienteering::where('team_id', $rank['team_id'])->first();
+                                    $knowledge_check_abandon = Knowledge::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
+                                    $orienteering_check_abandon = Orienteering::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
                                     if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
                                         $ranking_general[$key]['scor_stafeta'] = 10;
                                     } else {
@@ -2833,9 +3411,9 @@ class RankingsController extends Controller
             $list_clubs[$club->name]['bonus'] = 0;
             foreach($club->teams as $team){
 
-            $knowledge_bonus = Knowledge::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
-            $orienteering_bonus = Orienteering::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
-            $raidmontanparticipations_bonus = RaidmontanParticipations::where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $knowledge_bonus = Knowledge::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $orienteering_bonus = Orienteering::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
+            $raidmontanparticipations_bonus = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->whereIn('abandon', [0,2])->count();
 
                 if($knowledge_bonus == 1 && $orienteering_bonus == 1 && $raidmontanparticipations_bonus == 1){
                     $list_clubs[$club->name]['bonus'] += 10;
@@ -2903,8 +3481,6 @@ class RankingsController extends Controller
         // rank
         $x = 1;
         $unique_id = 0;
-
-    
         
         foreach($rankings as $key => $team){
             $decrease_rank = 0;
@@ -2926,10 +3502,7 @@ class RankingsController extends Controller
             $unique_id++;
         }
 
-        // dd($rankings);
-        // return view('rankings.general',compact('rankings','categories'));
-
-        $pdf = PDF::loadView('rankings.general_pdf', ['rankings' => $rankings, 'categories' => $categories]);
+        $pdf = PDF::loadView('rankings.general_pdf', ['rankings' => $rankings, 'categories' => $categories, 'stageid' => $stageid]);
         $pdf->setPaper('A4', 'landscape');
         $general_pdf = 'rankings.general_pdf';
         return $pdf->stream($general_pdf);

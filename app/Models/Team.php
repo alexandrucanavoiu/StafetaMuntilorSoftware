@@ -18,6 +18,7 @@ class Team extends Model
 
     protected $fillable = [
         'id',
+        'stage_id',
         'number',
         'name',
         'uuid_card_orienteering_id',
@@ -64,6 +65,11 @@ class Team extends Model
     public function  raidmontan_participations_entries()
     {
         return $this->hasMany('App\Models\RaidmontanParticipationsEntries', 'team_id', 'id' );
+    }
+
+    public function participants()
+    {
+        return $this->hasMany('App\Models\ParticipantsStages', 'team_id', 'id' );
     }
 
 }

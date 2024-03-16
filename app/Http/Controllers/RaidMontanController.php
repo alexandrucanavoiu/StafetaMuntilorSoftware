@@ -15,6 +15,7 @@ use App\Models\RaidmontanParticipationsEntries;
 use App\Models\RaidmontanStations;
 use App\Models\RaidmontanStationsStages;
 use DB;
+use App\Models\Stages;
 
 class RaidMontanController extends Controller
 {
@@ -29,8 +30,19 @@ class RaidMontanController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($id)
+    public function index($stageid, $id)
     {
+
+        $stage = Stages::where('id', $stageid)->first();
+        if($stage == null){
+            $notification = array(
+                'success_title' => 'Eroare!!',
+                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('error.alert')->with($notification);
+        }
+
         $category = Category::find($id);
         if($category == null) {
             $notification = array(
@@ -38,20 +50,30 @@ class RaidMontanController extends Controller
                 'message' => 'Categoria nu exista! URL-ul nu se editeaza manual...',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         } else {
-            $teams = Team::with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $id)->get();
+            $teams = Team::where('stage_id', $stageid)->with('raidmontan_participations')->with('raidmontan_participations_entries')->where('category_id', $id)->get();
             $number = 1;
-            return view('raidmontan.index',compact('category', 'teams', 'number'));
+            return view('raidmontan.index',compact('category', 'teams', 'number', 'stageid'));
         }
     }
 
-    public function edit($categoryid, $teamid, Request $request)
+    public function edit($stageid, $categoryid, $teamid, Request $request)
     {
         if( $request->ajax() )
         {
 
-            $team = Team::with('category')->FindOrFail($teamid);
+            $stage = Stages::where('id', $stageid)->first();
+            if($stage == null){
+                $notification = array(
+                    'success_title' => 'Eroare!!',
+                    'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('error.alert')->with($notification);
+            }
+
+            $team = Team::where('stage_id', $stageid)->with('category')->FindOrFail($teamid);
             $category = Category::FindOrFail($categoryid);
             if($team == null || $category == null) {
                 $notification = array(
@@ -59,22 +81,22 @@ class RaidMontanController extends Controller
                     'message' => 'Categoria sau Echipa nu exista in baza de date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('raidmontan.index', $category->id)->with($notification);
+                return redirect()->route('raidmontan.index', [$stageid, $category->id])->with($notification);
             } else {
 
-                $RaidmontanStations = RaidmontanStations::where('category_id', $category->id)->get();
-                $RaidmontanStationsStages = RaidmontanStationsStages::where('category_id', $category->id)->get();
+                $RaidmontanStations = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $category->id)->get();
+                $RaidmontanStationsStages = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 
                 if($RaidmontanStations->isEmpty() == true || $RaidmontanStationsStages->isEmpty() == true){
-                    $ajax_redirect_url = route('setup.index');
+                    $ajax_redirect_url = route('setup.index', $stageid);
                     $ajax_message_response = "Nu ati configurat Proba de Raid Montan corect. Verificati Traseu de raid si Statiile pentru Raid pentru aceasta categorie in sectiunea 'Configurare'.";
                     $ajax_title_response = "Eroare!";
                     $ajax_status_response = "error";
-                    return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 450);
+                    return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 450);
                 }
 
 
-                $raidmontan_participations = RaidmontanParticipations::where('team_id', $teamid)->first();
+                $raidmontan_participations = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $teamid)->first();
                 $station_type_one = 1;
                 $station_type_two = 1;
                 // if the team is not already in raidmontan_participations table, populate the blade with some temporary records.
@@ -82,7 +104,7 @@ class RaidMontanController extends Controller
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('raidmontan.create', ['team' => $team, 'category' => $category, 'RaidmontanStations' => $RaidmontanStations, 'station_type_one' => $station_type_one, 'station_type_two' => $station_type_two])->render()
+                        'view_content' => view('raidmontan.create', ['team' => $team, 'category' => $category, 'RaidmontanStations' => $RaidmontanStations, 'station_type_one' => $station_type_one, 'station_type_two' => $station_type_two, 'stageid' => $stageid])->render()
                     ] );
                 } else {
                     // if the team already have records in raidmontan_participations table get the data and populate the blade
@@ -91,7 +113,7 @@ class RaidMontanController extends Controller
                     $ajax_status_response = "success";
                     return response()->json( [
                         'ajax_status_response' => $ajax_status_response,
-                        'view_content' => view('raidmontan.edit', ['team' => $team, 'category' => $category, 'RaidmontanParticipationsEntries' => $RaidmontanParticipationsEntries, 'raidmontan_participations' => $raidmontan_participations, 'station_type_one' => $station_type_one, 'station_type_two' => $station_type_two])->render()
+                        'view_content' => view('raidmontan.edit', ['team' => $team, 'category' => $category, 'RaidmontanParticipationsEntries' => $RaidmontanParticipationsEntries, 'raidmontan_participations' => $raidmontan_participations, 'station_type_one' => $station_type_one, 'station_type_two' => $station_type_two, 'stageid' => $stageid])->render()
                     ] );
                 }
             }
@@ -102,12 +124,12 @@ class RaidMontanController extends Controller
                 'message' => 'Ilegal operation.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('raidmontan.index', $categoryid)->with($notification);
+            return redirect()->route('raidmontan.index', [$stageid, $categoryid])->with($notification);
         }
     }
 
 
-    public function update($categoryid, $teamid, Request $request)
+    public function update($stageid, $categoryid, $teamid, Request $request)
 
     {
         if( $request->ajax() )
@@ -147,6 +169,7 @@ class RaidMontanController extends Controller
                     $request->merge(['created_at' => date('Y-m-d H:i:s')]);
                     $request->merge(['team_id' => $team->id]);
                     $request->merge(['category_id' => $category->id]);
+                    $request->merge(['stage_id' => $stageid]);
 
                     $station_start = $request->input('station_start');
                     $station_finish = $request->input('station_finish');
@@ -154,8 +177,15 @@ class RaidMontanController extends Controller
                     $pfa_stations = explode(',', $request->input('pfa_stations'));
                     $pa_stations = json_decode($request->input('pa_stations'), true);
 
-                    $data = $request->only(['missing_footwear', 'minimum_distance_penalty', 'missing_equipment_items', 'created_at', 'updated_at', 'category_id', 'team_id', 'abandon']);
+                    $data = $request->only(['missing_footwear', 'minimum_distance_penalty', 'missing_equipment_items', 'created_at', 'updated_at', 'category_id', 'team_id', 'abandon', 'stage_id']);
                     $validator = Validator::make($data, $rules);
+
+                    $stage = Stages::where('id', $stageid)->first();
+                    if($stage == null){
+                        $validator->after(function ($validator) {
+                            $validator->errors()->add('form_corruption', 'StageID-ul nu este corect, incercati sa nu editati in cod.');
+                        });
+                    }
 
                     // validate stations Start / Finish to not be empty if status (abandon = 0) is ok.
                     if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
@@ -228,12 +258,13 @@ class RaidMontanController extends Controller
                     if($validator->passes())
                     {
 
-                    $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
-                    $raidmontan_stations = RaidmontanStations::where('category_id', $data['category_id'])->get();
+                    $RaidmontanParticipations = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->first();
+                    $raidmontan_stations = RaidmontanStations::where('stage_id', $stageid)->where('category_id', $data['category_id'])->get();
 
                         if($RaidmontanParticipations == null) {
                             // If the team is not in RaidmontanParticipations table insert the data
                             RaidmontanParticipations::insert([
+                                'stage_id' => $stageid,
                                 'team_id' => $data['team_id'],
                                 'missing_equipment_items' => $data['missing_equipment_items'],
                                 'missing_footwear' => $data['missing_footwear'],
@@ -247,6 +278,7 @@ class RaidMontanController extends Controller
 
                             foreach($raidmontan_stations as $key => $station){
                         
+                                $raidmontan_stations_final[$key]['stage_id'] = $stageid;
                                 $raidmontan_stations_final[$key]['raidmontan_participations_id'] = $RaidmontanParticipations->id;
                                 $raidmontan_stations_final[$key]['team_id'] = $team->id;
                                 $raidmontan_stations_final[$key]['raidmontan_stations_id'] = $station->id;
@@ -285,19 +317,20 @@ class RaidMontanController extends Controller
                         
                             RaidmontanParticipationsEntries::insert($raidmontan_stations_final);
 
-                            $ajax_redirect_url = route('raidmontan.index', [$categoryid, $teamid]);
+                            $ajax_redirect_url = route('raidmontan.index', [$stageid, $categoryid]);
                             $ajax_message_response = "Datele au fost adaugate.";
                             $ajax_title_response = "Felicitări!";
                             $ajax_status_response = "success";
-                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
                         } else {
                             // If the team exist in raidmontan table update the data without created_at.
 
-                            RaidmontanParticipations::where('team_id', '=', $data['team_id'])->delete();
-                            RaidmontanParticipationsEntries::where('team_id', '=', $data['team_id'])->delete();
+                            RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', '=', $data['team_id'])->delete();
+                            RaidmontanParticipationsEntries::where('stage_id', $stageid)->where('team_id', '=', $data['team_id'])->delete();
 
 
                             RaidmontanParticipations::insert([
+                                'stage_id' => $stageid,
                                 'team_id' => $data['team_id'],
                                 'missing_equipment_items' => $data['missing_equipment_items'],
                                 'missing_footwear' => $data['missing_footwear'],
@@ -308,10 +341,11 @@ class RaidMontanController extends Controller
                             ]);
 
 
-                            $RaidmontanParticipations = RaidmontanParticipations::where('team_id', $team->id)->first();
+                            $RaidmontanParticipations = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->first();
 
                             foreach($raidmontan_stations as $key => $station){
                         
+                                $raidmontan_stations_final[$key]['stage_id'] = $stageid;
                                 $raidmontan_stations_final[$key]['raidmontan_participations_id'] = $RaidmontanParticipations->id;
                                 $raidmontan_stations_final[$key]['team_id'] = $team->id;
                                 $raidmontan_stations_final[$key]['raidmontan_stations_id'] = $station->id;
@@ -350,11 +384,11 @@ class RaidMontanController extends Controller
                         
                             RaidmontanParticipationsEntries::insert($raidmontan_stations_final);
 
-                            $ajax_redirect_url = route('raidmontan.index', [$categoryid, $teamid]);
+                            $ajax_redirect_url = route('raidmontan.index', [$stageid, $categoryid]);
                             $ajax_message_response = "Datele au fost actualizate.";
                             $ajax_title_response = "Felicitări!";
                             $ajax_status_response = "success";
-                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
+                            return response()->json(['ajax_redirect_url' => $ajax_redirect_url, 'ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stageid' => $stageid], 200);
 
                         }
                     } else {
@@ -367,7 +401,7 @@ class RaidMontanController extends Controller
                 'message' => 'Ilegal operation. The administrator was notified.',
                 'alert-type' => 'error'
             );
-            return redirect()->route('dashboard')->with($notification);
+            return redirect()->route('dashboard', $stageid)->with($notification);
         }
     }
 

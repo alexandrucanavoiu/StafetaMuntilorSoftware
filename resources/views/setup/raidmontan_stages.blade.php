@@ -71,7 +71,7 @@
                                             <div class="row">
                                                 <div class="col-md-8 offset-md-4 pt-50">
                                                     <button type="button" class="btn btn-primary me-1 mr-1 mb-1" type="reset" data-bs-dismiss="modal" aria-label="Close">Inchide</button>
-                                                    <button type="submit" class="js--setup-raid-montan-stages-update btn btn-success mr-1 mb-1" data-id="{{ $category->id }}">Adauga</button>
+                                                    <button type="submit" class="js--setup-raid-montan-stages-update btn btn-success mr-1 mb-1" data-stageid="{{ $stageid }}" data-id="{{ $category->id }}">Adauga</button>
                                                 </div>
                                             </div>
                                         </div>

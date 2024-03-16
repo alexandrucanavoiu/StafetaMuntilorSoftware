@@ -12,7 +12,7 @@
                         <div class="card">
                             <div class="card-content">
                                 <div class="card-body">
-                                    <a href="{{ route('rankings.general_pdf') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a>
+                                    <a href="{{ route('rankings.general_pdf', $stageid) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a>
                                 </div>
                             </div>
                         </div>

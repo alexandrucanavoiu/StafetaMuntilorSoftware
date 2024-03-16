@@ -13,8 +13,8 @@
                         <div class="card">
                             <div class="card-content">
                                 <div class="card-body">
-                                    <a href="{{ route('clubs.index') }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
-                                    <a href="{{ route('clubs.clubs.listbyteams_pdf') }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
+                                    <a href="{{ route('clubs.index', [$stageid]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
+                                    <a href="{{ route('clubs.clubs.listbyteams_pdf', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
                                 </div>
                             </div>
                         </div>

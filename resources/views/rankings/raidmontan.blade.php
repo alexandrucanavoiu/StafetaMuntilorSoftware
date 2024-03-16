@@ -12,8 +12,8 @@
                         <div class="card">
                             <div class="card-content">
                                 <div class="card-body">
-                                    <a href="{{ route('rankings.index_category', $category->id) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
-                                    <a href="{{ route('rankings.category.raidmontan.pdf', $category->id) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a>
+                                    <a href="{{ route('rankings.index_category', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='corner-up-left'></i> Inapoi</a>
+                                    <a href="{{ route('rankings.category.raidmontan.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a>
                                 </div>
                             </div>
                         </div>
