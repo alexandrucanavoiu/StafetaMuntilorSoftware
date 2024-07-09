@@ -18,6 +18,18 @@
             <section>
                 <div class="card">
                     <div class="card-header">
+                        <h4 class="card-title">[ v5.0.1 ] - 09.07.2024</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Atunci cand o echipa este descalificata la Raid Montan sa nu mai apara in clasament Lipsa Bocanci.</p>
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- CI + Telefon Participant pentru identificare in loc de CNP</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
                         <h4 class="card-title">[ v5.0.0 ] - 16.03.2024</h4>
                     </div>
                     <div class="card-body">

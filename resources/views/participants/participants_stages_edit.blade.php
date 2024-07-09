@@ -29,7 +29,7 @@
                                                             <select class="form-control select2 max-length-3" id="participants" name="participants[]" multiple="multiple" id="max_length" required>
                                                                 <option value="">--- selectează ---</option>
                                                                 @foreach($participants as $participant)
-                                                                    <option value="{{ $participant->id }}" {{ ($searchparticipant->search($participant->id)) ? 'selected' : '' }} >{{$participant->cnp}} - {{$participant->name}}</option>
+                                                                    <option value="{{ $participant->id }}" {{ ($searchparticipant->search($participant->id)) ? 'selected' : '' }} >{{$participant->ci}} - {{$participant->phone}}  - {{$participant->name}}</option>
                                                                 @endforeach
                                                             </select>
                                                             <div class="help-block text-danger print-error" id="participants-error" style="display:none"><ul role="alert"></ul></div>

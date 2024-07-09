@@ -18,7 +18,8 @@ class Participants extends Model
 
     protected $fillable = [
         'id',
-        'cnp',
+        'ci',
+        'phone',
         'name',
         'ong',
     ];

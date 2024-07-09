@@ -104,27 +104,27 @@ class ParticipantsController extends Controller
         {
     
             $rules = [
-                'cnp' => [
+                'phone' => [
                     'required',
-                    'regex:/^[1-8][0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])(0[1-9]|[1-4][0-9]|5[0-2])[0-9]{3}[0-9]$/',
-                    'unique:participants,cnp',
                 ],
-                'name' => 'required|min:5|max:255|regex:/^[a-zA-Z]+(\s[a-zA-Z]+)+$/',
+                'name' => 'required|min:5|max:255',
             ];
 
             $request->merge(['created_at' => date('Y-m-d H:i:s')]);
             $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
 
-            $data = $request->only(['cnp', 'name', 'created_at', 'updated_at']);
+            $data = $request->only(['ci', 'phone', 'name', 'created_at', 'updated_at']);
 
             $validator = Validator::make($data, $rules);
     
             if($validator->passes())
             {
     
-                $cnp =  strip_tags($request->input('cnp'), '');
+                $ci =  strip_tags($request->input('ci'), '');
+                $phone =  strip_tags($request->input('phone'), '');
                 $name =  strip_tags($request->input('name'), '');
-                $data['cnp'] = $cnp;
+                $data['ci'] = $ci;
+                $data['phone'] = $phone;
                 $data['name'] = $name;    
     
                 Participants::create($data);
@@ -191,16 +191,18 @@ class ParticipantsController extends Controller
                 return response()->json( ['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response] );
             } else {
 
-                $cnp =  strip_tags($request->input('cnp'), '');
+                $ci =  strip_tags($request->input('ci'), '');
+                $phone =  strip_tags($request->input('phone'), '');
                 $name =  strip_tags($request->input('name'), '');
-                    if($cnp == $participant->cnp){
+                    if($phone == $participant->phone){
                         $rules = [
-                            'cnp' => 'required',
+                            'phone' => 'required',
                             'name' => 'required|min:5|max:255',
                         ];
                     } else {
                         $rules = [
-                            'cnp' => 'required|unique:participants,cnp',
+                            'ci' => 'unique:participants,ci',
+                            'phone' => 'required',
                             'name' => 'required|min:5|max:255',
                         ];
 
@@ -208,7 +210,7 @@ class ParticipantsController extends Controller
     
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
 
-                    $data = $request->only(['cnp', 'name', 'updated_at']);
+                    $data = $request->only(['ci', 'phone', 'name', 'updated_at']);
 
                     $validator = Validator::make($data, $rules);
                     
@@ -216,11 +218,12 @@ class ParticipantsController extends Controller
                     if($validator->passes())
                     {
 
-                        if($cnp == $participant->cnp){
-                            unset($data['cnp']);
+                        if($ci == $participant->ci){
+                            unset($data['ci']);
                             $data['name'] = $name;
                         } else {
-                            $data['cnp'] = $cnp;
+                            $data['ci'] = $ci;
+                            $data['phone'] = $phone;
                             $data['name'] = $name;
                         } 
 
@@ -704,26 +707,26 @@ class ParticipantsController extends Controller
         }
 
         $results = DB::table('participants')
-        ->select('participants.cnp', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id', 'participants_stage_rankings.category_name','clubs.name as club_name', 'participants_stage_rankings.scor')
+        ->select('participants.id', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id', 'participants_stage_rankings.category_name','clubs.name as club_name', 'participants_stage_rankings.scor')
         ->leftJoin('participants_stages', 'participants_stages.participant_id', '=', 'participants.id')
         ->leftJoin('participants_stage_rankings', 'participants_stage_rankings.team_id', '=', 'participants_stages.team_id')
         ->leftJoin('clubs','clubs.id','=','participants_stage_rankings.club_id')
-        ->groupBy('participants.cnp', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id','participants_stage_rankings.category_name','clubs.name','participants_stage_rankings.scor')
+        ->groupBy('participants.id', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id','participants_stage_rankings.category_name','clubs.name','participants_stage_rankings.scor')
         ->get();
 
         $participantsStats = [];
         foreach( $results as $result )
         {
             // var_dump($result);
-            $participantsStats[$result->cnp]['name'] = $result->name;
+            $participantsStats[$result->id]['name'] = $result->name;
             $score = $result->scor ?? 0;
-            $participantsStats[$result->cnp]['total_score'] = ( !empty($participantsStats[$result->cnp]['total_score']) ) ? $participantsStats[$result->cnp]['total_score'] + $score : $score;
-            $participantsStats[$result->cnp]['stages'][$result->stage_id] = $result;   
-            if( !empty($participantsStats[$result->cnp]['club']) && in_array($result->club_name,$participantsStats[$result->cnp]['club']) )
+            $participantsStats[$result->id]['total_score'] = ( !empty($participantsStats[$result->id]['total_score']) ) ? $participantsStats[$result->id]['total_score'] + $score : $score;
+            $participantsStats[$result->id]['stages'][$result->stage_id] = $result;   
+            if( !empty($participantsStats[$result->id]['club']) && in_array($result->club_name,$participantsStats[$result->id]['club']) )
             {
                //deja exista
             } else {
-                $participantsStats[$result->cnp]['club'][] = $result->club_name;
+                $participantsStats[$result->id]['club'][] = $result->club_name;
             }      
         } 
 
@@ -768,12 +771,12 @@ class ParticipantsController extends Controller
         $stages = Stages::get();
 
         $results = DB::table('participants')
-        ->select('participants.cnp', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id', 'participants_stage_rankings.category_name','clubs.name as club_name', 'participants_stage_rankings.scor')
+        ->select('participants.id', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id', 'participants_stage_rankings.category_name','clubs.name as club_name', 'participants_stage_rankings.scor')
         ->leftJoin('participants_stages', 'participants_stages.participant_id', '=', 'participants.id')
         ->leftJoin('participants_stage_rankings', 'participants_stage_rankings.team_id', '=', 'participants_stages.team_id')
         ->leftJoin('clubs','clubs.id','=','participants_stage_rankings.club_id')
         
-        ->groupBy('participants.cnp', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id','participants_stage_rankings.category_name','clubs.name','participants_stage_rankings.scor')
+        ->groupBy('participants.id', 'participants.name', 'participants_stages.stage_id', 'participants_stage_rankings.club_id', 'participants_stage_rankings.team_id','participants_stage_rankings.category_name','clubs.name','participants_stage_rankings.scor')
         ->limit(100)
         ->get();
 
@@ -781,15 +784,15 @@ class ParticipantsController extends Controller
         foreach( $results as $result )
         {
             // var_dump($result);
-            $participantsStats[$result->cnp]['name'] = $result->name;
+            $participantsStats[$result->id]['name'] = $result->name;
             $score = $result->scor ?? 0;
-            $participantsStats[$result->cnp]['total_score'] = ( !empty($participantsStats[$result->cnp]['total_score']) ) ? $participantsStats[$result->cnp]['total_score'] + $score : $score;
-            $participantsStats[$result->cnp]['stages'][$result->stage_id] = $result;   
-            if( !empty($participantsStats[$result->cnp]['club']) && in_array($result->club_name,$participantsStats[$result->cnp]['club']) )
+            $participantsStats[$result->id]['total_score'] = ( !empty($participantsStats[$result->id]['total_score']) ) ? $participantsStats[$result->id]['total_score'] + $score : $score;
+            $participantsStats[$result->id]['stages'][$result->stage_id] = $result;   
+            if( !empty($participantsStats[$result->id]['club']) && in_array($result->club_name,$participantsStats[$result->id]['club']) )
             {
                //deja exista
             } else {
-                $participantsStats[$result->cnp]['club'][] = $result->club_name;
+                $participantsStats[$result->id]['club'][] = $result->club_name;
             }      
         } 
         $participantsStats = collect($participantsStats);

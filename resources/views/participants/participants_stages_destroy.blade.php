@@ -37,10 +37,10 @@
 
                                                 <div class="col-12">
                                                     <div class="form-group row">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             @foreach ($participants_stages as $key => $participant_stages)
                                                                 @foreach ($participant_stages->participants as $participant)
-                                                                <span><strong>Participant {{ $key+1 }}:</strong> {{ $participant->name }}</span>
+                                                                <span><strong>Participant {{ $key+1 }}:</strong> {{ $participant->name }}</span><br />
                                                                 @endforeach
                                                             @endforeach
                                                         </div>

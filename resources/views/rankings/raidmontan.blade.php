@@ -59,7 +59,7 @@
                                                 <td>{{ $rank['name'] }}</td>
                                                 <td class="text-center">-</td>
                                                 <td class="text-center">Descalificata</td>
-                                                <td>Lipsa Bocanci</td>
+                                                <td>-</td>
                                             </tr>
                                             @endforeach
                                             @foreach($teams_list_abandon as $rank)

@@ -32,7 +32,8 @@
                                     <thead>
                                         <tr>
                                             <th width="5%" class="text-center">ID</th>
-                                            <th width="10%">CNP</th>
+                                            <th width="10%">CI</th>
+                                            <th width="10%">TELEFON</th>
                                             <th width="50%" class="text-center">NAME</th>
                                             <th width="10%" class="text-center">ACTIUNI</th>
                                         </tr>
@@ -89,8 +90,13 @@ $(function() {
             searchable: false,
             sortable: false
         }, {
-            data: 'cnp',
-            name: 'cnp',
+            data: 'ci',
+            name: 'ci',
+            searchable: true,
+            sortable: false,
+        }, {
+            data: 'phone',
+            name: 'phone',
             searchable: true,
             sortable: false,
         }, {

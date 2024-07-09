@@ -20,13 +20,25 @@
                                             <div class="row">
 
                                                 <div class="col-12">
-                                                    <div class="form-group row cnp-list">
+                                                    <div class="form-group row ci-list">
                                                         <div class="col-md-4">
-                                                            <span>CNP: </span>
+                                                            <span>CI: </span>
                                                         </div>
                                                         <div class="col-md-8">
-                                                            <input class="form-control cnp" id="cnp" type="text" name="name" placeholder="" value="{{ $participant->cnp }}" disabled>
-                                                            <div class="help-block text-danger print-error" id="cnp-error" style="display:none"><ul role="alert"></ul></div>
+                                                            <input class="form-control cnp" id="ci" type="text" name="ci" placeholder="" value="{{ $participant->ci }}" disabled>
+                                                            <div class="help-block text-danger print-error" id="ci-error" style="display:none"><ul role="alert"></ul></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="form-group row phone-list">
+                                                        <div class="col-md-4">
+                                                            <span>Telefon: </span>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input class="form-control cnp" id="ci" type="text" name="phone" placeholder="" value="{{ $participant->phone }}" disabled>
+                                                            <div class="help-block text-danger print-error" id="phone-error" style="display:none"><ul role="alert"></ul></div>
                                                         </div>
                                                     </div>
                                                 </div>

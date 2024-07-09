@@ -2340,17 +2340,20 @@ $(document).on("click", ".js--participants-create", function(e){
 $("body").delegate('.js--participants-create-store', 'click',function(e){
     e.preventDefault();
     $( '#participants-error' ).html( "" );
-    $( '#cnp-error' ).html( "" );
+    $( '#ci-error' ).html( "" );
+    $( '#phone-error' ).html( "" );
     $( '#name-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var cnp = $("#cnp").val();
+    var ci = $("#ci").val();
+    var phone = $("#phone").val();
     var name = $("#name").val();
 
     formData.append("_token", _token);
-    formData.append("cnp", cnp);
+    formData.append("ci", ci);
+    formData.append("phone", phone);
     formData.append("name", name);
 
     var request = new XMLHttpRequest();
@@ -2402,8 +2405,11 @@ $("body").delegate('.js--participants-create-store', 'click',function(e){
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
                 }
-                if(data.errors.cnp){
-                    $( '#cnp-error' ).html( data.errors.cnp[0] );
+                if(data.errors.ci){
+                    $( '#ci-error' ).html( data.errors.ci[0] );
+                }
+                if(data.errors.phone){
+                    $( '#phone-error' ).html( data.errors.phone[0] );
                 }
                 if(data.errors.form_corruption){
                     $('#form_corruption-error').html( data.errors.form_corruption[0] );
@@ -2464,17 +2470,20 @@ $(document).on("click", ".js--participants-edit", function(e){
 $("body").delegate('.js--participants-update', 'click',function(e){
     e.preventDefault();
     $( '#participants-error' ).html( "" );
-    $( '#cnp-error' ).html( "" );
+    $( '#ci-error' ).html( "" );
+    $( '#phone-error' ).html( "" );
     $( '#name-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var cnp = $("#cnp").val();
+    var ci = $("#ci").val();
+    var phone = $("#phone").val();
     var name = $("#name").val();
 
     formData.append("_token", _token);
-    formData.append("cnp", cnp);
+    formData.append("ci", ci);
+    formData.append("phone", phone);
     formData.append("name", name);
 
     var request = new XMLHttpRequest();
@@ -2526,8 +2535,11 @@ $("body").delegate('.js--participants-update', 'click',function(e){
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
                 }
-                if(data.errors.cnp){
-                    $( '#cnp-error' ).html( data.errors.cnp[0] );
+                if(data.errors.ci){
+                    $( '#ci-error' ).html( data.errors.ci[0] );
+                }
+                if(data.errors.phone){
+                    $( '#phone-error' ).html( data.errors.phone[0] );
                 }
                 if(data.errors.form_corruption){
                     $('#form_corruption-error').html( data.errors.form_corruption[0] );
