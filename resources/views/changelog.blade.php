@@ -18,6 +18,16 @@
             <section>
                 <div class="card">
                     <div class="card-header">
+                        <h4 class="card-title">[ v5.0.2 ] - 20.07.2024</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Redirect Clasament Orientare/Raid.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
                         <h4 class="card-title">[ v5.0.1 ] - 09.07.2024</h4>
                     </div>
                     <div class="card-body">
