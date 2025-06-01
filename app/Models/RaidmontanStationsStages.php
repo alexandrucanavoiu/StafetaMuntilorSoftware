@@ -21,6 +21,8 @@ class RaidmontanStationsStages  extends Model
         'stage_id',
         'category_id',
         'post',
+        'cod_start',
+        'cod_finish',
         'time'
     ];
 

@@ -16,7 +16,6 @@
                                     <button class="btn btn-outline-primary waves-effect waves-light js--teams-create" data-stageid="{{ $stageid }}" data-toggle="modal"  data-target="#ClubsCreate"><span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-25"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adauga o echipa noua</span></button>
                                     <a href="{{ route('teams.order.start', [$stageid]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='list'></i> Ordine Start Echipe</a>
                                     <a href="{{ route('import.index', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='upload'></i> Import file</a>
-                                    <a href="{{ route('uuids.index', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='clock'></i> Lista Ceasuri</a>
                                     <a href="{{ route('teams.listbyteams_pdf', [$stageid]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export PDF</a>
                                 </div>
                             </div>
@@ -37,10 +36,9 @@
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
-                                            <th class="text-center">O</th>
-                                            <th class="text-center">R</th>
                                             <th>Nume Club</th>
                                             <th>Nume Echipa</th>
+                                            <th>Chipno</th>
                                             <th>Categorie</th>
                                             <th class="text-center">Actiuni</th>
                                         </tr>
@@ -49,10 +47,9 @@
                                         @foreach($teams as $team)
                                         <tr>
                                             <td class="text-center">{{ $team->number }}</td>
-                                            <td class="text-center">{{ $team->uuid_orienteering->id }}</td>
-                                            <td class="text-center">{{ $team->uuid_raid->id }}</td>
                                             <td>{{ $team->club->name }}</td>
                                             <td>{{ $team->name }}</td>
+                                            <td>{{ $team->chipno }}</td>
                                             <td>{{ $team->category->name }}</td>
                                             <td class="text-center">
                                                 <div class="dropdown">
@@ -92,10 +89,9 @@
                                     <div><strong>Legenda</strong></div>
                                     <br />
                                     <p><strong>#</strong> - numarul de participare concurent.</p>
-                                    <p><strong>O</strong> - numarul ceasului de orientare (ceas galben).</p>
-                                    <p><strong>R</strong> - numarul ceasului de raid (ceas verde).</p>
                                     <p><strong>Nume Club</strong> - numele clubului participant</p>
                                     <p><strong>Nume Echipa</strong> - numele echipei participante</p>
+                                    <p><strong>Categorie</strong> - categoria echipei</p>
                                     </div>
                                 </div>
                     </div>

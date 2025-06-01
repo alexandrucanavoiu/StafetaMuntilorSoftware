@@ -14,7 +14,7 @@
                 <li class="{{ \App\Helpers\Navigation::isActiveRoute(['dashboard']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('dashboard', $stageid) }}"><i data-feather="grid"></i><span class="menu-title text-truncate" data-i18n="Dashboards">Dashboard</span></a></li>
                 <li class="{{ \App\Helpers\Navigation::isActiveRoute(['setup.index']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('setup.index', [$stageid]) }}"><i data-feather="tool"></i><span class="menu-title text-truncate" data-i18n="Configurare">Configurare</span></a></li>
                 <li class="{{ \App\Helpers\Navigation::isActiveRoute(['clubs.index', 'clubs.clubs.listbyteams']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('clubs.index', [$stageid]) }}"><i data-feather='users'></i><span class="menu-title text-truncate" data-i18n="Cluburi">Cluburi</span></a></li>
-                <li class="{{ \App\Helpers\Navigation::isActiveRoute(['teams.index', 'teams.order.start', 'import.index']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('teams.index', [$stageid]) }}"><i data-feather="sliders"></i><span class="menu-title text-truncate" data-i18n="Echipe">Echipe</span></a></li>
+                <li class="{{ \App\Helpers\Navigation::isActiveRoute(['teams.index', 'teams.order.start', 'import.index', 'import.teams_chipno_and_team_name_check']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('teams.index', [$stageid]) }}"><i data-feather="sliders"></i><span class="menu-title text-truncate" data-i18n="Echipe">Echipe</span></a></li>
                 <li class=" navigation-header"><span data-i18n="">Cultural</span><i data-feather="more-horizontal"></i></li>
                 <li class="{{ \App\Helpers\Navigation::isActiveRoute(['cultural.index']) }} nav-item"><a class="d-flex align-items-center" href="{{ route('cultural.index', [$stageid]) }}"><i data-feather="star"></i><span class="menu-title text-truncate" data-i18n="Cultural">Cultural</span></a></li>
 
@@ -64,9 +64,10 @@
 
 
                 <li class="navigation-header"><span data-i18n="Clasamente">Clasamente </span><i data-feather="more-horizontal"></i></li>
-                <li class="nav-item @if(Request::path() === $stageid .'/rankings/general') active @endif"><a class="d-flex align-items-center" href="{{ route('rankings.general', $stageid) }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">General</span></a></li>
+                <li class="nav-item @if(Request::path() === $stageid .'/rankings/general') active @endif"><a class="d-flex align-items-center" href="{{ route('rankings.general', $stageid) }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">General Etapa</span></a></li>
+                <li class="nav-item @if(Request::path() === $stageid .'/participants/rankingcumulatclubs') active @endif"><a class="d-flex align-items-center" href="{{ route('participants.rankingcumulatclubs') }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">Cumulat Etape</span></a></li>
                 <li class="navigation-header"><span data-i18n="Participanti">Participanti </span><i data-feather="more-horizontal"></i></li>
-                <li class="nav-item @if(Request::path() === '/participants/list') active @endif"><a class="d-flex align-items-center" href="{{ route('participants.list') }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">Toti Participantii</span></a></li>
+                <li class="nav-item @if(Request::path() === '/participants/list') active @endif"><a class="d-flex align-items-center" href="{{ route('participants.list') }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">Alte Clasamente</span></a></li>
                 <li class="nav-item @if(Request::path() === '/participants/'. $stageid .'/list') active @endif"><a class="d-flex align-items-center" href="{{ route('participants.stages.list', $stageid) }}"><i data-feather="map"></i><span class="menu-title text-truncate" data-i18n="Clasamente">Participanti Etapa</span></a></li>
             </ul>
         </div>

@@ -9,6 +9,7 @@
                             </div>
                             <div class="card-content">
                                 <div class="card-body">
+                                    <div class="text-danger">Se Adauga in functie de CSV: Start punch, PunchX, Finish punch</div>
                                     <div class="alert alert-danger print-error-msg" style="display:none">
                                         <span>Există erori la validarea formularului!</span>
                                     </div>
@@ -17,14 +18,17 @@
                                     <form>
                                         @csrf
                                         <div class="form-body">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Start</span>
+                                        <div class="row">
+                                                <div class="col-12 stations-list">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span class="station_type_name_pa0">Start</span>
                                                         </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" value="251" disabled>
+                                                        <div class="col-4">
+                                                            <div class="input-group mb-2 station_type_insert">
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="start_251" value="" aria-describedby="basic-addon2">
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -35,34 +39,46 @@
                                             <div class="row">
                                                 <div class="col-12 stations-list">
                                                     <div class="form-group row">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-2">
                                                             <span class="station_type_name_pa0">PA {{ $number_station }} </span>
                                                         </div>
                                                         <div class="col-4">
                                                             <div class="input-group mb-2 station_type_insert">
-                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[]" value="" aria-describedby="basic-addon2">
-                                                                <span class="input-group-text" id="basic-addon2">cod statie</span>
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[{{ $number_station }}][arrived]" value="" aria-describedby="basic-addon2">
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-4">
                                                             <div class="input-group mb-2 station_type_insert">
-                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="time[]" value="" aria-describedby="basic-addon2">
-                                                                <span class="input-group-text" id="basic-addon2">minute de pauza</span>
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[{{ $number_station }}][go]" value="" aria-describedby="basic-addon2">
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
                                                             </div>
                                                         </div>
+                                                        <div class="col-2">
+                                                            <div class="form-group mb-2">
+                                                                <label class="form-label">Pauza</label>
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" placeholder="" name="post[{{ $number_station }}][time]" value="">
+                                                                    <span class="input-group-text">minute</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                             </div>
-                                            <br />
                                         @endforeach
                                             <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Finish</span>
+                                                <div class="col-12 stations-list">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span class="station_type_name_pa0">Finish</span>
                                                         </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" value="252" disabled>
+                                                        <div class="col-4">
+                                                            <div class="input-group mb-2 station_type_insert">
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="finish_252" value="" aria-describedby="basic-addon2">
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

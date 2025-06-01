@@ -9,6 +9,8 @@
                             </div>
                             <div class="card-content">
                                 <div class="card-body">
+                                    <div class="text-danger">Primul POST este Start-ul, Ultimul POST este Finish-ul. Se Adauga in functie de CSV: Start punch, PunchX, Finish punch</div>
+                                    <br />
                                     <div class="alert alert-danger print-error-msg" style="display:none">
                                         <span>Există erori la validarea formularului!</span>
                                     </div>
@@ -18,23 +20,11 @@
                                         @csrf
                                     <div class="form-body">
 
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="form-group row start_time-list">
-                                                    <div class="col-md-3"><span>Start</span></div>
-                                                    <div class="col-md-5"><input class="form-control" type="text" name="post[]" value="251" disabled></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <br />
 
                                         <div class="row">
                                             <div class="col-12 stations-list">
                                                 @php $number_post = 1; @endphp
                                                     @foreach($orienteering_setup_stages as $key => $orienteering_stage)
-                                                        @if($orienteering_stage->post == 251 || $orienteering_stage->post == 252)
-                                                            @continue
-                                                        @else
                                                         <div class="form-group row">
                                                             <div class="col-md-4"><span class="station_type_name_pa{{ $number_post }}">POST {{ $number_post }}</span></div>
                                                             <div class="col-md-4">
@@ -44,27 +34,18 @@
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-3">
-                                                                @if($key == 1)
+                                                                @if($key == 0)
                                                                     <a href="javascript:void(0);" class="add_button_post" title="Add field"><img src="/images/add-icon.png"/></a>
                                                                 @else
                                                                     <a href="javascript:void(0);" class="remove_button_post" title="Remove field"><img src="/images/remove-icon.png"/></a>
                                                                 @endif
                                                             </div>
                                                         </div>
-                                                            @endif
                                                             @php $number_post++ @endphp
                                                     @endforeach
                                             </div>
                                         </div>
                                     </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="form-group row start_time-list">
-                                                    <div class="col-md-3"><span>Finish</span></div>
-                                                    <div class="col-md-5"><input class="form-control" type="text" name="post[]" value="252" disabled></div>
-                                                </div>
-                                            </div>
-                                        </div>
                                         <br /><br />
                                         <div class="row">
                                                 <div class="col-md-8 offset-md-4 pt-50">

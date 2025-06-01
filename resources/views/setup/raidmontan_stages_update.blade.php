@@ -9,8 +9,10 @@
                             </div>
                             <div class="card-content">
                                 <div class="card-body">
+                                <div class="text-danger">Se Adauga in functie de CSV: Start punch, PunchX, Finish punch</div>
                                     <div class="alert alert-danger print-error-msg" style="display:none">
                                         <span>Există erori la validarea formularului!</span>
+
                                     </div>
                                     <div class="help-block text-danger print-error" id="form_corruption-error" style="display:none"><ul role="alert"></ul></div>
                                     <br />
@@ -20,27 +22,34 @@
                                         @foreach($raid_montan_setup_stages as $number_stage => $raid_montan_setup_stages)
                                             @if($raid_montan_setup_stages->post == 251)
                                             <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Start</span>
+                                                <div class="col-12 stations-list">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span class="station_type_name_pa0">Start</span>
                                                         </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" value="251" disabled>
+                                                        <div class="col-4">
+                                                            <div class="input-group mb-2 station_type_insert">
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="start_251" value="{{ $raid_montan_setup_stages->cod_start }}" aria-describedby="basic-addon2" required>
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <br />
                                             @elseif($raid_montan_setup_stages->post == 252)
                                             <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Finish</span>
+                                                <div class="col-12 stations-list">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span class="station_type_name_pa0">Finish</span>
                                                         </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" value="252" disabled>
+                                                        <div class="col-4">
+                                                            <div class="input-group mb-2 station_type_insert">
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="finish_252" value="{{ $raid_montan_setup_stages->cod_start }}" aria-describedby="basic-addon2" required>
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -49,21 +58,31 @@
                                             <div class="row">
                                                 <div class="col-12 stations-list">
                                                     <div class="form-group row">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-2">
                                                             <span class="station_type_name_pa0">PA {{ $number_stage }} </span>
                                                         </div>
                                                         <div class="col-4">
                                                             <div class="input-group mb-2 station_type_insert">
-                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[]" value="{{ $raid_montan_setup_stages->post }}" aria-describedby="basic-addon2">
-                                                                <span class="input-group-text" id="basic-addon2">cod statie</span>
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[{{ $number_stage }}][arrived]" value="{{ $raid_montan_setup_stages->cod_start }}" aria-describedby="basic-addon2" required>
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-4">
                                                             <div class="input-group mb-2 station_type_insert">
-                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="time[]" value="{{ $raid_montan_setup_stages->time }}" aria-describedby="basic-addon2">
-                                                                <span class="input-group-text" id="basic-addon2">minute de pauza</span>
+                                                                <input type="text" class="form-control" placeholder="" aria-label="" name="post[{{ $number_stage }}][go]" value="{{ $raid_montan_setup_stages->cod_finish }}" aria-describedby="basic-addon2" required>
+                                                                <span class="input-group-text" id="basic-addon2">cod</span>
                                                             </div>
                                                         </div>
+                                                        <div class="col-2">
+                                                            <div class="form-group mb-2">
+                                                                <label class="form-label">Pauza</label>
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" placeholder="" name="post[{{ $number_stage }}][time]" value="{{ $raid_montan_setup_stages->time }}" required>
+                                                                    <span class="input-group-text">minute</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                             </div>

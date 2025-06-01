@@ -10,8 +10,6 @@ use Illuminate\Http\Request;
 use App\Models\Club;
 use App\Models\Team;
 use App\Models\Category;
-use App\Models\UuidOrienteeting;
-use App\Models\UuidRaid;
 use App\Models\TeamOrderStart;
 use App\Models\Knowledge;
 use App\Models\Orienteering;
@@ -47,7 +45,7 @@ class TeamsController extends Controller
             return redirect()->route('error.alert')->with($notification);
         }
 
-        $teams = Team::where('stage_id', $stageid)->with('category')->with('club')->with('uuid_orienteering')->with('uuid_raid')->OrderBy('club_id', 'ASC')->get();
+        $teams = Team::where('stage_id', $stageid)->with('category')->with('club')->OrderBy('club_id', 'ASC')->get();
         $clubs_count = Club::get()->count();
         if($clubs_count == 0){
             $notification = array(
@@ -79,20 +77,10 @@ class TeamsController extends Controller
             $clubs = Club::OrderBy('name', 'ASC')->get();
             $categories = Category::OrderBy('id', 'ASC')->get();
 
-            $used_uuid_orienteering = [];
-            $used_uuid_raid = [];
-            $teams = Team::where('stage_id', $stageid)->get();
-            foreach($teams as $key => $team){
-                $used_uuid_orienteering[] = $team->uuid_card_orienteering_id;
-                $used_uuid_raid[] = $team->uuid_card_raid_id;
-            }
-
-            $uuid_orienteering = UuidOrienteeting::OrderBy('id', 'ASC')->whereNotIn('id', $used_uuid_orienteering)->get();
-            $uuid_raid = UuidRaid::OrderBy('id', 'ASC')->whereNotIn('id', $used_uuid_raid)->get();
             $ajax_status_response = "success";
             return response()->json( [
                 'ajax_status_response' => $ajax_status_response,
-                'view_content' => view('teams.create', ['clubs' => $clubs, 'categories' => $categories, 'uuid_orienteering' => $uuid_orienteering, 'uuid_raid' => $uuid_raid, 'stageid' => $stageid])->render()
+                'view_content' => view('teams.create', ['clubs' => $clubs, 'categories' => $categories, 'stageid' => $stageid])->render()
             ] );
 
 
@@ -115,9 +103,7 @@ class TeamsController extends Controller
                 'name' => 'required|max:255|min:3',
                 'club_id' => 'required|numeric|exists:clubs,id',
                 'category_id' => 'required|numeric|exists:categories,id',
-                'number' => 'required|numeric|max:50000|min:1',
-                'uuid_card_orienteering_id' => 'required|numeric|exists:uuids_orienteering,id',
-                'uuid_card_raid_id' => 'required|numeric|exists:uuids_raid,id',
+                'number' => 'nullable|numeric|max:50000|min:1',
             ];
 
             $request->merge(['created_at' => date('Y-m-d H:i:s')]);
@@ -126,15 +112,23 @@ class TeamsController extends Controller
 
 
             // clean input before update in db
-            $data = $request->only(['name', 'stage_id', 'club_id', 'category_id', 'number', 'uuid_card_orienteering_id', 'uuid_card_raid_id', 'created_at', 'updated_at']);
+            $data = $request->only(['name', 'stage_id', 'club_id', 'category_id', 'number', 'created_at', 'updated_at']);
             $validator = Validator::make($data, $rules);
 
-            $participant_number = Team::where('stage_id', $stageid)->where('number', $data['number'])->first();
-            if($participant_number != null){
-                $validator->after(function ($validator) {
-                    $validator->errors()->add('form_corruption', 'Numarul de participant a fost deja folosit');
-                });
+            if(isset($data['number'])){
+                $participant_number = Team::where('stage_id', $stageid)
+                ->where('number', $data['number'])
+                ->first();
+
+                if ($participant_number && $participant_number->id !== $team->id) {
+                    $validator->after(function ($validator) {
+                        $validator->errors()->add('form_corruption', 'Numarul de participant a fost deja folosit');
+                    });
+                }
+            } else {
+                $data['number'] = null;
             }
+
 
             $stage = Stages::where('id', $stageid)->first();
             if($stage == null){
@@ -195,28 +189,12 @@ class TeamsController extends Controller
                 $ajax_status_response = "error";
                 return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response], 200);
             } else {
-
                 $clubs = Club::OrderBy('name', 'ASC')->get();
                 $categories = Category::OrderBy('id', 'ASC')->get();
-                $used_uuid_orienteering = [];
-                $used_uuid_raid = [];
-                $teams = Team::where('stage_id', $stageid)->get();
-                foreach($teams as $key => $team_result){
-                    if($team->id == $team_result->id){
-                        continue;
-                    } else {
-                        $used_uuid_orienteering[] = $team_result->uuid_card_orienteering_id;
-                        $used_uuid_raid[] = $team_result->uuid_card_raid_id; 
-                    }
-                }
-    
-                $uuid_orienteering = UuidOrienteeting::OrderBy('id', 'ASC')->whereNotIn('id', $used_uuid_orienteering)->get();
-                $uuid_raid = UuidRaid::OrderBy('id', 'ASC')->whereNotIn('id', $used_uuid_raid)->get();
-
                 $ajax_status_response = "success";
                 return response()->json( [
                     'ajax_status_response' => $ajax_status_response,
-                    'view_content' => view('teams.edit', ['team' => $team, 'clubs' => $clubs, 'categories' => $categories, 'uuid_orienteering' => $uuid_orienteering, 'uuid_raid' => $uuid_raid, 'stageid' => $stageid])->render()
+                    'view_content' => view('teams.edit', ['team' => $team, 'clubs' => $clubs, 'categories' => $categories, 'stageid' => $stageid])->render()
                 ] );
             }
 
@@ -234,6 +212,7 @@ class TeamsController extends Controller
     public function update($stageid, $id, Request $request)
 
     {
+
         if( $request->ajax() )
         {
             $team = Team::FindOrFail($id);
@@ -249,15 +228,14 @@ class TeamsController extends Controller
                         'name' => 'required|max:255|min:3',
                         'club_id' => 'required|numeric|exists:clubs,id',
                         'category_id' => 'required|numeric|exists:categories,id',
-                        'number' => 'required|numeric|max:50000|min:1',
-                        'uuid_card_orienteering_id' => 'required|numeric|exists:uuids_orienteering,id',
-                        'uuid_card_raid_id' => 'required|numeric|exists:uuids_raid,id',
+                        'number' => 'nullable|numeric|max:50000|min:1',
+                        'chipno' => 'nullable|numeric|max:5000000000|min:1',
                     ];
 
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
                     $request->merge(['stage_id' => $stageid]);
 
-                    $data = $request->only(['name', 'stage_id', 'club_id', 'category_id', 'number', 'uuid_card_orienteering_id', 'uuid_card_raid_id', 'updated_at']);
+                    $data = $request->only(['name', 'stage_id', 'club_id', 'category_id', 'number', 'chipno', 'updated_at']);
 
                     // clean input before update in db
                     $data['name'] =  trim(strip_tags($request->input('name'), ''));
@@ -265,11 +243,19 @@ class TeamsController extends Controller
 
                     $validator = Validator::make($data, $rules);
 
-                    $participant_number = Team::where('stage_id', $stageid)->where('number', [$team->number])->first();
-                    if($participant_number->number != $team->number){
-                        $validator->after(function ($validator) {
-                            $validator->errors()->add('form_corruption', 'Numarul de participant a fost deja folosit');
-                        });
+           
+                    if(isset($data['number'])){
+                        $participant_number = Team::where('stage_id', $stageid)
+                        ->where('number', $data['number'])
+                        ->first();
+
+                        if ($participant_number && $participant_number->id !== $team->id) {
+                            $validator->after(function ($validator) {
+                                $validator->errors()->add('form_corruption', 'Numarul de participant a fost deja folosit');
+                            });
+                        }
+                    } else {
+                        $data['number'] = null;
                     }
 
                     $stage = Stages::where('id', $stageid)->first();
@@ -279,13 +265,18 @@ class TeamsController extends Controller
                         });
                     }
 
-                    if($data['number'] != $team->number){
-                        $find_team_number = Team::where('stage_id', $stageid)->where('number', $data['number'])->first();
-                        if($find_team_number !== null){
+                    if(isset($data['chipno'])){
+                        $participant_chipno = Team::where('stage_id', $stageid)
+                        ->where('chipno', $data['chipno'])
+                        ->first();
+
+                        if ($participant_chipno && $participant_chipno->id !== $team->id) {
                             $validator->after(function ($validator) {
-                                $validator->errors()->add('number', 'Numarul de participare exista in baza de date!');
+                                $validator->errors()->add('form_corruption', 'Numarul de CHIP a fost deja folosit');
                             });
                         }
+                    } else {
+                        $data['chipno'] = null;
                     }
 
                     if($data['name'] != $team->name){
@@ -296,8 +287,6 @@ class TeamsController extends Controller
                             });
                         }
                     }
-
-                   
 
                     if($validator->passes())
                     {
@@ -418,7 +407,7 @@ class TeamsController extends Controller
             return redirect()->route('error.alert')->with($notification);
         }
         
-        $teams = Team::where('stage_id', $stageid)->with('club')->with('uuid_orienteering')->with('uuid_raid')->with('category')->get();
+        $teams = Team::where('stage_id', $stageid)->with('club')->with('category')->get();
 
         if($teams->isEmpty() === false) {
 
@@ -427,13 +416,10 @@ class TeamsController extends Controller
             $teams_list = [];
             foreach($teams as $key => $team){
                 $teams_list[$key]['number'] = $team->number;
-                $teams_list[$key]['uuid_orienteering_id'] = $team->uuid_orienteering->id;
-                $teams_list[$key]['uuid_orienteering_name'] = $team->uuid_orienteering->name;
-                $teams_list[$key]['uuid_raid_id'] = $team->uuid_orienteering->id;
-                $teams_list[$key]['uuid_raid_name'] = $team->uuid_raid->name;
                 $teams_list[$key]['name'] = $team->name;
                 $teams_list[$key]['club'] = $team->club->name;
                 $teams_list[$key]['category'] = $team->category->name;
+                $teams_list[$key]['chipno'] = $team->chipno;
             }
 
             usort($teams_list, function ($item1, $item2) {
@@ -828,26 +814,5 @@ class TeamsController extends Controller
                 
         
             }
-
-
-            public function index_uuids($stageid) {
-
-                $stage = Stages::where('id', $stageid)->first();
-                if($stage == null){
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('error.alert')->with($notification);
-                }
-
-                $uuid_orienteering = UuidOrienteeting::OrderBy('id', 'ASC')->get();
-                $uuid_raidmontan = UuidRaid::OrderBy('id', 'ASC')->get();
-                
-                return view('teams.uuids.index',compact('uuid_orienteering','uuid_raidmontan', 'stageid'));
-
-            }
-
 
 }

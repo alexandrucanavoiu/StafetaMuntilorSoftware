@@ -51,6 +51,7 @@ class ClubsController extends Controller
         {
 
             $stage = Stages::where('id', $stageid)->first();
+            $stages = Stages::OrderBy('id', 'ASC')->get();
             if($stage == null){
                 $notification = array(
                     'success_title' => 'Eroare!!',
@@ -65,7 +66,7 @@ class ClubsController extends Controller
                 $ajax_status_response = "success";
                 return response()->json( [
                     'ajax_status_response' => $ajax_status_response,
-                    'view_content' => view('clubs.create', compact('stageid'))->render()
+                    'view_content' => view('clubs.create', compact('stageid', 'stages'))->render()
                 ] );
 
 
@@ -85,20 +86,15 @@ class ClubsController extends Controller
         {
 
             $rules = [
-                'clubs' => 'required|array|min:1|max:30',
-                'clubs.*' => 'required||max:255|min:2',
+                'clubs' => 'required|min:1|max:255',
+                'stage_id' => 'required|numeric|max:255|min:0',
             ];
 
             $request->merge(['created_at' => date('Y-m-d H:i:s')]);
             $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
+            $request->merge(['stage_id' => (int)$request->input('stage_id')]);
 
-            if(!empty($request->input('clubs'))){
-                $create_array_ajax_clubs = explode(',', $request->input('clubs'));
-                $request->merge(['clubs' => $create_array_ajax_clubs]);
-            }
-
-
-            $data = $request->only(['clubs', 'created_at', 'updated_at']);
+            $data = $request->only(['clubs', 'created_at', 'updated_at', 'stage_id']);
             $validator = Validator::make($data, $rules);
 
             $stage = Stages::where('id', $stageid)->first();
@@ -113,34 +109,30 @@ class ClubsController extends Controller
                     $validator->errors()->add('form_corruption', 'Nume Club gol!');
                 });
             } else {
-                foreach($request->input('clubs') as $club_name){
-                    if($club_name == ""){
+                    if($request->input('clubs') == ""){
                         $validator->after(function ($validator) {
                             $validator->errors()->add('form_corruption', 'Va rugam sa verificati formularul si sa stergeti Nume Club care nu este completat!');
                         });
                     } else {
-                        $find_club = Club::where('name', $club_name)->first();
+                        $find_club = Club::where('name', $request->input('clubs'))->first();
                         if($find_club !== null){
                                 $validator->after(function ($validator) {
                                     $validator->errors()->add('form_corruption', "Unul sau mai multe cluburi din lista exista deja in baza de date iar formularul nu poate fi salvat.");
                                 });
                         }   
-                    }             
-                }
+                    }       
             }
 
             if($validator->passes())
             {
 
-                foreach ($data['clubs'] as $club) {
-                    if(isset($club)) {
-                        Club::create([
-                            'name' => trim(strip_tags($club, '')),
-                            'created_at' => $data['created_at'],
-                            'updated_at' => $data['updated_at'],
-                        ]);
-                    }
-                }
+                Club::create([
+                    'name' => trim(strip_tags($data['clubs'], '')),
+                    'stage_id' => $data['stage_id'],
+                    'created_at' => $data['created_at'],
+                    'updated_at' => $data['updated_at'],
+                ]);
+
 
                 $ajax_redirect_url = route('clubs.index', [$stageid]);
                 $ajax_message_response = "Datele au fost salvate.";
@@ -168,6 +160,7 @@ class ClubsController extends Controller
         {
 
             $stage = Stages::where('id', $stageid)->first();
+            $stages = Stages::OrderBy('id', 'ASC')->get();
             if($stage == null){
                 $notification = array(
                     'success_title' => 'Eroare!!',
@@ -187,7 +180,7 @@ class ClubsController extends Controller
                 $ajax_status_response = "success";
                 return response()->json( [
                     'ajax_status_response' => $ajax_status_response,
-                    'view_content' => view('clubs.edit', ['club' => $club, 'stageid' => $stageid])->render()
+                    'view_content' => view('clubs.edit', ['club' => $club, 'stageid' => $stageid, 'stages' => $stages])->render()
                 ] );
             }
 
@@ -220,10 +213,12 @@ class ClubsController extends Controller
 
                     $rules = [
                         'name' => 'required|max:255|min:2',
+                        'stage_id' => 'required|numeric|max:255|min:0',
                     ];
 
+                    $request->merge(['stage_id' => (int)$request->input('stage_id')]);
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
-                    $data = $request->only(['name', 'updated_at']);
+                    $data = $request->only(['name', 'updated_at', 'stage_id']);
                     $validator = Validator::make($data, $rules);
 
                     $stage = Stages::where('id', $stageid)->first();

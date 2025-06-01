@@ -69,8 +69,9 @@ class DashboardController extends Controller
         $count_teams = Team::where('stage_id', $stageid)->get()->count();
 
         $teams = Team::where('stage_id', $stageid)->get();
+        $stages = Stages::get();
         
-        return view('dashboard',compact('count_clubs', 'count_teams', 'stageid'));
+        return view('dashboard',compact('count_clubs', 'count_teams', 'stageid', 'stages'));
     }
 
     public function changelog($stageid)

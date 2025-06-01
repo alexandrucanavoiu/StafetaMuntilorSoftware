@@ -16,8 +16,6 @@ use App\Models\RaidmontanStationsStages;
 use App\Models\OrienteeringStationsStages;
 use App\Models\RaidmontanParticipations;
 use App\Models\RaidmontanParticipationsEntries;
-use App\Models\UuidRaid;
-use App\Models\UuidOrienteeting;
 use DB;
 use Illuminate\Validation\Rule;
 use Excel;
@@ -56,6 +54,108 @@ class ImportController extends Controller
         return view('import.index',compact('teams', 'participations_raidmontan', 'participations_orienteering', 'stageid'));
     }
 
+
+    public function teams_chipno_and_team_name_check($stageid, Request $request)
+    {
+
+        if ($request->hasFile('import_file')) {
+    
+            $path = $request->file('import_file')->getRealPath();
+
+            // remove all chipno from db
+            Team::query()->update(['chipno' => null]);    
+    
+            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $header = str_getcsv(array_shift($lines), ';');
+    
+            $dataRows = array_map(function ($line) {
+                return str_getcsv($line, ';');
+            }, $lines);
+
+            $chipnoIndex = null;
+            $surnameIndex = null;
+            $shortIndex = null;
+
+            foreach ($header as $index => $column) {
+                if (trim($column) === 'Chipno') {
+                    $chipnoIndex = $index;
+                } elseif (trim($column) === 'Surname') {
+                    $surnameIndex = $index;
+                } elseif (trim($column) === 'Short') {
+                    $shortIndex = $index;
+                }
+            }
+
+            // Optional: validate that all were found
+            if (is_null($chipnoIndex) || is_null($surnameIndex) || is_null($shortIndex)) {
+                $notification = array(
+                    'success_title' => 'Error',
+                    'message' => ' One or more required columns (Chipno, Surname, Short) were not found in the header.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('import.index', [$stageid])->with($notification); 
+            }
+
+            $categories = Category::get();
+            $categories_array = [];
+            foreach($categories as $category){
+                $categories_array[$category->name] = $category->id;
+            }
+
+
+            $teams_with_issue = [];
+            $teams_exists = [];
+            $teams_exists_but_category_is_wrong = [];
+            foreach ($dataRows as $index => $fields) {
+                if( !isset($fields[$surnameIndex]) || !isset($categories_array[$fields[$shortIndex]]) ){
+                    $notification = array(
+                        'success_title' => 'Error',
+                        'message' => 'Numele categoriilor din fisierule excel NU corespund cu cele din Statefa Muntilor. Va rugam sa verificati numele categoriilor.',
+                        'alert-type' => 'error'
+                    );
+                    return redirect()->route('import.index', [$stageid])->with($notification); 
+                }
+
+                $surnameKey = $fields[$surnameIndex] ?? null;
+
+                $team_exist = Team::where('name', $fields[$surnameIndex])->where('category_id', $categories_array[$fields[$shortIndex]])->where('stage_id', $stageid)->first();
+                    if($team_exist !== null && !empty($team_exist->name) && !empty($fields[$chipnoIndex]) && !empty($team_exist->category->name) )
+                    {
+
+                        $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['id'] = $team_exist->id;
+                            $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['name'] = $team_exist->name;
+                            $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['club'] = $team_exist->club->name;
+                            $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['category_name'] = $team_exist->category->name;
+                            $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['category_id'] = $team_exist->category_id;
+                            $teams_exists[$team_exist->category_id][$fields[$surnameIndex]]['chipno'] = $fields[$chipnoIndex];
+                    } else {
+                        $teams_with_issue[$fields[$shortIndex]][$fields[$surnameIndex]]['name'] = $fields[$surnameIndex] ?? 'N/A';
+                        $teams_with_issue[$fields[$shortIndex]][$fields[$surnameIndex]]['category_name'] = $fields[$shortIndex] ?? 'N/A';
+                        $teams_with_issue[$fields[$shortIndex]][$fields[$surnameIndex]]['chipno'] =  $fields[$chipnoIndex] ?? 'N/A';
+                    }
+            }
+
+
+            foreach($teams_exists as $team_in_category){
+                foreach($team_in_category as $team){
+                    Team::where('id', $team['id'])->where('stage_id', $stageid)->where('category_id', $team['category_id'])->where('name', $team['name'])->update(['chipno' => $team['chipno']]);
+                }
+            }
+
+            return view('teams.index_chipno',compact('stageid', 'teams_exists', 'teams_with_issue', 'teams_exists_but_category_is_wrong'));
+            
+
+        } else {
+            $notification = array(
+                'success_title' => 'Error',
+                'message' => 'No file uploaded.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('import.index', [$stageid])->with($notification); 
+        }
+
+
+    }
 
     public function raidmontan_seed($stageid)
     {
@@ -182,7 +282,6 @@ class ImportController extends Controller
 
     }
 
-
     public function raidmontan_seed_intern($stageid)
     {
 
@@ -299,7 +398,6 @@ class ImportController extends Controller
 
     }
 
-
     public function orienteering_seed($stageid)
     {
 
@@ -348,197 +446,580 @@ class ImportController extends Controller
 
     }
 
-
-    public function raidmontan_import_uuids($stageid, Request $request)
+    public function orienteering_import_uuids($stageid, Request $request)
     {
 
-        $stage = Stages::where('id', $stageid)->first();
-        if($stage == null){
-            $notification = array(
-                'success_title' => 'Eroare!!',
-                'message' => 'StageID-ul nu este valid. Incercati sa nu modificati url-urile de mana.',
-                'alert-type' => 'error'
-            );
-            return redirect()->route('error.alert')->with($notification);
-        }
-
-        $this->validate($request, [
-            'import_file' => 'required'
-        ]);
-
-        $teams = Team::where('stage_id', $stageid)->get();
-
-        $posts = [];
-//        $posts[1]= [ 251,31,32,33,252 ]; //Family
-//        $posts[2]= [ 251,31,33,33,252 ]; //Juniori
-//        $posts[3]= [ 251,31,32,33,34,35,36,252 ]; //Elite
-//        $posts[4]= [ 251,31,33,32,252 ]; //Open
-//        $posts[5]= [ 251,31,33,32,252 ]; //Veterani
-//        $posts[6]= [ 251,31,33,32,252 ]; //Feminin
-//        $posts[7]= [ 251,31,33,32,252 ]; //Seniori
-
-
-        function UUIDWithSpaces($uuid) {
-            return preg_replace("/\B(?=(?:[0-9A-F]{2})+\b)/", ' ', $uuid);
-        }
-
-
-        $get_posts = RaidmontanStationsStages::where('stage_id', $stageid)->get();
-
-        foreach ($get_posts as $key => $gets){
-
-            if($gets->category_id == 1){
-                $posts[1][] = $gets->post;
-            }
-            if($gets->category_id == 2){
-                $posts[2][] = $gets->post;
-            }
-            if($gets->category_id == 3){
-                $posts[3][] = $gets->post;
-            }
-            if($gets->category_id == 4){
-                $posts[4][] = $gets->post;
-            }
-            if($gets->category_id == 5){
-                $posts[5][] = $gets->post;
-            }
-            if($gets->category_id == 6){
-                $posts[6][] = $gets->post;
-            }
-            if($gets->category_id == 7){
-                $posts[7][] = $gets->post;
-            }
-        }
-
-
         if ($request->hasFile('import_file')) {
-            echo "<pre>";
+    
             $path = $request->file('import_file')->getRealPath();
-            $uuid_from_file = "FF FF FF FF";
-            $data = array();
+    
+            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $header = str_getcsv(array_shift($lines), ';');
+    
+            $dataRows = array_map(function ($line) {
+                return str_getcsv($line, ';');
+            }, $lines);
 
-            //take data from file
-            if ($file = fopen($path, "r")) {
-                while(!feof($file)) {
-//                    $line = str_replace(' ','',fgets($file));
-                    $line = fgets($file);
+            $teams = Team::where('stage_id', $stageid)->with('category')->get();
+            $categories = Category::get();
 
-                    if( empty(trim($line)) )
-                    {
-                        continue;
-                    }
+            
+            $chipnoIndex = null;
+            $surnameIndex = null;
+            $shortIndex = null;
+            $startPunch = null;
+            $finishPunch = null;
+            $orienteering_stations_array = [];
 
-                    if(str_starts_with($line, '>')){
-                        echo "<h2><font color='red'><strong>";
-                        echo "Ceasul cu UUID " . $uuid_from_file . " nu are date valide.</br />";
-                        echo "Te rugam sa stergi inregistrarea pentru acest ceas din fisierul text sau sa verifici daca este o eroare de validare.";
-                        echo "</stroing></font></h2>";
-                        fclose($file);
-                        die();
-                    }
-
-                    if(substr( $line, 0, 5 ) === "Card:"){
-
-                        $uuid_from_file = substr($line,6,11);
-                        $uuid_from_db = UuidRaid::where('name',$uuid_from_file)->first();
-
-                        // Verificare daca UUID-ul exista in baza de date sau asociat unei echipe
-                        if(!empty($uuid_from_db)) {
-                            $echipa = Team::where('stage_id', $stageid)->where('uuid_card_raid_id',$uuid_from_db->id)->first();
-                            if($echipa === NULL){
-                                echo "<h2><font color='red'><strong>";
-                                echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db->id . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db->name . ".";
-                                echo "<br />";
-                                echo "Va rugam sa verificati ceasul si sa il asociati unei echipe sau sa stergeti inregistrarea din fisierul text.";
-                                echo "<br />";
-                                echo "Importul datelor nu poate fi realizat complet";
-                                echo "</stroing></font></h2>";
-                                fclose($file);
-                                die();
+            foreach($categories as $category){
+                $orienteering_stations_category = OrienteeringStationsStages::where('category_id', $category->id)->get();
+                $first_post = optional($orienteering_stations_category->first())->post;
+                $last_post = optional($orienteering_stations_category->last())->post;
+                foreach($orienteering_stations_category as $orienteering_stations){
+                    foreach ($header as $index => $column) {
+                        if (trim($column) === $orienteering_stations->post) {
+                            $orienteering_stations_array[$category->name][$index] = $orienteering_stations->post;
+                            if ($orienteering_stations->post === $first_post) {
+                                $start_punch_array[$category->name] = $orienteering_stations->post;
                             }
-                        } else {
-                            echo "<h2><font color='red'><strong>";
-                            echo "Ceasul cu UUID " . $uuid_from_file . " nu exista in baza de date. Ceasul nu se regaseste in LISTA CU UUID-uri.";
-                            echo "<br />";
-                            echo "Acest ceas este folosit pentru teste? Te rugam sa stergi inregistrarea pentru acest ceas din fisierul text.";
-                            echo "<br />";
-                            echo "Importul datelor nu poate fi realizat complet";
-                            echo "</stroing></font></h2>";
-                            fclose($file);
-                            die('');
-                        }
-
-                        // UUID-uri din fisier ca si categorie echipa
-
-                        $uuid_categorie = $posts[$echipa['category_id']];
-                        $team_name = $echipa->name;
-                        $team_id = $echipa->id;
-                        $clock_number = $echipa->uuid_card_raid_id;
-                        $category_id = $echipa->category_id;
-
-
-                        // Array pentru fiecare UUID
-                        $data[$uuid_from_file]['stage_id'] = $stageid;
-                        $data[$uuid_from_file]['category'] = $uuid_categorie;
-                        $data[$uuid_from_file]['category_id'] = $category_id;
-                        $data[$uuid_from_file]['team_name'] = $team_name;
-                        $data[$uuid_from_file]['team_id'] = $team_id;
-                        $data[$uuid_from_file]['clock_number'] = $clock_number;
-                        $data[$uuid_from_file]['uuid_code'] = $uuid_from_file;
-
-                        switch ($category_id) {
-                            case "1":
-                                $data[$uuid_from_file]['category_name'] = "FAMILY";
-                                break;
-                            case "2":
-                                $data[$uuid_from_file]['category_name'] = "JUNIOR";
-                                break;
-                            case "3":
-                                $data[$uuid_from_file]['category_name'] = "ELITE";
-                                break;
-                            case "4":
-                                $data[$uuid_from_file]['category_name'] = "OPEN";
-                                break;
-                            case "5":
-                                $data[$uuid_from_file]['category_name'] = "VETERANI";
-                                break;
-                            case "6":
-                                $data[$uuid_from_file]['category_name'] = "FEMININ";
-                                break;
-                            case "7":
-                                $data[$uuid_from_file]['category_name'] = "SENIORI";
-                                break;
-                            default:
-                                $data[$uuid_from_file]['category_name'] = "NONE";
-                        }
-
-
-                    } else {
-
-
-                        // Grupare post/timestamp/data si creare array
-
-                        $parts = explode(",",$line);
-
-                        foreach ( $parts as $key => $part )
-                        {
-                            if( trim($parts[$key]) == '%' || $key % 2 != 0  )
-                            {
-                                continue;
+            
+                            // Verifică dacă este ultimul
+                            if ($orienteering_stations->post === $last_post) {
+                                $finish_punch_array[$category->name] = $orienteering_stations->post;
                             }
-
-                            $data[$uuid_from_file][] = array( "post"=> $parts[$key], "time" => $parts[$key+1]);
-
                         }
-
+                        elseif (trim($column) === 'Chipno') {
+                            $chipnoIndex = $index;
+                        } elseif (trim($column) === 'Surname') {
+                            $surnameIndex = $index;
+                        } elseif (trim($column) === 'Short') {
+                            $shortIndex = $index;
+                        } elseif (trim($column) === 'Start punch') {
+                            $startPunch = $index;
+                        } elseif (trim($column) === 'Finish punch') {
+                            $finishPunch = $index;
+                        }
                     }
 
                 }
 
-                fclose($file);
             }
 
 
+            // Optional: validate that all were found
+            if (is_null($chipnoIndex) || is_null($surnameIndex) || is_null($shortIndex)) {
+                $notification = array(
+                    'success_title' => 'Error',
+                    'message' => ' One or more required columns (Chipno, Surname, Short) were not found in the header.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('import.index', [$stageid])->with($notification); 
+            }
+
+
+            $teams_in_stage = [];            
+            $teams_with_issue = [];
+            
+            foreach ($dataRows as $index => $fields) {
+                // $surnameKey = $fields[$surnameIndex] ?? null;
+                if (!isset($teams_in_stage[$chipnoIndex])) 
+                {
+                    // Key exists, do something
+                    $teams_in_stage[$fields[$chipnoIndex]]['chipno'] = $fields[$chipnoIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['category_name'] = $fields[$shortIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['name'] = $fields[$surnameIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['orienteering_missing'] = 0;
+                    $teams_in_stage[$fields[$chipnoIndex]]['start_time'] = '00:00:00';
+                    $teams_in_stage[$fields[$chipnoIndex]]['finish_time'] = '00:00:00';
+                    $teams_in_stage[$fields[$chipnoIndex]]['total_time'] = '00:00:00';
+                    $teams_in_stage[$fields[$chipnoIndex]]['id'] = 0;
+                    $teams_in_stage[$fields[$chipnoIndex]]['club'] = '';
+                    $teams_in_stage[$fields[$chipnoIndex]]['stations'] = [];
+
+                    $team_exist = Team::where('chipno', $fields[$chipnoIndex])->with('category')->where('stage_id', $stageid)->first();
+            
+                        if( !empty($team_exist) )
+                        {
+                            $teams_in_stage[$fields[$chipnoIndex]]['id'] = $team_exist->id;
+                            $teams_in_stage[$fields[$chipnoIndex]]['club'] = $team_exist->club->name;
+
+                            foreach($orienteering_stations_array[$fields[$shortIndex]] as $station_key => $station){
+
+                                if( !isset($fields[$station_key]) ){
+                                    $notification = array(
+                                        'success_title' => 'Error',
+                                        'message' => 'Fisierul este incorect, nu sunt setate toate punch-urile corect! Verifica daca nr de posturi de pe categorie corespunde cu cele din excel.',
+                                        'alert-type' => 'error'
+                                    );
+                                    return redirect()->route('import.index', [$stageid])->with($notification); 
+                                }
+                                if (in_array($fields[$station_key], ["-----", "00:00:00", ""])) {
+                                    $teams_in_stage[$fields[$chipnoIndex]]['orienteering_missing'] = 1;
+                                }
+
+                                
+                                
+                                $teams_in_stage[$fields[$chipnoIndex]]['stations'][$station] = date("H:i:s",strtotime($fields[$station_key]));
+                            }
+                            
+                            //Creaza metoda de calcul 1 2 3
+                            // 1 - Daca Orientarea este la inceput si dupa raid-ul - Finish-ul trebuie calculat altfel: finish punch - start punch 
+                            // 2 - Daca Raid-ul este la inceput si dupa orientare
+                            // 3 - Daca Orientarea si Raid-ul sunt pe zile spearate si au Start Punch / Finish Punch ambele
+                            // Pentru asta am creat $finish_punch_array
+
+                            if($start_punch_array[$team_exist->category->name] == "Start punch" && $finish_punch_array[$team_exist->category->name] == "Finish punch"){
+                                // Metoda 3
+                                $start_time_input = reset($teams_in_stage[$fields[$chipnoIndex]]['stations']);
+                                if (str_starts_with($start_time_input, "12")) {
+                                    $start_time_input = "00" . substr($start_time_input, 2);  // păstrează ":26:17"
+                                }
+                                $start_time = date("H:i:s",strtotime($start_time_input));
+
+                                $end_time_input = end($teams_in_stage[$fields[$chipnoIndex]]['stations']);
+                                if (str_starts_with($end_time_input, "12")) {
+                                    $end_time_input = "00" . substr($end_time_input, 2);  // păstrează ":26:17"
+                                }
+                                $finish_time = date("H:i:s",strtotime($end_time_input));
+
+                                $start_punch_time_convert = \DateTime::createFromFormat('H:i:s', $start_time);
+                                $finish_punch_time_convert = \DateTime::createFromFormat('H:i:s', $finish_time);
+
+                                // Verifica diferenta dintre Start si Total timp
+                                // Compute the interval
+                                $total_time = $start_punch_time_convert->diff($finish_punch_time_convert);
+                                // Format the interval as H:M:S
+                                $total_time = $total_time->format('%H:%I:%S');
+
+                            } elseif($start_punch_array[$team_exist->category->name] !== "Start punch" && $finish_punch_array[$team_exist->category->name] == "Finish punch"){
+                                // Metoda 2
+
+                                //se ia Finish Punch time - Start Punch dupa care se va scadea Start-ul de la orientare pentru total
+                                $start_punch_time = date("H:i:s",strtotime($fields[$startPunch]));
+                                if (str_starts_with($start_punch_time, "12")) {
+                                    $start_punch_time = "00" . substr($start_punch_time, 2);  // păstrează ":26:17"
+                                }
+                                $finish_punch_time = date("H:i:s",strtotime($fields[$finishPunch]));
+                                if (str_starts_with($finish_punch_time, "12")) {
+                                    $finish_punch_time = "00" . substr($finish_punch_time, 2);  // păstrează ":26:17"
+                                }
+                                $start_punch_time_convert = \DateTime::createFromFormat('H:i:s', $start_punch_time);
+                                $finish_punch_time_convert = \DateTime::createFromFormat('H:i:s', $finish_punch_time);
+
+                                // Se calculeaza diferenta intre Start Punch si Finish Time pentru a fi scazuta pe viitor
+                                // Compute the interval_start_punch_and_finish_time
+                                $interval_start_punch_and_finish_time = $start_punch_time_convert->diff($finish_punch_time_convert);
+                                // Format the interval as H:M:S
+                                $total_interval_start_punch_and_finish_time = $interval_start_punch_and_finish_time->format('%H:%I:%S');
+                                // Convertire in datetime
+                                $total_interval_start_punch_and_finish_time_date = \DateTime::createFromFormat('H:i:s', $total_interval_start_punch_and_finish_time);
+
+                                // Ia start-ul de Orientare
+                                $start_time_input = reset($teams_in_stage[$fields[$chipnoIndex]]['stations']);
+                                $start_time = date("H:i:s",strtotime($start_time_input));
+                                $start_time_date = \DateTime::createFromFormat('H:i:s', $start_time);
+
+                                // Verifica diferenta dintre Start si Total timp
+                                // Compute the interval
+                                $interval_start_orientare_and_interval_start_punch_and_finish_time = $start_time_date->diff($total_interval_start_punch_and_finish_time_date);
+                                // Format the interval as H:M:S
+                                $total_time = $interval_start_orientare_and_interval_start_punch_and_finish_time->format('%H:%I:%S');
+
+                                //Facem replace la Finish Punch cu interval_start_punch_and_finish_time
+                                $teams_in_stage[$fields[$chipnoIndex]]['stations']['Finish punch'] = $total_interval_start_punch_and_finish_time;
+                                $finish_time = $total_interval_start_punch_and_finish_time;
+
+                            } elseif( $start_punch_array[$team_exist->category->name] == "Start punch" && $finish_punch_array[$team_exist->category->name] !== "Finish punch"){
+                                // Metoda 1
+                                $start_time_input = reset($teams_in_stage[$fields[$chipnoIndex]]['stations']);
+                                if (str_starts_with($start_time_input, "12")) {
+                                    $start_time_input = "00" . substr($start_time_input, 2);  // păstrează ":26:17"
+                                }
+                                $start_time = date("H:i:s",strtotime($start_time_input));
+
+                                $end_time_input = end($teams_in_stage[$fields[$chipnoIndex]]['stations']);
+                                if (str_starts_with($end_time_input, "12")) {
+                                    $end_time_input = "00" . substr($end_time_input, 2);  // păstrează ":26:17"
+                                }
+                                $finish_time = date("H:i:s",strtotime($end_time_input));
+
+                                $start_punch_time_convert = \DateTime::createFromFormat('H:i:s', $start_time);
+                                $finish_punch_time_convert = \DateTime::createFromFormat('H:i:s', $finish_time);
+
+                                // Verifica diferenta dintre Start si Total timp
+                                // Compute the interval
+                                $total_time = $start_punch_time_convert->diff($finish_punch_time_convert);
+                                // Format the interval as H:M:S
+                                $total_time = $total_time->format('%H:%I:%S');
+
+                            } else {
+                                dd('Ceva este gresit la statii in configurare');
+                            }
+
+                            // Convert strings to DateTime objects
+                            $start = \DateTime::createFromFormat('H:i:s', $start_time);
+                            $end = \DateTime::createFromFormat('H:i:s', $finish_time);
+
+                            $startValid = $start && $start->format('H:i:s') === \DateTime::createFromFormat('H:i:s', $start_time)->format('H:i:s');
+                            $endValid = $end && $end->format('H:i:s') === \DateTime::createFromFormat('H:i:s', $finish_time)->format('H:i:s');
+
+                            if (($startValid && $endValid) && $teams_in_stage[$fields[$chipnoIndex]]['orienteering_missing'] !== 1) {
+                                $teams_in_stage[$fields[$chipnoIndex]]['start_time'] = $start_time;
+                                $teams_in_stage[$fields[$chipnoIndex]]['finish_time'] = $finish_time;
+                                $teams_in_stage[$fields[$chipnoIndex]]['total_time'] = $total_time;
+                            } else {
+                                // At least one is invalid
+                                $teams_in_stage[$fields[$chipnoIndex]]['start_time'] = "00:00:00";
+                                $teams_in_stage[$fields[$chipnoIndex]]['finish_time'] = "00:00:00";
+                                $teams_in_stage[$fields[$chipnoIndex]]['total_time'] = "00:00:00";
+                            }
+                            
+                        }
+                        else
+                        {
+                            unset($teams_in_stage[$fields[$chipnoIndex]]);
+                            $teams_with_issue[$fields[$chipnoIndex]]['club'] =  'N\A';
+                            $teams_with_issue[$fields[$chipnoIndex]]['name'] =  $fields[$surnameIndex];
+                            $teams_with_issue[$fields[$chipnoIndex]]['category_name'] =  $fields[$shortIndex];
+                            $teams_with_issue[$fields[$chipnoIndex]]['chipno'] =  $fields[$chipnoIndex];
+                            $teams_with_issue[$fields[$chipnoIndex]]['start_time'] = "-";
+                            $teams_with_issue[$fields[$chipnoIndex]]['finish_time'] = "-";
+                            $teams_with_issue[$fields[$chipnoIndex]]['total_time'] = "--"; 
+                        }
+                        
+                } else {
+                    //the chipno already exists, send an error.
+
+                    $teams_with_issue[$fields[$chipnoIndex]]['name'] =  $fields[$surnameIndex];
+                    $teams_with_issue[$fields[$chipnoIndex]]['category_name'] =  $fields[$shortIndex];
+                    $teams_with_issue[$fields[$chipnoIndex]]['chipno'] =  $fields[$chipnoIndex];
+                    $teams_with_issue[$fields[$chipnoIndex]]['start_time'] = "-";
+                    $teams_with_issue[$fields[$chipnoIndex]]['finish_time'] = "-";
+                    $teams_with_issue[$fields[$chipnoIndex]]['total_time'] = "--";      
+                    $teams_with_issue[$fields[$chipnoIndex]]['club'] =  'N\A';  
+                     
+                }
+
+            }
+
+            // dd($teams_with_issue);
+            foreach($teams_in_stage as $team_in_stage){
+                if(isset($team_in_stage['stations'])){                   
+
+                    if($team_in_stage['orienteering_missing'] == 1){
+                        $missed_posts = "POST LIPSA/ORDINE POST";
+                        $abandon = 2;
+                    } else {
+                        $missed_posts = "";
+                        $abandon = 0;
+                    }
+                    Orienteering::where('team_id', $team_in_stage['id'])->where('stage_id', $stageid)->update(
+                        [
+                            'start_time' => $team_in_stage['start_time'],
+                            'finish_time' => $team_in_stage['finish_time'],
+                            'total_time' => $team_in_stage['total_time'],
+                            'abandon' => $abandon,
+                            'missed_posts' => $missed_posts,
+                            'order_posts' => json_encode($team_in_stage['stations'])
+                        ]);   
+                }
+            }
+
+            // Sort by count of values
+            uasort($teams_in_stage     , function ($a, $b) {
+                return count($a) <=> count($b); // ascending order
+            });
+            
+            return view('teams.index_orienteering_chipno',compact('stageid', 'teams_in_stage', 'teams_with_issue'));
+
+
+        } else {
+            $notification = array(
+                'success_title' => 'Error',
+                'message' => 'No file uploaded.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('import.index', [$stageid])->with($notification); 
+        }
+
+
+    }
+
+    public function raidmontan_import_sportident($stageid, Request $request)
+    {
+
+        if ($request->hasFile('import_file')) {
+    
+            $path = $request->file('import_file')->getRealPath();
+    
+            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $header = str_getcsv(array_shift($lines), ';');
+    
+            $dataRows = array_map(function ($line) {
+                return str_getcsv($line, ';');
+            }, $lines);
+
+            $teams = Team::where('stage_id', $stageid)->with('category')->get();
+            $categories = Category::get();
+
+            
+            $chipnoIndex = null;
+            $surnameIndex = null;
+            $shortIndex = null;
+            $startPunch = null;
+            $finishPunch = null;
+            $raid_stations_array = [];
+            $raid_montan_stations_stage_array = [];
+
+            foreach($categories as $key => $category){
+
+                $raid_stations_category = RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
+                $first_post = optional($raid_stations_category->first())->post;
+                $last_post = optional($raid_stations_category->last())->post;
+                foreach($raid_stations_category as $raid_stations){
+                    foreach ($header as $index => $column) {
+                        if (trim($column) === $raid_stations->cod_start) {
+                            $raid_stations_array[$category->name][$index]['start'] = $raid_stations->cod_start;
+                        }
+                        
+                        if ( !empty($raid_stations->cod_finish) && trim($column) === $raid_stations->cod_finish) {
+                            $raid_stations_array[$category->name][$index]['finish'] = $raid_stations->cod_finish;
+                        }
+                        elseif (trim($column) === 'Chipno') {
+                            $chipnoIndex = $index;
+                        } elseif (trim($column) === 'Surname') {
+                            $surnameIndex = $index;
+                        } elseif (trim($column) === 'Short') {
+                            $shortIndex = $index;
+                        } elseif (trim($column) === 'Start punch') {
+                            $startPunch = $index;
+                        } elseif (trim($column) === 'Finish punch') {
+                            $finishPunch = $index;
+                        }
+                    }
+                    
+                    // To be used for calculating whether the team stayed longer than allowed in a PA.
+                    if (!in_array($raid_stations->post, ["251", "252"])) {
+                        $raid_montan_stations_stage_array[$category->name][$raid_stations->post]['arrived'] = $raid_stations->cod_start;
+                        $raid_montan_stations_stage_array[$category->name][$raid_stations->post]['go'] = $raid_stations->cod_finish;
+                        $raid_montan_stations_stage_array[$category->name][$raid_stations->post]['time'] = $raid_stations->time;
+                    }
+
+                }
+
+            };
+        
+            // Optional: validate that all were found
+            if (is_null($chipnoIndex) || is_null($surnameIndex) || is_null($shortIndex)) {
+                $notification = array(
+                    'success_title' => 'Error',
+                    'message' => ' One or more required columns (Chipno, Surname, Short) were not found in the header.',
+                    'alert-type' => 'error'
+                );
+                return redirect()->route('import.index', [$stageid])->with($notification); 
+            }
+
+
+            $teams_in_stage = [];
+            $teams_with_issue = [];
+            $formatted_time_difference_from_finish_minus_start = [];
+
+            foreach ($dataRows as $index => $fields) {
+
+                // $surnameKey = $fields[$surnameIndex] ?? null;
+                if (!isset($teams_in_stage[$chipnoIndex])) {
+
+                    // Store the original values before modification
+                    $original_start_punch = date("H:i:s",strtotime($fields[$startPunch]));  // Original start time
+                    $original_finish_punch = date("H:i:s",strtotime($fields[$finishPunch]));  // Original finish time
+
+                    // Modify the values for further processing
+                    if (str_starts_with($original_start_punch, "12")) {
+                        $original_start_punch = "00" . substr($original_start_punch, 2);  // Adjust time if it starts with "12"
+                    }
+                    if (str_starts_with($original_finish_punch, "12")) {
+                        $original_finish_punch = "00" . substr($original_finish_punch, 2);  // Adjust time if it starts with "12"
+                    }
+
+                    // Convert times to DateTime objects and check if the conversion succeeded
+                    $start_punch_from_csv = \DateTime::createFromFormat('H:i:s', $original_start_punch );
+                    $finish_punch_from_csv = \DateTime::createFromFormat('H:i:s', $original_finish_punch);
+
+                    $time_difference = $finish_punch_from_csv->diff($start_punch_from_csv);
+                    
+                    // Check if both conversions succeeded
+                    if (!$start_punch_from_csv || !$finish_punch_from_csv) {
+                        // Handle invalid time format (for debugging purposes, log or return an error)
+                        dd("Invalid time format for start or finish punch: Start Punch: {$fields[$startPunch]}, Finish Punch: {$fields[$finishPunch]}");
+                    }
+
+                    // If conversion succeeded, calculate the difference
+                    $time_difference = $finish_punch_from_csv->diff($start_punch_from_csv);
+
+                    // Format the difference as HH:MM:SS
+                    $formatted_time_difference_from_finish_minus_start[$fields[$chipnoIndex]] = $time_difference->format('%H:%I:%S');
+
+                    
+                    // Key exists, do something
+                    $teams_in_stage[$fields[$chipnoIndex]]['id'] = 0;
+                    $teams_in_stage[$fields[$chipnoIndex]]['name'] = $fields[$surnameIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['club'] = '';
+                    $teams_in_stage[$fields[$chipnoIndex]]['category_name'] = $fields[$shortIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['category_id'] = $fields[$shortIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['abandon'] = 0;
+                    $teams_in_stage[$fields[$chipnoIndex]]['chipno'] = $fields[$chipnoIndex];
+                    $teams_in_stage[$fields[$chipnoIndex]]['stations'] = [];
+
+                    $team_exist = Team::where('chipno', $fields[$chipnoIndex])->with('category')->where('stage_id', $stageid)->first();
+
+                    if( !empty($team_exist) )
+                    {
+                        $teams_in_stage[$fields[$chipnoIndex]]['id'] = $team_exist->id;
+                        $teams_in_stage[$fields[$chipnoIndex]]['club'] = $team_exist->club->name;
+                        $teams_in_stage[$fields[$chipnoIndex]]['category_id'] = $team_exist->category_id;
+
+
+                        foreach($raid_stations_array[$fields[$shortIndex]] as $station_key => $station){
+
+                            
+                            if( !isset($fields[$station_key]) ){
+                                $notification = array(
+                                    'success_title' => 'Error',
+                                    'message' => 'Fisierul este incorect, nu sunt setate toate punch-urile corect! Verifica daca nr de posturi de pe categorie corespunde cu cele din excel.',
+                                    'alert-type' => 'error'
+                                );
+                                return redirect()->route('import.index', [$stageid])->with($notification); 
+                            }
+                            if(in_array($fields[$station_key], ["-----", "00:00:00", ""])) {
+                                $teams_in_stage[$fields[$chipnoIndex]]['abandon'] = 2;
+                            }
+
+                            //
+                            // if(str_starts_with($fields[$station_key], "12")) {
+                            //     $fields[$station_key] = "00" . substr($fields[$station_key], 2);  // păstrează ":26:17"
+                            // }
+
+                            $fields[$station_key] = date("H:i:s",strtotime($fields[$station_key]));
+
+                            
+                            if( !empty($station['start']) && strtolower($station['start']) == "start punch" ){
+                                $fields[$station_key] = "00:00:00";
+                            }
+
+
+                            $teams_in_stage[$fields[$chipnoIndex]]['stations'][array_values($station)[0]] = $fields[$station_key];
+
+                        }
+
+
+                    }
+
+                        
+                } else {
+                    // Key is missing, do something else
+                    
+                    $teams_with_issue[$fields[$surnameIndex]]['name'] =  $fields[$surnameIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['category'] =  $fields[$shortIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['chipno'] =  $fields[$chipnoIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['start_time'] = "-";
+                    $teams_with_issue[$fields[$surnameIndex]]['finish_time'] = "-";
+                    $teams_with_issue[$fields[$surnameIndex]]['total_time'] = "--";
+                     
+                }
+
+            }
+
+            // dd($teams_in_stage);
+
+            foreach($teams_in_stage as $key => $team_in_stage)
+            {
+
+                if(isset($team_in_stage['stations']))
+                { 
+                    
+                    $post_times = [];
+                    $post_number = 1;
+                    $post_keys = array_keys($team_in_stage['stations']);
+                    $post_keys_reset = array_values($team_in_stage['stations']);
+
+                    foreach($post_keys as $key => $name )
+                    {
+                        if( $key == 0 ){
+                            $post_times['251']['arrived'] = [
+                                'key' => $name,
+                                'time' => date("H:i:s",strtotime($team_in_stage['stations'][$name]))
+                            ];
+                            continue;
+                        }
+
+                    
+                        // if the raidmontan is after orienteering else do the standard way.
+                        if ($post_keys[0] !== "Start punch" && end($post_keys) === "Finish punch") {
+
+                            if( $key == ( count($post_keys) -1 ) ){                                
+                                $post_times['252']['arrived'] = [
+                                    'key' => $name,
+                                    'time' => $formatted_time_difference_from_finish_minus_start[$team_in_stage['chipno']]
+                                ];
+                                continue;
+                            }
+                            
+                            
+                        } else {
+                         
+                            if( $key == ( count($post_keys) -1 ) ){
+                                $post_times['252']['arrived'] = [
+                                    'key' => $name,
+                                    'time' => date("H:i:s",strtotime($team_in_stage['stations'][$name]))
+                                ];
+                                continue;
+                            }
+                        }
+
+                        if( !isset($post_times[$post_number]['arrived']) ){
+                            $post_times[$post_number]['arrived'] = [
+                                'key' => $name,
+                                'time' => date("H:i:s",strtotime($team_in_stage['stations'][$name]))
+                            ];
+                            continue;
+                        }
+
+                        if( !isset($post_times[$post_number]['go']) ){
+                            $post_times[$post_number]['go'] = [
+                                'key' => $name,
+                                'time' => date("H:i:s",strtotime($team_in_stage['stations'][$name]))
+                            ];
+
+                            // If the time spent in PA does not match the defined duration, the extra minutes spent in PA will be deducted from GO.
+
+                            $expectedTime = $raid_montan_stations_stage_array[$team_in_stage['category_name']][$post_number]['time']; // in minutes
+
+                            $arrived = Carbon::createFromFormat('H:i:s', $post_times[$post_number]['arrived']['time']);
+                            $go = Carbon::createFromFormat('H:i:s', $post_times[$post_number]['go']['time']);
+                            
+                            $actualDuration = $arrived->diffInMinutes($go);
+                            
+                            if ($actualDuration > $expectedTime) {
+                                $extraMinutes = $actualDuration - $expectedTime;
+                                $newGoTime = $go->subMinutes($extraMinutes);
+                                $post_times[$post_number]['go']['time'] = $newGoTime->format('H:i:s');
+                            }
+
+                            $post_number++;
+                        }
+                    }
+
+                    $teams_in_stage[$team_in_stage['chipno']]['raidmontan'] =  $post_times;
+
+                    $missed_posts = "";
+                    $abandon = 0;
+                    
+                    
+                }
+            }
+
+            // dd($teams_in_stage);
+            
             // clean up db
             RaidmontanParticipations::where('stage_id', $stageid)->delete();
             RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
@@ -546,637 +1027,107 @@ class ImportController extends Controller
             // add abandon to all
             $this->raidmontan_seed_intern($stageid);
 
-            echo "<pre>";
-
-            //check data
-            if (!empty($data)) {
-
-                foreach ($data as $cardUuid => $time_and_posts ) {
-                    $number_pa = 0;
-
-                    echo "\n<strong>#### Informatii Echipa <u>". $time_and_posts['team_name'] . "</u>, Ceas NR." . $time_and_posts['clock_number'] . ", UUID  " . $time_and_posts['uuid_code'] . ", Categorie " . $time_and_posts['category_name'] . " ####</strong>";
-                    echo "<br />";
-
-
-                    $category = [];
-                    $missing_posts = [];
-                    $valid_posts = [];
-
-                    if (!empty($time_and_posts['category'])) {
-                        $category = $time_and_posts['category'];
-                        unset($time_and_posts['category']);
-                    }
-
-                    if (!empty($time_and_posts['team_name'])) {
-                        unset($time_and_posts['team_name']);
-                    }
-
-                    if (!empty($time_and_posts['clock_number'])) {
-                        unset($time_and_posts['clock_number']);
-                    }
-
-                    if (!empty($time_and_posts['uuid_code'])) {
-                        unset($time_and_posts['uuid_code']);
-                    }
-
-                    if (!empty($time_and_posts['category_name'])) {
-                        unset($time_and_posts['category_name']);
-                    }
-
-
-                    $total_posts = count($category);
-                    $number_of_posts_taked = count($time_and_posts);
-
-                    $start_time = 0;
-                    $final_time = 0;
-
+            foreach ($teams_in_stage as $team) {
+                if (!isset($team['raidmontan'])) {
+                    continue;
+                }
             
-                    foreach ( $time_and_posts as $order => $time_and_post )
-                    {
-        
-                        if($order == "category_id" || $order == "team_id" || $order == "stage_id")
-                        {
-                            //invalid post
-                            continue;
-                        }
+                $raidmontan_participants = RaidmontanParticipations::where('stage_id', $stageid)
+                    ->where('team_id', $team['id'])
+                    ->first();
+            
 
-                        if( empty($valid_posts[$time_and_post['post']]['arrived']) )
-                        {
-                            $valid_posts[$time_and_post['post']]['arrived'] = $time_and_post['time'];
-                        }
-                        else
-                        {
-                            $valid_posts[$time_and_post['post']]['go'] = $time_and_post['time'];
-                        }
-
-                    }
-
-                    if( count($category) !== count($valid_posts) )
-                    {
-                        $missing_posts = array_diff($category,array_keys($valid_posts));
-                    }
-
-                    $uuid_raid = UuidRaid::where('name','=',$cardUuid)->first();
-                    $uuid_raid_id = 0;
-                    if( !empty($uuid_raid->uuid_id) )
-                    {
-                        $uuid_raid_id = $uuid_raid->uuid_id;
-                    }
-
-                    $participants = RaidmontanParticipations::where('stage_id', $stageid)->where('team_id',$time_and_posts['team_id'])->get();
-
-                    foreach ( $participants as $participant )
-                    {
-                        $participation_entries = RaidmontanParticipationsEntries::where('stage_id', $stageid)->where('team_id',$participant->team_id)->where('hits', '=',NULL)->get();
-
-                        $index = 0;
-                        foreach ( $valid_posts as $post => $valid_post )
-                        {
-
-                            if(count($missing_posts) == 0){
-
-
-                                $chanllenge_stations_stages = RaidmontanStationsStages::where('stage_id', $stageid)->where('post',$post)->where('category_id',$time_and_posts['category_id'])->first();
-
-                                $time = ( !empty($chanllenge_stations_stages['time']) ) ? $chanllenge_stations_stages['time'] : null;
-                                $arrived = ( !empty($valid_post['arrived']) ) ? $valid_post['arrived'] : null;
-                                $go = ( !empty($valid_post['go']) ) ? $valid_post['go'] : null;
-                                $raidmontan_stations_stages_id = ( !empty($chanllenge_stations_stages['id']) ) ? $chanllenge_stations_stages['id'] : null;
-    
-                                if( !empty($time) )
-                                {
-                                    //timpul de start plus timp de stat in post
-                                    $outside_time = strtotime('+'.$time.'minutes',$arrived);
-    
-                                    //daca a stat mai mult in post timpul de plecare il punem cu timpul de start plus timpul care trebuia sa stea
-                                    if( $go > $outside_time )
-                                    {
-                                        $go = $outside_time;
-                                    }
-                                }
-                                //daca nu are timp de plecare se pune timpul la care a sosit( se crede ca nu a stat in post si a plecat direct )
-                                if( empty($go) && $post != 252 )
-                                {
-                                    $go = $arrived;
-                                }
-    
-                                $values = [];
-    
-
-                                if($post == 252 )
-                                {
-                                    $go = $arrived;
-                                    $arrived = $go;
-                                }
-                                
-                                $values['time_start'] = "00:00:00";
-                                if( !empty($arrived) )
-                                {
-                                    $values['time_start'] = date('H:i:s',$arrived);
-                                }
-    
-                                $values['time_finish'] = "00:00:00";
-                                if( !empty($go) )
-                                {
-                                    $values['time_finish'] = date('H:i:s',$go);
-                                }
-    
-                                //$time_minus_pauses = [];
-    
-                            }
-
-
-                            if(empty($missing_posts)){
-
-                                // get
-
-                                //update
-                                DB::table('raidmontan_participations_entries')
-                                    ->where('stage_id', $stageid)
-                                    ->where('team_id', $time_and_posts['team_id'])
-                                    ->where('raidmontan_stations_stages_id', $raidmontan_stations_stages_id)
-                                    ->update($values);
-
-                                DB::table('raidmontan_participations')
-                                    ->where('stage_id', $stageid)
-                                    ->where('team_id', $time_and_posts['team_id'])
-                                    ->update(['abandon' => 0]);
-
-                                if ($post == '251'){
-                                    echo "</br >";
-                                    echo "Start: " . $values['time_start'];
-                                    $total_timp_team_start = $values['time_start'];
-                                } elseif ($post == '252'){
-                                    echo "Finish: " . $values['time_finish'];
-                                    $total_timp_team_finish = $values['time_finish'];
-                                } else {
-                                    if($values['time_start'] === $values['time_finish']){
-                                        //echo 'Cod PA: ' . $post .' Sosire: ' .  $values['time_start'];
-                                        echo 'PA: ' . $number_pa .' Sosire: ' .  $values['time_finish'];
-
-                                        $finish_pa = strtotime($values['time_finish']);
-                                        $start_pa = strtotime($values['time_start']);
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
-
-                                    } else {
-                                        echo 'PA: ' . $number_pa .' <strong> -></strong> Sosire: ' .  $values['time_start'] . ' <strong> -></strong> Plecare: ' . $values['time_finish'];
-
-                                        $finish_pa = strtotime($values['time_finish']);
-                                        $start_pa = strtotime($values['time_start']);
-
-                                        $time_minus_pauses[$uuid_raid_id][]['time'] = $finish_pa - $start_pa;
-
-
-                                    }
-                                }
-
-                                echo "<br />";
-                                $number_pa++;
-                            }
-                            $index++;
-                        }
-                    }
-
-
-
-                    if( empty($missing_posts) )
-                    {
-                        echo '<br/>';
-                        $f1 = strtotime($total_timp_team_finish);
-                        $s1 = strtotime($total_timp_team_start);
-                        $finish_start_diff = $f1 - $s1;
-                        echo 'Timp Total: <strong>' . date('H:i:s', $finish_start_diff) . "</strong> cu pauze.</font>";
-                        echo '<br />';
-
-                        // foreach ($time_minus_pauses[$uuid_raid_id] as $key => $times){
-                        //     $time_minus_pauses_total = 0;
-                        //     foreach ($times as $time){
-                        //         var_dump("$time " . $time);
-                        //         $time_minus_pauses_total += $time;                            
-                        //     }
-                        // }
-                        // echo 'Timp Total: <strong>' . date('H:i:s',$finish_start_diff - $time_minus_pauses_total) . "</strong> fara pauze.</font>";
-                    }
-                    else
-                    {
-                        echo '<br/>';
-                        echo '<font color=\'red\'><strong>PA lipsa sau Abandon</strong> ';
-
-                    //    foreach ( $missing_posts as $missing_post )
-                    //    {
-                    //        echo $missing_post . " ";
-
-                    //    }
-
-                        $missing_posts_implode = implode(",", $missing_posts);
-                        $missing_posts_text = ( empty($missing_posts) ) ? '' : $missing_posts_implode;
-                        $count_pa_missings =  'regaseste';
-                        if(count($missing_posts) > 1){
-                            $count_pa_missings =  "regasesc";
-                        } else {
-                            $count_pa_missings =  "regaseste";
-                        }
-                        echo '<br/>';
-                        echo "PA " . $missing_posts_text . " nu se " . $count_pa_missings . " pe card";
-
-                        // echo "PA nu se " . $count_pa_missings . " pe card";
-
-                        echo '</font>';
-
-                    }
-
-                    echo "<br />";
-                    echo "\n########################################  END ########################################";
-                    echo "<br />";
-
-
-
-//                    foreach ($time_and_posts as $order => $time_and_post )
-//                    {
-//                        dd($time_and_post);
-//
-//
-////
-//
-//                    }
-//                }
-//                die();
-//                return redirect('/import-orienteering')->with('success', 'UUID Cards from file has imported successed.');
+                if (!$raidmontan_participants) {
+                    continue;
                 }
-            }
-
-        }
-    }
-
-
-    public function orienteering_import_uuids($stageid, Request $request)
-    {
-
-        $this->validate($request, [
-
-            'import_file' => 'required'
-
-        ]);
-
-        $uuidlist = UuidOrienteeting::All();
-        $teams = Team::where('stage_id', $stageid)->get();
-
-//        $posts[1]= [ 251,31,32,33,252 ]; //Family
-//        $posts[2]= [ 251,31,33,33,252 ]; //Juniori
-//        $posts[3]= [ 251,31,32,33,34,35,36,252 ]; //Elite
-//        $posts[4]= [ 251,31,33,32,252 ]; //Open
-//        $posts[5]= [ 251,31,33,32,252 ]; //Veterani
-//        $posts[6]= [ 251,31,33,32,252 ]; //Feminin
-//        $posts[7]= [ 251,31,33,32,252 ]; //Seniori
-
-
-        function UUIDWithSpaces($uuid) {
-            return preg_replace("/\B(?=(?:[0-9A-F]{2})+\b)/", ' ', $uuid);
-        }
-
-
-        $get_posts = OrienteeringStationsStages::where('stage_id', $stageid)->get();
-
-        foreach ($get_posts as $key => $gets){
-            if($gets->category_id == 1){
-                $posts[1][] = $gets->post;
-            }
-            if($gets->category_id == 2){
-                $posts[2][] = $gets->post;
-            }
-            if($gets->category_id == 3){
-                $posts[3][] = $gets->post;
-            }
-            if($gets->category_id == 4){
-                $posts[4][] = $gets->post;
-            }
-            if($gets->category_id == 5){
-                $posts[5][] = $gets->post;
-            }
-            if($gets->category_id == 6){
-                $posts[6][] = $gets->post;
-            }
-            if($gets->category_id == 7){
-                $posts[7][] = $gets->post;
-            }
-        }
-
-        if ($request->hasFile('import_file')) {
-            echo "<pre>";
-            $path = $request->file('import_file')->getRealPath();
-            $uuid_from_file = "FF FF FF FF";
-            $data = array();
-
-            //take data from file
-            if ($file = fopen($path, "r")) {
-                while(!feof($file)) {
-//                    $line = str_replace(' ','',fgets($file));
-                    $line = fgets($file);
-
-                    if( empty(trim($line)) )
-                    {
-                        continue;
+            
+                $entries = RaidmontanParticipationsEntries::where('stage_id', $stageid)
+                    ->where('raidmontan_participations_id', $raidmontan_participants->id)
+                    ->where('team_id', $team['id'])
+                    ->whereNull('hits')
+                    ->get()
+                    ->values();
+            
+                if ($entries->isEmpty()) {
+                    continue;
+                }
+            
+                $teamRaid = $team['raidmontan'];
+                $entryCount = $entries->count();
+            
+                // Update first entry with 251 if exists
+                if (isset($teamRaid[251]['arrived']['time'])) {
+                    $entries[0]->update([
+                        'time_start' => $teamRaid[251]['arrived']['time']
+                    ]);
+                }
+            
+                // Always try to update last entry with 252 if exists
+                if (isset($teamRaid[252]['arrived']['time'])) {
+                    $entries[$entryCount - 1]->update([
+                        'time_finish' => $teamRaid[252]['arrived']['time']
+                    ]);
+                }
+            
+                // If more than 2 entries, update the middle ones
+                if ($entryCount > 2) {
+                    $middleRaidKeys = array_values(array_filter(array_keys($teamRaid), fn($k) => $k != 251 && $k != 252));
+                    $middleEntries = $entries->slice(1, $entryCount - 2)->values();
+            
+                    foreach ($middleEntries as $i => $entry) {
+                        $raidKey = $middleRaidKeys[$i] ?? null;
+                        if ($raidKey && isset($teamRaid[$raidKey]['arrived']['time'], $teamRaid[$raidKey]['go']['time'])) {
+                            $entry->update([
+                                'time_start' => $teamRaid[$raidKey]['arrived']['time'],
+                                'time_finish' => $teamRaid[$raidKey]['go']['time']
+                            ]);
+                        }
                     }
-
-                    if(substr( $line, 0, 5 ) === "Card:"){
-
-                        $uuid_from_file = substr($line,6,11);
-                        $uuid_from_db = UuidOrienteeting::where('name', $uuid_from_file)->first();
-
-                        // Verificare daca UUID-ul exista in baza de date sau asociat unei echipe
-                        if(!empty($uuid_from_db)) {
-                            $echipa = Team::where('stage_id', $stageid)->with('orienteering')->where('uuid_card_orienteering_id',$uuid_from_db->id)->first();
-                         
-                            if($echipa === NULL){
-                                echo "<h2><font color='red'><strong>";
-                                echo 'EROARE!!! - Ceasul cu numarul ' . $uuid_from_db['id'] . " nu este asociat nici unei echipe." .  " UUID CARD " . $uuid_from_db['name'] . ".";
-                                echo "<br />";
-                                echo "Va rugam sa verificati ceasul si sa il asociati unei echipe sau sa stergeti inregistrarea din fisierul text.";
-                                echo "<br />";
-                                echo "Importul datelor nu poate fi realizat complet";
-                                echo "</stroing></font></h2>";
-                                die();
-                            }
-                        } else {
-                            echo "<h2><font color='red'><strong>";
-                            echo "Ceasul cu UUID " . $uuid_from_file . " nu exista in baza de date. Ceasul nu se regaseste in LISTA CU UUID-uri.";
-                            echo "<br />";
-                            echo "Acest ceas este folosit pentru teste? Te rugam sa stergi inregistrarea pentru acest ceas din fisierul text.";
-                            echo "<br />";
-                            echo "Importul datelor nu poate fi realizat complet";
-                            echo "</stroing></font></h2>";
-                            die('');
-                        }
-
-                        // UUID-uri din fisier ca si categorie echipa
-
-                        $uuid_categorie = $posts[$echipa->category_id];
-                        $team_name = $echipa->name;
-                        $team_id = $echipa->id;
-                        $clock_number = $uuid_from_db->id;
-                        $category_id = $echipa->category_id;
-
-
-                        // Array pentru fiecare UUID
-                        // $data[$uuid_from_file]['stage_id'] = $stageid;
-                        $data[$uuid_from_file]['category'] = $uuid_categorie;
-                        $data[$uuid_from_file]['team_name'] = $team_name;
-                        $data[$uuid_from_file]['team_id'] = $team_id;
-                        $data[$uuid_from_file]['clock_number'] = $clock_number;
-                        $data[$uuid_from_file]['uuid_code'] = $uuid_from_file;
-
-                        switch ($category_id) {
-                            case "1":
-                                $data[$uuid_from_file]['category_name'] = "FAMILY";
-                                break;
-                            case "2":
-                                $data[$uuid_from_file]['category_name'] = "JUNIOR";
-                                break;
-                            case "3":
-                                $data[$uuid_from_file]['category_name'] = "ELITE";
-                                break;
-                            case "4":
-                                $data[$uuid_from_file]['category_name'] = "OPEN";
-                                break;
-                            case "5":
-                                $data[$uuid_from_file]['category_name'] = "VETERANI";
-                                break;
-                            case "6":
-                                $data[$uuid_from_file]['category_name'] = "FEMININ";
-                                break;
-                            case "7":
-                                $data[$uuid_from_file]['category_name'] = "SENIORI";
-                                break;
-                            default:
-                                $data[$uuid_from_file]['category_name'] = "NONE";
-                        }
-
-
-
-                    } else {
-                        // Grupare post/timestamp/data si creare array
-                        $parts = explode(",",$line);
-
-                        foreach ( $parts as $key => $part )
-                        {
-                            if( trim($parts[$key]) == '%' || $key % 2 != 0  )
-                            {
-                                continue;
-                            }
-
-                            $data[$uuid_from_file][] = array( "post"=> $parts[$key], "time" => $parts[$key+1]);
-
-                        }
-
-                    }
-
                 }
 
-                fclose($file);
-            }
-
-            echo "<pre>";
-
-            $team_id = 0;
-            //check data
-
-            if (!empty($data)) {
-
-                foreach ($data as $cardUuid => $time_and_posts ) {
-
-                    echo "\n<strong>#### Informatii Echipa <u>". $time_and_posts['team_name'] . "</u>, Ceas NR." . $time_and_posts['clock_number'] . ", UUID  " . $time_and_posts['uuid_code'] . ", Categorie " . $time_and_posts['category_name'] . " ####</strong>";
-                    echo "<br />";
-
-
-                    $category = [];
-                    $missing_posts = [];
-                    $valid_posts = [];
-
-                    if (!empty($time_and_posts['category'])) {
-                        $category = $time_and_posts['category'];
-                        unset($time_and_posts['category']);
-                    }
-
-                    if (!empty($time_and_posts['team_name'])) {
-                        unset($time_and_posts['team_name']);
-                    }
-
-                    if (!empty($time_and_posts['team_id'])) {
-                        $team_id = $time_and_posts['team_id'];
-                        unset($time_and_posts['team_id']);
-                    }
-
-                    if (!empty($time_and_posts['clock_number'])) {
-                        unset($time_and_posts['clock_number']);
-                    }
-
-                    if (!empty($time_and_posts['uuid_code'])) {
-                        unset($time_and_posts['uuid_code']);
-                    }
-
-                    if (!empty($time_and_posts['category_name'])) {
-                        unset($time_and_posts['category_name']);
-                    }
-
-
-                    $total_posts = count($category);
-                    $number_of_posts_taked = count($time_and_posts);
-
-
-                    $start_time = 0;
-                    $final_time = 0; 
+                // Reload updated entries to check time values
+                $updatedEntries = RaidmontanParticipationsEntries::where('stage_id', $stageid)
+                    ->where('raidmontan_participations_id', $raidmontan_participants->id)
+                    ->where('team_id', $team['id'])
+                    ->whereNull('hits')
+                    ->get();
 
                     
-                    $count = 0;
+                $hasInvalidTimes = $updatedEntries->contains(function ($entry) {
+                    return $entry->time_start === '00:00:00' && $entry->time_finish === '00:00:00';
+                });
 
-                    $posts_order = $category;
-                    $posts_order_final = [];
-
-                    // search if the order of posts are correct
-                    foreach($time_and_posts as $key => $post){
-                        if((int)$post['post'] == $posts_order[0]){
-                            unset($posts_order[0]);
-                            \array_splice($posts_order, 0, 0);
-                        } else {
-                            continue;
-                        }
-
-                    }
-
-                    $missing_posts = $posts_order;
-
-                    if( empty($missing_posts) )
-                    {
-
-                        for ($i = 0; $i < $total_posts; $i++) {
-
-                            foreach ($time_and_posts as $order => $time_and_post) {
-    
-                                if ($time_and_post['post'] == $category[$i] ) {
-    
-                                    if( $time_and_post['post'] == 251 && $start_time == 0 )
-                                    {
-                                        $start_time = $time_and_post['time'];
-                                    }
-    
-                                    if( $time_and_post['post'] == 252 && $final_time == 0 )
-                                    {
-                                        $final_time = $time_and_post['time'];
-                                    }
-    
-                                    if(  $i != 0  )
-                                    {
-                                        if ( isset($valid_posts[$category[$i-1]]) && $time_and_post['time'] >= $valid_posts[$category[$i-1]]  )
-                                        {
-                                            if( empty($valid_posts[$time_and_post['post']]) )
-                                            {
-                                                $valid_posts[$time_and_post['post']] = $time_and_post['time'];
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if( empty($valid_posts[$time_and_post['post']]) )
-                                        {
-                                            $valid_posts[$time_and_post['post']] = $time_and_post['time'];
-                                        }
-                                        break;
-                                    }
-    
-                                }
-    
-                                if ($number_of_posts_taked - 1 == $order) {
-                                    $missing_posts[] = $category[$i];
-                                }
-                            }
-    
-                        }
-
-
-                        echo "\n<font color='green'>Au fost validate toate posturile.";
-                        echo '<br/>';
-                        echo 'Timp Total: ' . date('H:i:s',$final_time - $start_time) . "</font>";
-                    }
-                    else
-                    {
-                        echo '<br/>';
-                        echo '<font color=\'red\'><strong>Ordine Gresita Posturi</strong> ';
-
-                        // foreach ( $missing_posts as $missing_post )
-                        // {
-                        //     if($missing_post == 251){
-                        //         $missing_post = "S";
-                        //     }
-                        //     if($missing_post == 252){
-                        //         $missing_post = "F";
-                        //     }
-                        //     echo $missing_post . " ";
-
-                        // }
-                        echo '</font>';
-                        echo '<br/><br/>';
-
-
-                        echo '<strong>Ordine Corecta: </strong>';
-                        foreach ( $category as $item )
-                        {
-                            if($item == 251){
-                                $item = "S";
-                            }
-                            if($item == 252){
-                                $item = "F";
-                            }
-                            echo $item . " ";
-                        }
-
-                        echo '<br/>';
-                        echo '<br/>';
-
-                        echo '<strong>Ordine Posturi Echipa:</strong>';
-                        echo '<br/>';
-
-                        foreach ( $time_and_posts as $order => $value )
-                        {
-                            if($value['post'] == 251){
-                                $value['post'] = "S";
-                            }
-                            if($value['post'] == 252){
-                                $value['post'] = "F";
-                            }
-                            echo 'Post: '.$value['post'].' time: '.date('H:i:s',$value['time']);
-                            echo '<br/>';
-
-                        }
-                    }
-
-
-                    $missing_posts = implode(",", $missing_posts);
-//                    var_dump($missing_posts);
-
-//                    $missing_posts_text = ( empty($missing_posts) ) ? '' : json_encode($missing_posts);
-                    $missing_posts_text = ( empty($missing_posts) ) ? '' : $missing_posts;
-                
-                    if(empty($missing_posts_text)){
-                        DB::table('orienteering')
-                            ->where('stage_id', $stageid)
-                            ->where('team_id', $team_id)
-                            ->update(['start_time' => date('H:i:s',$start_time), 'finish_time' => date('H:i:s',$final_time), 'total_time' => date('H:i:s',$final_time - $start_time), 'abandon' => 0, 'missed_posts' => $missing_posts_text, 'order_posts' => json_encode($time_and_posts)]);
-                    } else {
-                        DB::table('orienteering')
-                            ->where('stage_id', $stageid)
-                            ->where('team_id', $team_id)
-                            ->update(['start_time' => date('H:i:s',$start_time), 'finish_time' => date('H:i:s',$final_time), 'total_time' => date('H:i:s',$final_time - $start_time), 'abandon' => 2, 'missed_posts' => $missing_posts_text, 'order_posts' => json_encode($time_and_posts)]);
-                    }
-
-                    echo "<br />";
-                    echo "\n########################################  END ########################################";
-                    echo "<br />";
-
+                if($hasInvalidTimes == 2){
+                    $teams_in_stage[$team['chipno']]['abandon'] = 2;
+                } else {
+                    $teams_in_stage[$team['chipno']]['abandon'] = 0;
                 }
-            }
 
+                $raidmontan_participants->update([
+                    'abandon' => $hasInvalidTimes ? 2 : 0,
+                ]);
+            }
+            
+            // dd($teams_in_stage);
+
+            // Sort by count of values
+            uasort($teams_in_stage     , function ($a, $b) {
+                return count($a) <=> count($b); // ascending order
+            });
+
+            return view('teams.index_raidmontan_chipno',compact('stageid', 'teams_in_stage', 'teams_with_issue'));
+
+
+        } else {
+            $notification = array(
+                'success_title' => 'Error',
+                'message' => 'No file uploaded.',
+                'alert-type' => 'error'
+            );
+            return redirect()->route('import.index', [$stageid])->with($notification); 
         }
+
+
     }
 
 

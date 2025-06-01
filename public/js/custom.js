@@ -29,6 +29,38 @@ function printErrorMsg (msg) {
     });
 }
 
+function printErrorMESSAGE(errors) {
+    $('.print-error-msg').show();
+    $(".print-error-msg ul").html('');
+    $(".print-error-msg").css('display','block');
+    $(".print-error").css('display','block');
+
+    $.each(errors, function (key, messages) {
+        const message = messages[0];
+
+        // Convert dot notation to bracket notation
+        const inputName = key
+            .replace(/\.(\d+)/g, '[$1]')
+            .replace(/\.(\w+)/g, '[$1]');
+
+        console.log('key:', key, '→ inputName:', inputName);
+
+        $(".print-error-msg ul").append('<li>' + message + '</li>');
+
+        const input = $(`[name="${inputName}"]`);
+
+        if (input.length) {
+            input.addClass("is-invalid");
+            if (input.next('.invalid-feedback').length === 0) {
+                input.after(`<div class="invalid-feedback d-block">${message}</div>`);
+            }
+        } else {
+            console.warn('No input found for:', inputName);
+        }
+    });
+}
+
+
 
 // Timestamp
 
@@ -131,7 +163,7 @@ $("body").delegate('.js--setup-convert-datetime-timestamp-confirm', 'click',func
 
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.timestamp_year){
                     $( '#timestamp_year-error' ).html( data.errors.timestamp_year[0] );
                 }
@@ -242,7 +274,7 @@ $("body").delegate('.js--setup-convert-timestamp-datetime-confirm', 'click',func
 
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.timestamp){
                     $( '#timestamp-error' ).html( data.errors.timestamp[0] );
                 }
@@ -320,14 +352,17 @@ $(document).on("click", ".js--clubs-create", function(e){
 $("body").delegate('.js--clubs-create-store', 'click',function(e){
     e.preventDefault();
     $( '#clubs-error' ).html( "" );
+    $( '#stage_id-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
     var clubs = $("input[name='clubs[]']").map(function(){return $(this).val();}).get();
+    var stage_id = parseInt($("#stage_id").val());
 
     formData.append("_token", _token);
     formData.append("clubs", clubs);
+    formData.append("stage_id", stage_id);
 
     var request = new XMLHttpRequest();
     request.open("POST", "/" + $(this).data('stageid') + "/clubs/create");
@@ -375,9 +410,12 @@ $("body").delegate('.js--clubs-create-store', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.clubs){
                     $('#clubs-error').html( data.errors.clubs[0] );
+                }
+                if(data.errors.stage_id){
+                    $('#stage_id-error').html( data.errors.stage_id[0] );
                 }
                 if(data.errors.form_corruption){
                     $('#form_corruption-error').html( data.errors.form_corruption[0] );
@@ -438,14 +476,18 @@ $(document).on("click", ".js--clubs-edit", function(e){
 $("body").delegate('.js--clubs-update', 'click',function(e){
     e.preventDefault();
     $( '#name-error' ).html( "" );
+    $( '#stage_id-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
     var name = $("input[name='name']").val();
+    var stage_id = parseInt($("#stage_id").val());
 
     formData.append("_token", _token);
     formData.append("name", name);
+    formData.append("stage_id", stage_id);
+    
 
     var request = new XMLHttpRequest();
     request.open("POST", "/" + $(this).data('stageid') + "/clubs/"+ $(this).data('id') +"/edit");
@@ -493,9 +535,12 @@ $("body").delegate('.js--clubs-update', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
+                }
+                if(data.errors.stage_id){
+                    $( '#stage_id-error' ).html( data.errors.stage_id[0] );
                 }
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
@@ -595,7 +640,7 @@ $("body").delegate('.js--clubs-destroy-confirm', 'click',function(e){
                     Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
                 }
@@ -672,8 +717,6 @@ $("body").delegate('.js--teams-create-store', 'click',function(e){
     $( '#name-error' ).html( "" );
     $( '#category_id-error' ).html( "" );
     $( '#number-error' ).html( "" );
-    $( '#uuid_card_orienteering_id-error' ).html( "" );
-    $( '#uuid_card_raid_id-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
@@ -682,16 +725,15 @@ $("body").delegate('.js--teams-create-store', 'click',function(e){
     var name = $("input[name='name']").val();
     var category_id = parseInt($("#category_id").val());
     var number = parseInt($( "#number" ).val());
-    var uuid_card_orienteering_id = parseInt($( "#uuid_card_orienteering_id" ).val());
-    var uuid_card_raid_id = parseInt($( "#uuid_card_raid_id" ).val());
 
     formData.append("_token", _token);
     formData.append("club_id", parseInt(club_id));
     formData.append("name", name);
     formData.append("category_id", parseInt(category_id));
-    formData.append("number", parseInt(number));
-    formData.append("uuid_card_orienteering_id", parseInt(uuid_card_orienteering_id));
-    formData.append("uuid_card_raid_id", parseInt(uuid_card_raid_id));
+    if (number !== '' && !isNaN(number)) {
+        formData.append("number", parseInt(number));
+    }
+
 
     var request = new XMLHttpRequest();
     request.open("POST", "/" + $(this).data('stageid') + "/teams/create");
@@ -739,7 +781,7 @@ $("body").delegate('.js--teams-create-store', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.club_id){
                     $( '#club_id-error' ).html( data.errors.club_id[0] );
                 }
@@ -751,12 +793,6 @@ $("body").delegate('.js--teams-create-store', 'click',function(e){
                 }
                 if(data.errors.number){
                     $( '#number-error' ).html( data.errors.number[0] );
-                }
-                if(data.errors.uuid_card_orienteering_id){
-                    $( '#uuid_card_orienteering_id-error' ).html( data.errors.uuid_card_orienteering_id[0] );
-                }
-                if(data.errors.uuid_card_raid_id){
-                    $( '#uuid_card_raid_id-error' ).html( data.errors.uuid_card_raid_id[0] );
                 }
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
@@ -819,8 +855,7 @@ $("body").delegate('.js--teams-update', 'click',function(e){
     $( '#name-error' ).html( "" );
     $( '#category_id-error' ).html( "" );
     $( '#number-error' ).html( "" );
-    $( '#uuid_card_orienteering_id-error' ).html( "" );
-    $( '#uuid_card_raid_id-error' ).html( "" );
+    $( '#chipno-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
@@ -829,16 +864,20 @@ $("body").delegate('.js--teams-update', 'click',function(e){
     var name = $("input[name='name']").val();
     var category_id = parseInt($("#category_id").val());
     var number = parseInt($( "#number" ).val());
-    var uuid_card_orienteering_id = parseInt($( "#uuid_card_orienteering_id" ).val());
-    var uuid_card_raid_id = parseInt($( "#uuid_card_raid_id" ).val());
+    var chipno = parseInt($( "#chipno" ).val());
 
     formData.append("_token", _token);
     formData.append("club_id", parseInt(club_id));
     formData.append("name", name);
     formData.append("category_id", parseInt(category_id));
-    formData.append("number", parseInt(number));
-    formData.append("uuid_card_orienteering_id", parseInt(uuid_card_orienteering_id));
-    formData.append("uuid_card_raid_id", parseInt(uuid_card_raid_id));
+
+    if (number !== '' && !isNaN(number)) {
+        formData.append("number", parseInt(number));
+    }
+
+    if (chipno !== '' && !isNaN(chipno)) {
+        formData.append("chipno", parseInt(chipno));
+    }
     
     var request = new XMLHttpRequest();
     request.open("POST", "/" + $(this).data('stageid') + "/teams/"+ $(this).data('id') +"/edit");
@@ -887,7 +926,7 @@ $("body").delegate('.js--teams-update', 'click',function(e){
                 }
             } else {
             
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.club_id){
                     $( '#club_id-error' ).html( data.errors.club_id[0] );
                 }
@@ -900,11 +939,8 @@ $("body").delegate('.js--teams-update', 'click',function(e){
                 if(data.errors.number){
                     $( '#number-error' ).html( data.errors.number[0] );
                 }
-                if(data.errors.uuid_card_orienteering_id){
-                    $( '#uuid_card_orienteering_id-error' ).html( data.errors.uuid_card_orienteering_id[0] );
-                }
-                if(data.errors.uuid_card_raid_id){
-                    $( '#uuid_card_raid_id-error' ).html( data.errors.uuid_card_raid_id[0] );
+                if(data.errors.chipno){
+                    $( '#chipno-error' ).html( data.errors.chipno[0] );
                 }
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
@@ -992,7 +1028,7 @@ $("body").delegate('.js--teams-destroy-confirm', 'click',function(e){
                     swal(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
                 }
@@ -1105,7 +1141,7 @@ $("body").delegate('.js--cultural-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.scor){
                     $( '#scor-error' ).html( data.errors.scor[0] );
                 }
@@ -1227,7 +1263,7 @@ $("body").delegate('.js--knowledge-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.time){
                     $( '#time-error' ).html( data.errors.time[0] );
                 }
@@ -1358,7 +1394,7 @@ $("body").delegate('.js--orienteering-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.start_time){
                     $( '#start_time-error' ).html( data.errors.start_time[0] );
                 }
@@ -1514,7 +1550,7 @@ $("body").delegate('.js--raidmontan-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.missing_footwear){
                     $( '#missing_footwear-error' ).html( data.errors.missing_footwear[0] );
                 }
@@ -1607,17 +1643,27 @@ $("body").delegate('.js--setup-raid-montan-update', 'click',function(e){
     $( '#stations_pfa-error' ).html( "" );
     $( '#stations_finish-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var stations_pa = $("input[name='stations_pa[]']").map(function(){return parseInt($(this).val());}).get();
-    var stations_pfa = $("input[name='stations_pfa[]']").map(function(){return parseInt($(this).val());}).get();
-    var stations_finish = $("input[name='stations_finish']").val();
+    var stations_pa = $("input[name='stations_pa[]']").map(function(){
+        var val = $(this).val();
+        return val === '' ? '' : parseInt(val);
+    }).get();
+    
+    var stations_pfa = $("input[name='stations_pfa[]']").map(function(){
+        var val = $(this).val();
+        return val === '' ? '' : parseInt(val);
+    }).get();
+    
+    var stations_finish = $("input[name='stations_finish']").val() || '';
 
 
     formData.append("_token", _token);
-    formData.append("stations_pa", stations_pa);
-    formData.append("stations_pfa", stations_pfa);
+    formData.append("stations_pa", JSON.stringify(stations_pa));
+    formData.append("stations_pfa", JSON.stringify(stations_pfa));    
     formData.append("stations_finish", stations_finish);
 
     var request = new XMLHttpRequest();
@@ -1660,19 +1706,7 @@ $("body").delegate('.js--setup-raid-montan-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
-                if(data.errors.stations_pa){
-                    $( '#stations_pa-error' ).html( data.errors.stations_pa[0] );
-                }
-                if(data.errors.stations_pfa){
-                    $( '#stations_pfa-error' ).html( data.errors.stations_pfa[0] );
-                }
-                if(data.errors.stations_finish){
-                    $( '#stations_finish-error' ).html( data.errors.stations_finish[0] );
-                }
-                if(data.errors.stations_pa){
-                    $( '#form_corruption-error' ).html( data.errors.stations_pa[0] );
-                }
+                printErrorMESSAGE(data.errors);
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
                 }
@@ -1735,16 +1769,37 @@ $("body").delegate('.js--setup-raid-montan-stages-update', 'click',function(e){
     $( '#post-error' ).html( "" );
     $( '#time-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
-    $( '.print-error-msg' ).hide();
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
+    $('.print-error-msg').hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
-    var post = $("input[name='post[]']").map(function(){return $(this).val();}).get();
-    var time = $("input[name='time[]']").map(function(){return $(this).val();}).get();
+    var start_251 = $("input[name='start_251']").val();
+    var finish_252 = $("input[name='finish_252']").val();
+    var post = {};
 
+    $("input[name^='post']").each(function () {
+        var input = $(this);
+        var name = input.attr('name'); // e.g. post[1]['arrived']
+        var matches = name.match(/^post\[(\d+)\]\[(\w+)\]$/);
+    
+        if (matches) {
+            var index = matches[1];  // e.g. 1
+            var key = matches[2];    // e.g. 'arrived' or 'go' or 'time'
+    
+            if (!post[index]) {
+                post[index] = {};
+            }
+    
+            post[index][key] = input.val();
+        }
+    });
+    
 
     formData.append("_token", _token);
-    formData.append("post", post);
-    formData.append("time", time);
+    formData.append("start_251", start_251);
+    formData.append("post", JSON.stringify(post));
+    formData.append("finish_252", finish_252);
 
     var request = new XMLHttpRequest();
     request.open("POST", "/" + $(this).data('stageid') + "/setup/raid-montan/stages/"+ $(this).data('id') +"/edit");
@@ -1786,12 +1841,10 @@ $("body").delegate('.js--setup-raid-montan-stages-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
+                printErrorMESSAGE(data.errors);
                 if(data.errors.post){
                     $( '#post-error' ).html( data.errors.post[0] );
-                }
-                if(data.errors.time){
-                    $( '#time-error' ).html( data.errors.time[0] );
                 }
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
@@ -1901,7 +1954,7 @@ $("body").delegate('.js--setup-orienteering-stages', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.post){
                     $( '#post-error' ).html( data.errors.post[0] );
                 }
@@ -2015,7 +2068,7 @@ $("body").delegate('.js--trophy-setup-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
                 }
@@ -2151,7 +2204,7 @@ $("body").delegate('.js--team-order-start-update', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.category_1){
                     $( '#category_1-error' ).html( data.errors.category_1[0] );
                 }
@@ -2249,7 +2302,7 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
                     });
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.delete_teams){
                     $( '#delete_teams-error' ).html( data.errors.delete_teams[0] );
                 }
@@ -2401,7 +2454,7 @@ $("body").delegate('.js--participants-create-store', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
                 }
@@ -2531,7 +2584,7 @@ $("body").delegate('.js--participants-update', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.name){
                     $( '#name-error' ).html( data.errors.name[0] );
                 }
@@ -2637,7 +2690,7 @@ $("body").delegate('.js--participants-destroy-confirm', 'click',function(e){
                     Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
                 }
@@ -2767,7 +2820,7 @@ $("body").delegate('.js--participants-stages-update', 'click',function(e){
                     return false;
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.participants){
                     $( '#participants-error' ).html( data.errors.participants[0] );
                 }
@@ -2867,7 +2920,7 @@ $("body").delegate('.js--participants-stages-confirm', 'click',function(e){
                     Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
                 }
             } else {
-                printErrorMsg(data.error);
+                printErrorMsg(data.errors);
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
                 }

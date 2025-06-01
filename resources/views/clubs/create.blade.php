@@ -31,7 +31,23 @@
                                                             <div class="help-block text-danger print-error" id="clubs-error" style="display:none"><ul role="alert"></ul></div>
                                                             <p><small class="text-muted">Numele clubului, exemplu: Asociatia Drumetii Montane</small></p>
                                                         </div>
-                                                        <div class="col-sm-2"><a href="javascript:void(0);" class="add_button" title="Add field"><img src="/images/add-icon.png"/></a></div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span>Organizator de etapa? (<span class="field-required">*</span>)</span>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select class="form-control m-b" id="stage_id" name="stage_id">
+                                                                <option value="0">-</option>
+                                                                @foreach($stages as $stage)
+                                                                <option value="{{ $stage->id }}">Etapa {{ $stage->id }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <div class="help-block text-danger print-error" id="stage_id-error" style="display:none"><ul role="alert"></ul></div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -50,47 +66,3 @@
         </div>
     </div>
 </div>
-<script type="text/javascript">
-
-$(document).ready(function() {
-
-
-            //Input fields increment limitation
-            var maxField = 29;
-
-            //Add button selector
-            var addButton = $('.add_button');
-            var x = 1;
-            //Input field wrapper
-            var wrapper = $('.clubs-list');
-
-            //New input field html
-            var fieldHTML = '<div class="col-12"><div class="form-group row clubs-list"><div class="col-md-2"><span>Nume Club: </span></div><div class="col-md-8"><input class="form-control clubs" id="clubs" type="text" name="clubs[]" placeholder="" required><div class="help-block text-danger print-error" id="clubs-error" style="display:none"><ul role="alert"></ul></div><p><small class="text-muted">Numele clubului, exemplu: Asociatia Drumetii Montane</small></p></div><div class="col-sm-2"><a href="javascript:void(0);" class="remove_button" title="Remove field"><img src="/images/remove-icon.png"/></a></div></div></div>';
-
-            //Initial field counter is 1
-
-            //Once add button is clicked
-            $(addButton).click(function() {
-
-                //Check maximum number of input fields
-                if(x < maxField){
-
-                    //Increment field counter
-                    x++;
-
-                    // Add field html
-                    $(wrapper).append(fieldHTML);
-                }
-            });
-            $(wrapper).on('click', '.remove_button', function(e) {
-                //Once remove button is clicked
-                e.preventDefault();
-
-                //Remove field html
-                $(this).parent('div').parent('div').remove();
-
-                //Decrement field counter
-                x--;
-            });
-        });
-    </script>

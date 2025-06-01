@@ -9,6 +9,8 @@
                             </div>
                             <div class="card-content">
                                 <div class="card-body">
+                                <div class="text-danger">Primul POST este Start-ul, Ultimul POST este Finish-ul. Se Adauga in functie de CSV: Start punch, PunchX, Finish punch</div>
+                                <br />
                                     <div class="alert alert-danger print-error-msg" style="display:none">
                                         <span>Există erori la validarea formularului!</span>
                                     </div>
@@ -17,20 +19,6 @@
                                     <form>
                                         @csrf
                                         <div class="form-body">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Start</span>
-                                                        </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" name="post[]" value="251" disabled>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <br />
-
                                             <div class="row">
                                                 <div class="col-12 stations-list">
                                                     <div class="form-group row">
@@ -50,18 +38,6 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-group row start_time-list">
-                                                        <div class="col-md-3">
-                                                            <span>Finish</span>
-                                                        </div>
-                                                        <div class="col-md-5">
-                                                            <input class="form-control" type="text" name="post[]" value="252" disabled>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             <br />
                                             <div class="row">
                                                 <div class="col-md-8 offset-md-4 pt-50">

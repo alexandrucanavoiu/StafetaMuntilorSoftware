@@ -23,6 +23,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ClubsStageRankings;
+use App\Models\ClubsStageCategoryRankings;
 
 class ParticipantsController extends Controller
 {
@@ -572,6 +573,7 @@ class ParticipantsController extends Controller
     {
         $stages = Stages::orderBy('id', 'asc')->get();
         $clubs = Club::get();
+        $categories = Category::get();
 
         // $username = '';
         // $password = '';
@@ -582,6 +584,7 @@ class ParticipantsController extends Controller
             // $response = Http::withBasicAuth($username, $password)->get($url);
         }
     
+        // General Cumulat
         $ranks = [];
         foreach ($stages as $stage) {
             foreach ($clubs as $club) {
@@ -627,7 +630,64 @@ class ParticipantsController extends Controller
             $unique_id++;
         }
 
-        return view('participants.participants_clubs_stage_rankings', compact('rankings', 'stages') );
+
+        //General Cumulat Categories
+        
+        $clubsstagecategoryrankings_rankings = [];
+
+        foreach ($categories as $category) {
+            $categoryId = $category->id;
+        
+            $records_club_stage_category = ClubsStageCategoryRankings::with('club')
+                ->where('category_id', $categoryId)
+                ->get()
+                ->groupBy('club_id');
+        
+            $clubsstagecategoryrankings_array = [];
+        
+            foreach ($records_club_stage_category as $clubId => $clubRecords) {
+                $row = ['club_name' => $clubRecords->first()->club->name];
+        
+                // Initialize dynamic stage columns
+                foreach ($stages as $stage) {
+                    $row['stage_' . $stage->id] = 0;
+                }
+        
+                // Fill in scores
+                $row['total'] = 0;
+                foreach ($clubRecords as $record) {
+                    $key = 'stage_' . $record->stage_id;
+                    if (array_key_exists($key, $row)) {
+                        $row[$key] = $record->scor;
+                        $row['total'] += $record->scor;
+                    }
+                }
+        
+                $clubsstagecategoryrankings_array[] = $row;
+            }
+        
+            // Sort and assign ranks
+            $sorted = collect($clubsstagecategoryrankings_array)->sortByDesc('total')->values()->toArray();
+        
+            $x = 1;
+            foreach ($sorted as $key => &$team) {
+                $team['rank'] = $x;
+                if (
+                    $key > 0 &&
+                    $team['total'] == $sorted[$key - 1]['total']
+                ) {
+                    $team['rank'] = $sorted[$key - 1]['rank'];
+                } else {
+                    $x++;
+                }
+            }
+        
+            $clubsstagecategoryrankings_rankings[$categoryId] = $sorted;
+
+            
+        }
+        
+        return view('participants.participants_clubs_stage_rankings', compact('rankings', 'clubsstagecategoryrankings_rankings', 'categories', 'stages') );
 
     }
 
@@ -635,6 +695,7 @@ class ParticipantsController extends Controller
     {
         $stages = Stages::orderBy('id', 'asc')->get();
         $clubs = Club::get();
+        $categories = Category::get();
     
         $ranks = [];
         foreach ($stages as $stage) {
@@ -681,7 +742,63 @@ class ParticipantsController extends Controller
             $unique_id++;
         }
 
-        $pdf = PDF::loadView('participants.participants_clubs_stage_rankings_pdf', ['rankings' => $rankings, 'stages' => $stages]);
+        //General Cumulat Categories
+        
+        $clubsstagecategoryrankings_rankings = [];
+
+        foreach ($categories as $category) {
+            $categoryId = $category->id;
+        
+            $records_club_stage_category = ClubsStageCategoryRankings::with('club')
+                ->where('category_id', $categoryId)
+                ->get()
+                ->groupBy('club_id');
+        
+            $clubsstagecategoryrankings_array = [];
+        
+            foreach ($records_club_stage_category as $clubId => $clubRecords) {
+                $row = ['club_name' => $clubRecords->first()->club->name];
+        
+                // Initialize dynamic stage columns
+                foreach ($stages as $stage) {
+                    $row['stage_' . $stage->id] = 0;
+                }
+        
+                // Fill in scores
+                $row['total'] = 0;
+                foreach ($clubRecords as $record) {
+                    $key = 'stage_' . $record->stage_id;
+                    if (array_key_exists($key, $row)) {
+                        $row[$key] = $record->scor;
+                        $row['total'] += $record->scor;
+                    }
+                }
+        
+                $clubsstagecategoryrankings_array[] = $row;
+            }
+        
+            // Sort and assign ranks
+            $sorted = collect($clubsstagecategoryrankings_array)->sortByDesc('total')->values()->toArray();
+        
+            $x = 1;
+            foreach ($sorted as $key => &$team) {
+                $team['rank'] = $x;
+                if (
+                    $key > 0 &&
+                    $team['total'] == $sorted[$key - 1]['total']
+                ) {
+                    $team['rank'] = $sorted[$key - 1]['rank'];
+                } else {
+                    $x++;
+                }
+            }
+        
+            $clubsstagecategoryrankings_rankings[$categoryId] = $sorted;
+
+            
+        }
+
+        $pdf = PDF::loadView('participants.participants_clubs_stage_rankings_pdf', ['rankings' => $rankings, 'clubsstagecategoryrankings_rankings' => $clubsstagecategoryrankings_rankings, 'categories' => $categories, 'stages' => $stages]);
         $pdf->setPaper('A4', 'landscape');
         $rankings = 'participants.participants_clubs_stage_rankings_pdf';
         return $pdf->stream($rankings);

@@ -84,8 +84,8 @@
                                                             <div class="col-md-4">
                                                                 <div class="input-group mb-2 input">
                                                                     <input type="text" class="form-control" placeholder="" aria-label="" name="stations_finish" value="{{ $raid_montan_stations->maximum_time }}" aria-describedby="basic-addon2">
-                                                                    <span class="input-group-text" id="basic-addon2">minute</span>
                                                                     <div class="help-block text-danger print-error" id="stations_finish-error" style="display:none"><ul role="alert"></ul></div>
+                                                                    <span class="input-group-text" id="basic-addon2">minute</span>
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-2">

@@ -70,14 +70,11 @@ Route::get('/{stageid}/setup/convert-datetime-timestamp', [SetupController::clas
 Route::post('/{stageid}/setup/convert-datetime-timestamp', [SetupController::class, 'convert_datetime_timestamp_confirm'])->name('setup.convert.datetime-timestamp.confirm');
 Route::get('/{stageid}/export-db', [SetupController::class, 'export_db'])->name('setup.export.db');
 
-// Route::get('/{stageid}/import-demo-data-1', [SetupController::class, 'demo_data_1'])->name('demo_data_1');
-// Route::get('/{stageid}/import-demo-data-2', [SetupController::class, 'demo_data_2'])->name('demo_data_2');
-
-
 Route::get('/{stageid}/import', [ImportController::class, 'index'])->name('import.index');
+Route::post('/{stageid}/import/check_teams_chipno', [ImportController::class, 'teams_chipno_and_team_name_check'])->name('import.teams_chipno_and_team_name_check');
 Route::post('/{stageid}/import/raidmontan-seed', [ImportController::class, 'raidmontan_seed'])->name('import.raidmontan_seed');
 Route::post('/{stageid}/import/orienteering-seed', [ImportController::class, 'orienteering_seed'])->name('import.orienteering_seed');
-Route::post('/{stageid}/import/raidmontan', [ImportController::class, 'raidmontan_import_uuids'])->name('import.raidmontan_import_uuids');
+Route::post('/{stageid}/import/raidmontan', [ImportController::class, 'raidmontan_import_sportident'])->name('import.raidmontan_import_uuids');
 Route::post('/{stageid}/import/orienteering', [ImportController::class, 'orienteering_import_uuids'])->name('import.orienteering_import_uuids');
 
 
@@ -101,7 +98,6 @@ Route::post('/{stageid}/teams/{id}/destroy', [TeamsController::class, 'destroy_c
 Route::get('/{stageid}/teams/pdf', [TeamsController::class, 'teams_listbyteams_pdf'])->name('teams.listbyteams_pdf');
 Route::get('/{stageid}/teams/order-start', [TeamsController::class, 'index_team_order_start'])->name('teams.order.start');
 Route::get('/{stageid}/teams/order-start/pdf', [TeamsController::class, 'index_team_order_start_pdf'])->name('teams.order.start.pdf');
-Route::get('/{stageid}/teams/uuids', [TeamsController::class, 'index_uuids'])->name('uuids.index');
 
 Route::get('/{stageid}/cultural', [CulturalController::class, 'index'])->name('cultural.index');
 Route::get('/{stageid}/cultural/rank-pdf', [CulturalController::class, 'cultural_rank_pdf'])->name('cultural.rank.pdf');

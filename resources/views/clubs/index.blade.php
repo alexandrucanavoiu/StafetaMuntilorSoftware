@@ -34,7 +34,8 @@
                                     <thead>
                                         <tr>
                                             <th width="15%" class="text-center">Nr. Curent</th>
-                                            <th width="75%">Nume Club</th>
+                                            <th width="70%">Nume Club</th>
+                                            <th width="5%" class="text-center">Organizator</th>
                                             <th width="10%" class="text-center">Actiuni</th>
                                         </tr>
                                     </thead>
@@ -43,6 +44,7 @@
                                         <tr>
                                             <td class="text-center">{{ $number++ }}</td>
                                             <td>{{ $club->name }}</td>
+                                            <td>@if($club->stage_id > 0) Da @else Nu @endif</td>
                                             <td class="text-center">
                                                 <div class="dropdown">
                                                     <button type="button" class="btn btn-sm dropdown-toggle hide-arrow py-0 waves-effect waves-float waves-light" data-bs-toggle="dropdown" aria-expanded="false">

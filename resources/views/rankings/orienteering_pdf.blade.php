@@ -92,7 +92,6 @@
   </table>
   <br/>
   <br/>
-  @if($ultra_orienteering == "1")<div class="text-center text-stations">Validarea corecta a punctelor de control: {{ $orienteering_stations_stage_result }}</div>@endif
   <footer>{{ \App\Helpers\Navigation::trophy_details()->software }}</footer>
 </body>
 </html>

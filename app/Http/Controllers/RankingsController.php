@@ -17,8 +17,10 @@ use App\Models\Knowledge;
 use App\Models\RaidmontanParticipations;
 use App\Models\ClubsStageRankings;
 use PDF;
+use DB;
 use App\Models\Stages;
 use App\Models\ParticipantsStageRankings;
+use App\Models\ClubsStageCategoryRankings;
 
 class RankingsController extends Controller
 {
@@ -372,17 +374,23 @@ class RankingsController extends Controller
                 } else {
                     $order_posts_result = "";
                     if($team->orienteering->abandon == 0){
-                        if($team->orienteering->order_posts !== null){
-                            foreach(json_decode($team->orienteering->order_posts) as $order_posts){
-                                if($order_posts->post == 251){
-                                    $order_posts_result .= "(Start - " . gmdate("H:i:s", $order_posts->time) . ") ";
-                                } elseif($order_posts->post == 252){
-                                    $order_posts_result .= " (Finish - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                        if ($team->orienteering->order_posts !== null) {
+                            $orderPosts = json_decode($team->orienteering->order_posts, true); // true = decode as array
+                            $orderPosts = array_values($orderPosts);
+                            $count = count($orderPosts);
+                            $postNumber = 1;
+                        
+                            foreach ($orderPosts as $index => $timeString) {
+                                if ($index === 0) {
+                                    $order_posts_result .= "(START - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
+                                } elseif ($index === $count - 1) {
+                                    $order_posts_result .= "(FINISH - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
                                 } else {
-                                    $order_posts_result .= "(P ". $order_posts->post . " - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                                    $order_posts_result .= "(P " . $postNumber++ . " - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
                                 }
                             }
                         }
+                        
                         $teams_list[$key]['name'] = $team->name;
                         $teams_list[$key]['total_time'] = $team->orienteering->total_time;
                         $teams_list[$key]['missing'] = $team->orienteering->missed_posts;
@@ -391,17 +399,30 @@ class RankingsController extends Controller
                         // convert into a timestamp
                         $teams_list[$key]['total_time_seconds'] = strtotime($team->orienteering->total_time);
                     } elseif($team->orienteering->abandon == 2) {
-                        if($team->orienteering->order_posts !== null) {
-                            foreach(json_decode($team->orienteering->order_posts) as $order_posts){
-                                if($order_posts->post == 251){
-                                    $order_posts_result .= "(Start - " . gmdate("H:i:s", $order_posts->time) . ") ";
-                                } elseif($order_posts->post == 252){
-                                    $order_posts_result .= " (Finish - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                        if ($team->orienteering->order_posts !== null) {
+                            $orderPosts = json_decode($team->orienteering->order_posts, true); // true = decode as array
+                            $orderPosts = array_values($orderPosts);
+                            $count = count($orderPosts);
+                            $postNumber = 1;
+                            
+                            foreach ($orderPosts as $index => $timeString) {
+                                if ($timeString === "-----" || $timeString === "") {
+                                    $formattedTime = "-----";
                                 } else {
-                                    $order_posts_result .= "(P ". $order_posts->post . " - " . gmdate("H:i:s", $order_posts->time). ") ";
+                                    $formattedTime = gmdate("H:i:s", strtotime($timeString));
+                                }
+                                
+                                if ($index === 0) {
+                                    $order_posts_result .= "(START - " . $formattedTime . ") ";
+                                } elseif ($index === $count - 1) {
+                                    $order_posts_result .= "(FINISH - " . $formattedTime . ") ";
+                                } else {
+                                    $label = $timeString === "-----" ? "P" : "P " . $postNumber++;
+                                    $order_posts_result .= "(" . $label . " - " . $formattedTime . ") ";
                                 }
                             }
                         }
+
                         $teams_list_disqualified[$key]['name'] = $team->name;
                         $teams_list_disqualified[$key]['total_time'] = $team->orienteering->total_time;
                         $teams_list_disqualified[$key]['missing'] = $team->orienteering->missed_posts;
@@ -436,9 +457,10 @@ class RankingsController extends Controller
                         $difference = isset($seconds) ?
                             $seconds - $collection_orienteering[0]["total_time_seconds"] :
                             0;
-                        $score = isset($difference) ?
+                        $raw_score = isset($difference) ?
                             5000 - $difference :
                             5000;
+                        $score = max(0, $raw_score); // Ensure score is at least 0
                         $collection_orienteering[$key]['scor'] = $score;
                     }
                 }
@@ -518,14 +540,19 @@ class RankingsController extends Controller
                 } else {
                     $order_posts_result = "";
                     if($team->orienteering->abandon == 0){
-                        if($team->orienteering->order_posts !== null){
-                            foreach(json_decode($team->orienteering->order_posts) as $order_posts){
-                                if($order_posts->post == 251){
-                                    $order_posts_result .= "(Start - " . gmdate("H:i:s", $order_posts->time) . ") ";
-                                } elseif($order_posts->post == 252){
-                                    $order_posts_result .= " (Finish - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                        if ($team->orienteering->order_posts !== null) {
+                            $orderPosts = json_decode($team->orienteering->order_posts, true); // true = decode as array
+                            $orderPosts = array_values($orderPosts);
+                            $count = count($orderPosts);
+                            $postNumber = 1;
+                        
+                            foreach ($orderPosts as $index => $timeString) {
+                                if ($index === 0) {
+                                    $order_posts_result .= "(START - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
+                                } elseif ($index === $count - 1) {
+                                    $order_posts_result .= "(FINISH - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
                                 } else {
-                                    $order_posts_result .= "(P ". $order_posts->post . " - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                                    $order_posts_result .= "(P " . $postNumber++ . " - " . gmdate("H:i:s", strtotime($timeString)) . ") ";
                                 }
                             }
                         }
@@ -538,14 +565,26 @@ class RankingsController extends Controller
                         // convert into a timestamp
                         $teams_list[$key]['total_time_seconds'] = strtotime($team->orienteering->total_time);
                     } elseif($team->orienteering->abandon == 2) {
-                        if($team->orienteering->order_posts !== null) {
-                            foreach(json_decode($team->orienteering->order_posts) as $order_posts){
-                                if($order_posts->post == 251){
-                                    $order_posts_result .= "(Start - " . gmdate("H:i:s", $order_posts->time) . ") ";
-                                } elseif($order_posts->post == 252){
-                                    $order_posts_result .= " (Finish - " . gmdate("H:i:s", $order_posts->time) . ") ";
+                        if ($team->orienteering->order_posts !== null) {
+                            $orderPosts = json_decode($team->orienteering->order_posts, true); // true = decode as array
+                            $orderPosts = array_values($orderPosts);
+                            $count = count($orderPosts);
+                            $postNumber = 1;
+                        
+                            foreach ($orderPosts as $index => $timeString) {
+                                if ($timeString === "-----" || $timeString === "") {
+                                    $formattedTime = "-----";
                                 } else {
-                                    $order_posts_result .= "(P ". $order_posts->post . " - " . gmdate("H:i:s", $order_posts->time). ") ";
+                                    $formattedTime = gmdate("H:i:s", strtotime($timeString));
+                                }
+                        
+                                if ($index === 0) {
+                                    $order_posts_result .= "(START - " . $formattedTime . ") ";
+                                } elseif ($index === $count - 1) {
+                                    $order_posts_result .= "(FINISH - " . $formattedTime . ") ";
+                                } else {
+                                    $label = $timeString === "-----" ? "P" : "P " . $postNumber++;
+                                    $order_posts_result .= "(" . $label . " - " . $formattedTime . ") ";
                                 }
                             }
                         }
@@ -583,9 +622,10 @@ class RankingsController extends Controller
                         $difference = isset($seconds) ?
                             $seconds - $collection_orienteering[0]["total_time_seconds"] :
                             0;
-                        $score = isset($difference) ?
+                        $raw_score = isset($difference) ?
                             5000 - $difference :
                             5000;
+                        $score = max(0, $raw_score); // Ensure score is at least 0
                         $collection_orienteering[$key]['scor'] = $score;
                     }
                 }
@@ -615,19 +655,8 @@ class RankingsController extends Controller
 
             $rankings = $collection_orienteering;
 
-            $orienteering_stations_stage = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
-            $orienteering_stations_stage_result = "";
-            foreach($orienteering_stations_stage as $station){
-                    if($station->post == 251){
-                        $orienteering_stations_stage_result .= "Start ,";
-                    } elseif($station->post == 252){
-                        $orienteering_stations_stage_result .= " Finish";
-                    } else {
-                        $orienteering_stations_stage_result .= " P " . $station->post . " ,";
-                    }
-            }
 
-            $pdf = PDF::loadView('rankings.orienteering_pdf', ['ultra_orienteering' => $ultra_orienteering, 'rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'orienteering_stations_stage_result' => $orienteering_stations_stage_result, 'stageid' => $stageid]);
+            $pdf = PDF::loadView('rankings.orienteering_pdf', ['ultra_orienteering' => $ultra_orienteering, 'rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
             $listrankknowledge = 'rankings.knowledge_pdf';
             return $pdf->stream($listrankknowledge);
@@ -1123,7 +1152,7 @@ class RankingsController extends Controller
             foreach($teams_knowledge as $key => $team){
                 if($team->knowledge == null){
                     continue;
-                } else {     
+                } else {
                     if($team->knowledge->abandon == 0){
                         $teams_knowledge_list[$key]['name'] = $team->name;
                         $teams_knowledge_list[$key]['scor'] = 0;
@@ -1232,6 +1261,7 @@ class RankingsController extends Controller
                 }
     
                 $unique_id++;
+                
 
             }
             
@@ -1286,9 +1316,10 @@ class RankingsController extends Controller
                         $difference = isset($seconds) ?
                             $seconds - $collection_orienteering[0]["total_time_seconds"] :
                             0;
-                        $score = isset($difference) ?
+                        $raw_score = isset($difference) ?
                             5000 - $difference :
                             5000;
+                        $score = max(0, $raw_score); // Ensure score is at least 0
                         $collection_orienteering[$key]['scor'] = $score;
                     }
                 }
@@ -1550,7 +1581,13 @@ class RankingsController extends Controller
             }
 
             // Score Stafeta
-            $initial_scor = 500;
+            // If Cateogry is Open the score is 400 if not 500
+            if($category_id == 4){
+                $initial_scor = 400;
+            } else {
+                $initial_scor = 500;
+            }
+
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
                     // check if knowledge or orienteering is not abandon to give them 10 points.
@@ -1840,9 +1877,10 @@ class RankingsController extends Controller
                         $difference = isset($seconds) ?
                             $seconds - $collection_orienteering[0]["total_time_seconds"] :
                             0;
-                        $score = isset($difference) ?
+                        $raw_score = isset($difference) ?
                             5000 - $difference :
                             5000;
+                        $score = max(0, $raw_score); // Ensure score is at least 0
                         $collection_orienteering[$key]['scor'] = $score;
                     }
                 }
@@ -2092,7 +2130,13 @@ class RankingsController extends Controller
             }
 
             // Score Stafeta
-            $initial_scor = 500;
+            // If Cateogry is Open the score is 400 if not 500
+            if($category_id == 4){
+                $initial_scor = 400;
+            } else {
+                $initial_scor = 500;
+            }
+
             foreach($ranking_general as $key => $rank){
                 if($rank['scor_raidmontan'] == 0){
                     // check if knowledge or orienteering is not abandon to give them 10 points.
@@ -2197,9 +2241,14 @@ class RankingsController extends Controller
 
 
 
-    public function ranking_cumulat($stageid, ClubsStageRankings $ClubsStageRankings)
+    public function ranking_cumulat($stageid, ClubsStageRankings $ClubsStageRankings, ClubsStageCategoryRankings $ClubsStageCategoryRankings)
     {
         $stage = Stages::where('id', $stageid)->first();
+        
+        //organize clubs in order to add points for the cumulate ranking.
+        $organizer_clubs = Club::where('stage_id', $stageid)->get();
+       
+
         if($stage == null){
             $notification = array(
                 'success_title' => 'Eroare!!',
@@ -2407,9 +2456,10 @@ class RankingsController extends Controller
                                 $difference = isset($seconds) ?
                                     $seconds - $collection_orienteering[0]["total_time_seconds"] :
                                     0;
-                                $score = isset($difference) ?
+                                $raw_score = isset($difference) ?
                                     5000 - $difference :
                                     5000;
+                                $score = max(0, $raw_score); // Ensure score is at least 0
                                 $collection_orienteering[$key]['scor'] = $score;
                             }
                         }
@@ -2668,7 +2718,8 @@ class RankingsController extends Controller
                             }
                 
                             // Score Stafeta
-                            $initial_scor = 500;
+                            $initial_scor = $category->points;
+                            
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
                                     // check if knowledge or orienteering is not abandon to give them 10 points.
@@ -2775,8 +2826,12 @@ class RankingsController extends Controller
             }
         }
 
-        $rankings = [];
-        foreach($list_clubs as $club_key => $club){
+        $rankings = [];        
+
+        foreach($list_clubs as $club_key => $club)
+        {
+            $rankings[$club_key]['club_id'] = $club['id'];
+            $rankings[$club_key]['stage_id'] = $stageid;
             $rankings[$club_key]['bonus'] = $club['bonus'];
             $rankings[$club_key]['id'] = $club['id'];
             // start with bonus total_sm
@@ -2834,9 +2889,14 @@ class RankingsController extends Controller
         $x = 1;
         $unique_id = 0;
 
-    
+        //Delete all from clubs_stage_category_rankings for cumulat categories
+        ClubsStageCategoryRankings::where('stage_id', $stageid)->delete();
+        //Delete all from clubs_stage_rankings for cumulat
+        ClubsStageRankings::where('stage_id', $stageid)->delete();
+   
         
         foreach($rankings as $key => $team){
+            $clubstagerankings_insert = [];
             $decrease_rank = 0;
             $rankings[$key]['rank'] = $x;
                 if(isset($rankings[$key-1]))
@@ -2859,13 +2919,92 @@ class RankingsController extends Controller
             $clubstagerankings_insert[$key]['club_id'] = $team['id'];
             $clubstagerankings_insert[$key]['scor'] = $team['total_sm'];
 
-        }
-
-        
             // insert in db score for cumulat clubs
-            ClubsStageRankings::where('stage_id', $stageid)->delete();
             $ClubsStageRankings->create($clubstagerankings_insert);
 
+
+            //Ranking for cumulat categories
+            foreach($team['categories'] as $category_name => $category_score){
+
+                if ($category_name == 'Family') {
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['category_id'] = 1;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Juniori') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 2;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Elite') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 3;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Open') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 4;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Veterani') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 5;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Feminin') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 6;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                } elseif ($category_name == 'Seniori') {
+                    $clubs_stage_category_rankings_insert['category_id'] = 7;
+                    $clubs_stage_category_rankings_insert['stage_id'] = $stageid;
+                    $clubs_stage_category_rankings_insert['club_id'] = $team['id'];
+                    $clubs_stage_category_rankings_insert['scor'] = $category_score;
+                }
+
+                //Insert data in clubs_stage_category_rankings for cumulat categories
+                $ClubsStageCategoryRankings->insert($clubs_stage_category_rankings_insert);
+            }
+
+            //Insert data for club organizer for category
+            foreach( $organizer_clubs as $organizer_club )
+            {
+                if($organizer_club->stage_id == $stageid)
+                {
+                    ClubsStageCategoryRankings::where('stage_id', $stageid)->where('club_id', $organizer_club['id'])->delete();
+                    $clubs_stage_organizer_category_rankings_insert = [];
+                    foreach($categories as $key => $category){
+                        $clubs_stage_organizer_category_rankings_insert[$key]['category_id'] =  $category->id;
+                        $clubs_stage_organizer_category_rankings_insert[$key]['stage_id'] = $stageid;
+                        $clubs_stage_organizer_category_rankings_insert[$key]['club_id'] = $organizer_club['id'];
+                        $clubs_stage_organizer_category_rankings_insert[$key]['scor'] = $category->points;
+                    }
+
+                    DB::table('clubs_stage_category_rankings')->insert($clubs_stage_organizer_category_rankings_insert);
+                }
+            } 
+            
+        }
+
+        foreach($organizer_clubs as $key => $organizer_club)
+        {
+            ClubsStageRankings::where('stage_id', $stageid)->where('club_id',$organizer_club->id)->delete();
+            $clubstagerankings_insert_org = [];
+            $organier_score = 2000;
+            if( $organizer_club->climbing > 0 ){
+                $organier_score += 200;
+            }
+
+            $clubstagerankings_insert_org[$key]['stage_id'] = $stageid;
+            $clubstagerankings_insert_org[$key]['club_id'] = $organizer_club->id;
+            $clubstagerankings_insert_org[$key]['scor'] = $organier_score;
+
+            DB::table('clubs_stage_rankings')->insert($clubstagerankings_insert_org);
+        }
+    
+
+           
  
         return view('rankings.general',compact('rankings','categories', 'stageid'));
 
@@ -3062,9 +3201,10 @@ class RankingsController extends Controller
                                 $difference = isset($seconds) ?
                                     $seconds - $collection_orienteering[0]["total_time_seconds"] :
                                     0;
-                                $score = isset($difference) ?
+                                $raw_score = isset($difference) ?
                                     5000 - $difference :
                                     5000;
+                                $score = max(0, $raw_score); // Ensure score is at least 0
                                 $collection_orienteering[$key]['scor'] = $score;
                             }
                         }
@@ -3316,7 +3456,8 @@ class RankingsController extends Controller
                             }
                 
                             // Score Stafeta
-                            $initial_scor = 500;
+                            // If Cateogry is Open the score is 400 if not 500
+                            $initial_scor = $category->points;
                             foreach($ranking_general as $key => $rank){
                                 if($rank['scor_raidmontan'] == 0){
                                     // check if knowledge or orienteering is not abandon to give them 10 points.

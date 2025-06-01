@@ -21,6 +21,7 @@ use App\Models\Cultural;
 use App\Models\TeamOrderStart;
 use App\Models\Stages;
 use App\Models\ClubsStageRankings;
+use App\Models\ClubsStageCategoryRankings;
 use App\Models\ParticipantsStageRankings;
 use DB;
 use Illuminate\Support\Facades\Artisan;
@@ -41,14 +42,15 @@ class SetupController extends Controller
 
      public function export_db($stageid)
      {
-
-        \Spatie\DbDumper\Databases\MySql::create()
-        ->setDbName(env('DB_DATABASE'))
-        ->setUserName(env('DB_USERNAME'))
-        ->setPassword(env('DB_PASSWORD'))
-        ->dumpToFile(storage_path('backupDataBASE'. $stageid .'.sql'));
-        return response()->download(storage_path('backupDataBASE'. $stageid .'.sql'));
-
+         \Spatie\DbDumper\Databases\MySql::create()
+             ->setDbName(env('DB_DATABASE'))
+             ->setUserName(env('DB_USERNAME'))
+             ->setPassword(env('DB_PASSWORD'))
+             ->addExtraOption('--skip-lock-tables')
+             ->addExtraOption('--no-tablespaces')
+             ->dumpToFile(storage_path("backupDataBASE{$stageid}.sql"));
+     
+         return response()->download(storage_path("backupDataBASE{$stageid}.sql"));
      }
 
     public function index($stageid)
@@ -499,6 +501,7 @@ class SetupController extends Controller
     {
         if( $request->ajax() )
         {
+
             $category = Category::FindOrFail($id);
                 if($category == null ) {
                     $notification = array(
@@ -507,33 +510,52 @@ class SetupController extends Controller
                         'alert-type' => 'error'
                     );
                     return redirect()->route('setup.index', [$stageid, $category->id])->with($notification);
-                } else {
+                } else {           
+
+                    $stations_pa = array_map(function($val) {
+                        return $val === '' ? null : $val;
+                    }, json_decode($request->stations_pa, true));
+                    
+                    $request->merge(['stations_pa' => $stations_pa]);
+
+                    $stations_pfa = array_map(function($val) {
+                        return $val === '' ? null : $val;
+                    }, json_decode($request->stations_pfa, true));
+                    
+                    $request->merge(['stations_pfa' => $stations_pfa]);
+
+                    // Now prepare all request data
+                    $request->merge([
+                        'stations_start' => 0,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]);
+
+
                     $rules = [
                         'stations_pa' => 'required|array|min:1|max:30',
                         'stations_pa.*' => 'required|numeric|max:1000|min:1',
                         'stations_pfa' => 'required|array|min:1|max:10000',
                         'stations_pfa.*' => 'required|numeric|max:10000|min:1',
                         'stations_finish' => 'required|numeric|max:10000|min:1',
-                    ];
+                    ];     
 
-                    $request->merge(['stations_start' => 0]);
-                    $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
-                    $request->merge(['created_at' => date('Y-m-d H:i:s')]);
-
-                    // create array for PA stations
-                    if(!empty($request->input('stations_pa'))){
-                        $stations_pa = explode(',', $request->input('stations_pa'));
-                        $request->merge(['stations_pa' => $stations_pa]);
+                    // adaugare text custom pentru erori
+                    $attributes = [
+                        'stations_finish' => 'Finish',
+                    ];;
+                    
+                    foreach ($request->stations_pa as $index => $val) {
+                        $attributes["stations_pa.$index"] = "PA";
                     }
-
-                    // create array for PFA stations
-                    if(!empty($request->input('stations_pfa'))){
-                        $stations_pfa = explode(',', $request->input('stations_pfa'));
-                        $request->merge(['stations_pfa' => $stations_pfa]);
-                    }
+                    
+                    foreach ($request->stations_pfa as $index => $val) {
+                        $attributes["stations_pfa.$index"] = "PFA";
+                    }                 
 
                     $data = $request->only(['stations_start', 'stations_pa', 'stations_pfa', 'stations_finish', 'missed_posts', 'abandon', 'created_at', 'updated_at', 'team_id']);
-                    $validator = Validator::make($data, $rules);
+
+                    $validator = Validator::make($request->all(), $rules, [], $attributes);
 
                     $stage = Stages::where('id', $stageid)->first();
                     if($stage == null){
@@ -542,21 +564,26 @@ class SetupController extends Controller
                         });
                     }
 
-                    foreach($stations_pa as $stationpa){
-                        if(is_numeric($stationpa) == false){
-                            $validator->after(function ($validator) {
-                                $validator->errors()->add('form_corruption', 'Verificati datele introduse la PA-uri, minutele trebuie sa fie in format numeric!');
-                            });
+                    $validator->after(function ($validator) use ($stations_pa, $stations_pfa) {
+                        $messages = [];
+                    
+                        foreach ($stations_pa as $index => $stationpa) {
+                            if (!is_numeric($stationpa)) {
+                                $messages[] = "PA " . ($index + 1) . ": minutele trebuie să fie numerice.";
+                            }
                         }
-                    }
-
-                    foreach($stations_pfa as $stationpfa){
-                        if(is_numeric($stationpfa) == false){
-                            $validator->after(function ($validator) {
-                                $validator->errors()->add('form_corruption', 'Verificati datele introduse la PFA-uri, punctele trebuie sa fie in format numeric!');
-                            });
+                    
+                        foreach ($stations_pfa as $index => $stationpfa) {
+                            if (!is_numeric($stationpfa)) {
+                                $messages[] = "PFA " . ($index + 1) . ": punctele trebuie să fie numerice.";
+                            }
                         }
-                    }
+                    
+                        if (!empty($messages)) {
+                            $validator->errors()->add('form_corruption', implode(' ', $messages));
+                        }
+                    });
+                    
 
                     if($validator->passes())
                     {
@@ -741,6 +768,7 @@ class SetupController extends Controller
     {
         if( $request->ajax() )
         {
+     
             $category = Category::FindOrFail($id);
 
             $stage = Stages::where('id', $stageid)->first();
@@ -769,77 +797,49 @@ class SetupController extends Controller
                     $ajax_status_response = "error";
                     return response()->json(['ajax_status_response' => $ajax_status_response, 'ajax_title_response' => $ajax_title_response, 'ajax_message_response' => $ajax_message_response, 'stage_id' => $stageid], 200);
                 } else  {
+
+                    $post = json_decode($request->post, true);
+                    $request->merge(['post' => $post]);
+
                     $rules = [
-                        'time' => 'required|array|min:1|max:30',
-                        'time.*' => 'required|max:255|min:1',
-                        'post' => 'required|array|min:1|max:30',
-                        'post.*' => 'required|max:255|min:1',
+                        'start_251' => 'required|string',
+                        'finish_252' => 'required|string',
+                        'post' => 'required|array',
+                        'post.*.arrived' => 'required|string',
+                        'post.*.go' => 'required|string',
+                        'post.*.time' => 'required|numeric',
                     ];
+
 
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
                     $request->merge(['created_at' => date('Y-m-d H:i:s')]);
 
-                    $time = [];
-                    if(!empty($request->input('time'))){
-                        $time = explode(',', $request->input('time'));
-                        $request->merge(['time' => $time]);
-                    }
+                    $data = $request->only(['start_251', 'post', 'finish_252', 'created_at', 'updated_at']);
 
-                    $post = [];
-                    if(!empty($request->input('post'))){
-                        $post = explode(',', $request->input('post'));
-                        $request->merge(['post' => $post]);
-                    }
 
-                    $data = $request->only(['post', 'time', 'created_at', 'updated_at']);
-                    $validator = Validator::make($data, $rules);
-
-                    if(count($time) == 0){
-                        $validator->after(function ($validator) {
-                            $validator->errors()->add('form_corruption', 'Verificati datele introduse la minute de pauza, minutele trebuie sa fie in format numeric!');
-                        });
-                    } else {
-                        foreach($time as $t){
-                            if(is_numeric($t) == false){
-                                $validator->after(function ($validator) {
-                                    $validator->errors()->add('form_corruption', 'Verificati datele introduse la minute de pauza, minutele trebuie sa fie in format numeric!');
-                                });
-                            }
-                        }
+                    // adaugare text custom pentru erori
+                    $attributes = [
+                        'start_251' => 'Codul de start',
+                        'finish_252' => 'Codul de finish',
+                    ];
+                    
+                    foreach ($post as $index => $values) {
+                        $attributes["post.$index.time"] = "Timpul de pauză pentru PA $index";
+                        $attributes["post.$index.arrived"] = "Cod sosire pentru PA $index";
+                        $attributes["post.$index.go"] = "Cod plecare pentru PA $index";
                     }
-
-                    if(count($post) == 0){
-                        $validator->after(function ($validator) {
-                            $validator->errors()->add('form_corruption', 'Verificati datele introduse la PA-uri, cod statie trebuie sa fie in format numeric!');
-                        });
-                    } else {
-                        foreach($post as $t){
-                            if(is_numeric($t) == false){
-                                $validator->after(function ($validator) {
-                                    $validator->errors()->add('form_corruption', 'Verificati datele introduse la PA-uri, cod statie trebuie sa fie in format numeric!');
-                                });
-                            }
-                        }
-                    }
+                    
+             
+                    $validator = Validator::make($data, $rules, [], $attributes);
 
                     if($validator->passes())
                     {
-
-                        $stations = [];
-                        $number = 0;
-                    
-                        foreach($data['time'] as $key => $time) {
-                            $stations[$key]['stage_id'] = $stageid; 
-                            $stations[$key]['category_id'] = $category->id;
-                            $stations[$key]['post'] = $post[$key];
-                            $stations[$key]['time'] = $time;
-                            $stations[$key]['created_at'] = $data['created_at'];
-                            $stations[$key]['updated_at'] = $data['updated_at'];
-                        }
-
+                        
                         $stations_start['stage_id'] = $stageid;
                         $stations_start['category_id'] = $category->id;
                         $stations_start['post'] = 251;
+                        $stations_start['cod_start'] = trim($data['start_251']);
+                        $stations_start['cod_finish'] = null;
                         $stations_start['time'] = null;
                         $stations_start['created_at'] = $data['created_at'];
                         $stations_start['updated_at'] = $data['updated_at'];
@@ -847,9 +847,24 @@ class SetupController extends Controller
                         $stations_finish['stage_id'] = $stageid;
                         $stations_finish['category_id'] = $category->id;
                         $stations_finish['post'] = 252;
+                        $stations_finish['cod_start'] = trim($data['finish_252']);
+                        $stations_finish['cod_finish'] = null;
                         $stations_finish['time'] = null;
                         $stations_finish['created_at'] = $data['created_at'];
                         $stations_finish['updated_at'] = $data['updated_at'];
+
+                        $stations = [];
+
+                        foreach ($post as $key => $value) {
+                            $stations[$key]['stage_id'] = $stageid;
+                            $stations[$key]['category_id'] = $category->id;
+                            $stations[$key]['post'] = $key;
+                            $stations[$key]['cod_start'] = trim($value['arrived']);
+                            $stations[$key]['cod_finish'] = trim($value['go']);
+                            $stations[$key]['time'] = $value['time'];
+                            $stations[$key]['created_at'] = $data['created_at'];
+                            $stations[$key]['updated_at'] = $data['updated_at'];
+                        }
 
                         RaidmontanStationsStages::where('stage_id', $stageid)->where('category_id', $id)->delete();
                         RaidmontanStationsStages::insert($stations_start);
@@ -969,16 +984,8 @@ class SetupController extends Controller
 
                     if(count($post) == 0){
                         $validator->after(function ($validator) {
-                            $validator->errors()->add('form_corruption', 'Verificati datele introduse la minute de pauza, minutele trebuie sa fie in format numeric!');
+                            $validator->errors()->add('form_corruption', 'Verificati datele introduse sunt corecte!');
                         });
-                    } else {
-                        foreach($post as $t){
-                            if(is_numeric($t) == false){
-                                $validator->after(function ($validator) {
-                                    $validator->errors()->add('form_corruption', 'Verificati datele introduse la minute de pauza, minutele trebuie sa fie in format numeric!');
-                                });
-                            }
-                        }
                     }
 
                     if($validator->passes())
@@ -1147,6 +1154,8 @@ class SetupController extends Controller
 
                 ClubsStageRankings::where('stage_id', $stageid)->delete();
                 ParticipantsStageRankings::where('stage_id', $stageid)->delete();
+                ClubsStageCategoryRankings::where('stage_id', $stageid)->delete();
+                ClubsStageRankings::where('stage_id', $stageid)->delete();
 
                 $ajax_message_response = "Datele au fost sterse.";
                 $ajax_title_response = "Felicitări!";

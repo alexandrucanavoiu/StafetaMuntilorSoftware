@@ -84,41 +84,6 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-12">
-                                                    <div class="form-group row">
-                                                        <div class="col-md-4">
-                                                            <span>UUID Orienteeting (<span class="field-required">*</span>)</span>
-                                                        </div>
-                                                        <div class="col-md-8">
-                                                            <select class="form-control uuid_card_orienteering_id" aria-required="true" id="uuid_card_orienteering_id" name="uuid_card_orienteering_id">
-                                                                <option value="">--- selectează ---</option>
-                                                                @foreach($uuid_orienteering as $uuid)
-                                                                    <option value="{{ $uuid->id }}" {{ (collect(old('uuid_card_orienteering_id'))->contains($uuid->id)) ? 'selected':'' }}>Nr. {{ $uuid->id }} - {{ $uuid->name }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                            <div class="help-block text-danger print-error" id="uuid_card_orienteering_id-error" style="display:none"><ul role="alert"></ul></div>
-                                                            <p><small class="text-muted">Selectati ceas pentru orientare</small></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <div class="form-group row">
-                                                        <div class="col-md-4">
-                                                            <span>UUID Raid (<span class="field-required">*</span>)</span>
-                                                        </div>
-                                                        <div class="col-md-8">
-                                                            <select class="form-control uuid_card_raid_id" aria-required="true" id="uuid_card_raid_id" name="uuid_card_raid_id">
-                                                                <option value="">--- selectează ---</option>
-                                                                @foreach($uuid_raid as $uuid)
-                                                                    <option value="{{ $uuid->id }}" {{ (collect(old('uuid_card_raid_id'))->contains($uuid->id)) ? 'selected':'' }}>Nr. {{ $uuid->id }} - {{ $uuid->name }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                            <div class="help-block text-danger print-error" id="uuid_card_raid_id-error" style="display:none"><ul role="alert"></ul></div>
-                                                            <p><small class="text-muted">Selectati ceas pentru orientare</small></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                                 <div class="col-md-8 offset-md-4 pt-50">
                                                     <button type="button" class="btn btn-primary me-1 mr-1 mb-1" type="reset" data-bs-dismiss="modal" aria-label="Close">Inchide</button>
                                                     <button type="submit" class="js--teams-create-store btn btn-success mr-1 mb-1" data-stageid="{{ $stageid }}">Adauga</button>

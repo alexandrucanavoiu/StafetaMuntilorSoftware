@@ -21,10 +21,9 @@ class Team extends Model
         'stage_id',
         'number',
         'name',
-        'uuid_card_orienteering_id',
-        'uuid_card_raid_id',
         'club_id',
         'category_id',
+        'chipno',
     ];
 
     public function category()
@@ -35,16 +34,6 @@ class Team extends Model
     public function club()
     {
         return $this->belongsTo('App\Models\Club', 'club_id');
-    }
-
-    public function uuid_orienteering()
-    {
-        return $this->belongsTo('App\Models\UuidOrienteeting', 'uuid_card_orienteering_id');
-    }
-
-    public function uuid_raid()
-    {
-        return $this->belongsTo('App\Models\UuidRaid', 'uuid_card_raid_id');
     }
 
     public function knowledge()

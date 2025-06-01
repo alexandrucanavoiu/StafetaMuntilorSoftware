@@ -18,6 +18,27 @@
             <section>
                 <div class="card">
                     <div class="card-header">
+                        <h4 class="card-title">[ v6.0.0 ] - 01.06.2025</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Cumulat Etape pentru categorii - clasament.</p>
+                        <p class="card-text">- Export baza de date</p>
+                        <p class="card-text">- Fara puncte negative la orientare</p>
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- Modificare Software dupa regulament Stafeta Muntilor 2025</p>
+                        <p class="card-text">- Import din CSV timp folosind sistemul SPORTIDENT pentru Orientare/Raid + CHIPNO pentru echipe si validare nume echipe</p>
+                        <p class="card-text">- Modificare campuri configurare statii de RAID/Orientare</p>
+                        <p class="card-text">[Stergere]</p>
+                        <p class="card-text">- Import folosind sistemul Ultra Orienteering + configurare statii orientare/raid pentru acest sistem</p>
+                        <p class="card-text">- La editarea/adaugarea unei echipe a fost sterse campurile UUIDs</p>
+                        <p class="card-text">- La editarea/adaugarea unei echipe campul "Numar de participare" nu mai este obligatoriu de completat</p>
+                        <p class="card-text">- Din dashboard PDF-urile cu regulament/fise au fost eliminate</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
                         <h4 class="card-title">[ v5.0.2 ] - 20.07.2024</h4>
                     </div>
                     <div class="card-body">

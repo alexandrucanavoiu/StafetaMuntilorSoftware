@@ -188,7 +188,8 @@ class RaidMontanController extends Controller
                     }
 
                     // validate stations Start / Finish to not be empty if status (abandon = 0) is ok.
-                    if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                    // if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                    if($station_finish == '00:00:00' && $data['abandon'] == "0"){
                         $validator->after(function ($validator) {
                             $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si Finish Time, par sa fie necompletati iar Status este OK');
                         });
@@ -249,7 +250,8 @@ class RaidMontanController extends Controller
                     $pfa_stations_count = 0;
 
                     // validate stations Start / Finish to not be empty if status (abandon = 0) is ok.
-                    if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                    // if($station_start == '00:00:00' && $data['abandon'] == "0" ||  $station_finish == '00:00:00' && $data['abandon'] == "0"){
+                    if($station_finish == '00:00:00' && $data['abandon'] == "0"){
                         $validator->after(function ($validator) {
                             $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si Finish Time, par sa fie necompletati iar Status este OK');
                         });

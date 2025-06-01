@@ -68,6 +68,54 @@
         @endforeach
     </tbody>
   </table>
+
+
+  @foreach($categories as $category)
+  <div style="page-break-before: always;"></div>
+  <table width="100%">
+    <tr>
+        <td valign="right" class="text-center"><img src="logo.png" alt="" width="150"/></td>
+        <td class="text-center">
+            <h1>Stafeta Muntilor - Clasament Cumulat</h1>
+            <h1>Categoria {{ $category->name }}</h1>
+        </td>
+        <td valign="right" class="text-center"><img src="logo2.png" alt="" width="150"/></td>
+    </tr>
+
+  </table>
+
+  <br/>
+
+  
+  <table width="100%">
+    <thead style="background-color: lightgray;">
+      <tr>
+        <th width="5%" class="text-center">Loc</th>
+        <th width="30%">Nume Club</th>
+        @foreach ($stages as $stage)
+        <th width="5%" class="text-center">Etapa {{ $stage->id }}</th>
+        @endforeach
+        <th width="5%" class="text-center">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+        @foreach($clubsstagecategoryrankings_rankings[$category->id] as $key => $rank)
+              @if($rank['total'] !== 0)
+              <tr>
+                  <td class="text-center">{{ $rank['rank'] }}</td>
+                  <td class="text-center">{{ $rank['club_name'] }}</td>
+                  @foreach ($stages as $stage)
+                  <th width="10%" class="text-center">{{ $rank['stage_' . $stage->id] }}</th>
+                  @endforeach
+                  <td class="text-center">{{ $rank['total'] }}</td>
+              </tr>
+              @endif
+        @endforeach
+    </tbody>
+  </table>
+  @endforeach
+  
+
   <br/>
   <br/>
   <footer>{{ \App\Helpers\Navigation::trophy_details()->software }}</footer>
