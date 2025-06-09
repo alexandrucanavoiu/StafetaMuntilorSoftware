@@ -55,7 +55,7 @@
                                             <tr class="table-warning">
                                                 <td>{{ $team['name'] }} ({{ $team['club'] }})</td>
                                                 <td>@if($team['abandon'] == 1) Abandon @else Descalificata @endif</td>
-                                                <td>-</td>
+                                                <td>{{ $team['chipno'] }}</td>
                                                 <td>{{ $team['category_name'] }}</td>
                                             </tr>
                                             @else

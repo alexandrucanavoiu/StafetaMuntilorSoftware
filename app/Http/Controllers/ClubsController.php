@@ -88,13 +88,15 @@ class ClubsController extends Controller
             $rules = [
                 'clubs' => 'required|min:1|max:255',
                 'stage_id' => 'required|numeric|max:255|min:0',
+                'climbing' => 'required|numeric|max:255|min:0',
             ];
 
             $request->merge(['created_at' => date('Y-m-d H:i:s')]);
             $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
             $request->merge(['stage_id' => (int)$request->input('stage_id')]);
+            $request->merge(['climbing' => (int)$request->input('climbing')]);
 
-            $data = $request->only(['clubs', 'created_at', 'updated_at', 'stage_id']);
+            $data = $request->only(['clubs', 'created_at', 'updated_at', 'stage_id', 'climbing']);
             $validator = Validator::make($data, $rules);
 
             $stage = Stages::where('id', $stageid)->first();
@@ -129,6 +131,7 @@ class ClubsController extends Controller
                 Club::create([
                     'name' => trim(strip_tags($data['clubs'], '')),
                     'stage_id' => $data['stage_id'],
+                    'climbing' => $data['climbing'],
                     'created_at' => $data['created_at'],
                     'updated_at' => $data['updated_at'],
                 ]);
@@ -214,11 +217,13 @@ class ClubsController extends Controller
                     $rules = [
                         'name' => 'required|max:255|min:2',
                         'stage_id' => 'required|numeric|max:255|min:0',
+                        'climbing' => 'required|numeric|max:255|min:0',
                     ];
 
                     $request->merge(['stage_id' => (int)$request->input('stage_id')]);
+                    $request->merge(['climbing' => (int)$request->input('climbing')]);
                     $request->merge(['updated_at' => date('Y-m-d H:i:s')]);
-                    $data = $request->only(['name', 'updated_at', 'stage_id']);
+                    $data = $request->only(['name', 'updated_at', 'stage_id', 'climbing']);
                     $validator = Validator::make($data, $rules);
 
                     $stage = Stages::where('id', $stageid)->first();

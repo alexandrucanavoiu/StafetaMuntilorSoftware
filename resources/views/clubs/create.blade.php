@@ -51,6 +51,21 @@
                                                     </div>
                                                 </div>
 
+                                                <div class="col-12">
+                                                    <div class="form-group row">
+                                                        <div class="col-md-4">
+                                                            <span>Organizator de escalada? (<span class="field-required">*</span>)</span>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select class="form-control m-b" id="climbing" name="climbing">
+                                                                <option value="0">-</option>
+                                                                <option value="1">Da</option>
+                                                            </select>
+                                                            <div class="help-block text-danger print-error" id="climbing-error" style="display:none"><ul role="alert"></ul></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="col-md-8 offset-md-4 pt-50">
                                                     <button type="button" class="btn btn-primary me-1 mr-1 mb-1" type="reset" data-bs-dismiss="modal" aria-label="Close">Inchide</button>
                                                     <button type="submit" class="js--clubs-create-store btn btn-success mr-1 mb-1" data-stageid="{{ $stageid }}">Adauga</button>

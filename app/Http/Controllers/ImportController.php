@@ -825,6 +825,15 @@ class ImportController extends Controller
             $formatted_time_difference_from_finish_minus_start = [];
 
             foreach ($dataRows as $index => $fields) {
+                if(empty($fields[$chipnoIndex])){
+                    $teams_with_issue[$fields[$surnameIndex]]['name'] =  $fields[$surnameIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['category'] =  $fields[$shortIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['chipno'] =  $fields[$chipnoIndex];
+                    $teams_with_issue[$fields[$surnameIndex]]['start_time'] = "-";
+                    $teams_with_issue[$fields[$surnameIndex]]['finish_time'] = "-";
+                    $teams_with_issue[$fields[$surnameIndex]]['total_time'] = "--";
+                    continue;
+                }
 
                 // $surnameKey = $fields[$surnameIndex] ?? null;
                 if (!isset($teams_in_stage[$chipnoIndex])) {
