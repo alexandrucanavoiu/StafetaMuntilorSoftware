@@ -41,6 +41,11 @@ class Team extends Model
         return $this->belongsTo('App\Models\Knowledge', 'id', 'team_id' );
     }
 
+    public function climb()
+    {
+        return $this->belongsTo('App\Models\Climb', 'id', 'team_id');
+    }    
+
     public function orienteering()
     {
         return $this->belongsTo('App\Models\Orienteering', 'id', 'team_id' );

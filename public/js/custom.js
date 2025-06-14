@@ -1290,6 +1290,131 @@ $("body").delegate('.js--knowledge-update', 'click',function(e){
     }
 });
 
+// Climb
+
+$(document).on('hidden.bs.modal', '.modal', function () { $("#ClimbEdit").remove(); $(".modal-dialog").remove(); });
+
+$(document).on("click", ".js--climb-edit", function(e){
+    e.preventDefault();
+    $.ajax({
+        type: "GET",
+        url: "/" + $(this).data('stageid') + "/climb/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",
+        dataType: 'html',
+        success: function (view) {
+            var response = jQuery.parseJSON(view);
+            if(response.ajax_status_response == 'success'){
+                $('.modal-backdrop').remove();
+                if( $('#ClimbEdit').length > 0 )
+                {
+                    $('#ClimbEdit').modal('hide');
+                    $('#ClimbEdit').remove();
+                }
+                $('body').append(response.view_content);
+                $('#ClimbEdit').modal('show');
+
+            } else {
+                $('#ClimbEdit').modal('hide');
+                $('#Climbdit').modal('toggle');
+                Swal.fire({
+                    title: response.ajax_title_response,
+                    text: response.ajax_message_response,
+                    icon: response.ajax_status_response,
+                    customClass: {
+                    confirmButton: 'btn btn-success'
+                    },
+                    buttonsStyling: false
+                });
+            }
+
+        },
+        error: function (data) {
+            data = JSON.parse(data.responseText);
+            Swal.fire(data.ajax_title_response, data.ajax_message_response, data.ajax_status_response);
+        }
+    });
+});
+
+$("body").delegate('.js--climb-update', 'click',function(e){
+    e.preventDefault();
+    $( '#time-error' ).html( "" );
+    $( '#meters-error' ).html( "" );
+    $( '#form_corruption-error' ).html( "" );
+    $( '.print-error-msg' ).hide();
+    var formData = new FormData();
+    var _token = $("input[name='_token']").val();
+    var time = $("input[name='time']").val();
+    var meters = $( "#meters" ).val();
+    var abandon = $( "#abandon" ).val();
+
+    formData.append("_token", _token);
+    formData.append("time", time);
+    formData.append("meters", meters);
+    formData.append("abandon", abandon);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "/" + $(this).data('stageid') + "/climb/"+ $(this).data('categoryid') + "/"+ $(this).data('teamid') +"/edit",);
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.send(formData);
+    request.onreadystatechange=function(){
+        if (request.readyState==4 && request.status==200){
+            data = JSON.parse(request.responseText);
+            if($.isEmptyObject(data.errors)){
+                if(data.ajax_status_response == 'success'){
+                    window.setTimeout(function() {
+                        window.location.href = data.ajax_redirect_url;
+                    }, 1000);
+                    $('#ClimbEdit').remove();
+                    $('.modal-backdrop').remove();
+                    $('.sidebar-mini').removeClass('modal-open');
+                    $('#ClimbEdit').modal('hide');
+                    $('#ClimbEdit').modal('toggle');
+                    Swal.fire({
+                        title: data.ajax_title_response,
+                        text: data.ajax_message_response,
+                        icon: data.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                } else {
+                    data = JSON.parse(request.responseText);
+                    Swal.fire({
+                        title: response.ajax_title_response,
+                        text: response.ajax_message_response,
+                        icon: response.ajax_status_response,
+                        customClass: {
+                        confirmButton: 'btn btn-success'
+                        },
+                        buttonsStyling: false
+                    });
+                }
+            } else {
+                printErrorMsg(data.errors);
+                if(data.errors.time){
+                    $( '#time-error' ).html( data.errors.time[0] );
+                }
+                if(data.errors.wrong_answers){
+                    $( '#meters-error' ).html( data.errors.meters[0] );
+                }
+                if(data.errors.abandon){
+                    $( '#abandon-error' ).html( data.errors.abandon[0] );
+                }
+                if(data.errors.form_corruption){
+                    $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
+                }
+                $("#ClimbEdit").scrollTop( 0 );
+            }
+        }
+        if (request.status==405){
+            $('#ClimbEdit').modal('hide');
+            $('#ClimbEdit').modal('toggle');
+            Swal.fire('Eroare!!', 'Eroare la validarea datelor!', 'error')
+        }
+    }
+});
+
 // Orienteering
 
 $(document).on('hidden.bs.modal', '.modal', function () { $("#OrienteeringEdit").remove(); $(".modal-dialog").remove(); });
@@ -2259,6 +2384,7 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
     var delete_rezults_raid_montan = $("#delete_rezults_raid_montan").is(":checked")
     var delete_rezults_orienteering = $("#delete_rezults_orienteering").is(":checked")
     var delete_rezults_knowledge = $("#delete_rezults_knowledge").is(":checked")
+    var delete_rezults_climb = $("#delete_rezults_climb").is(":checked")
     var delete_rezults_cultural = $("#delete_rezults_cultural").is(":checked")
 
     formData.append("_token", _token);
@@ -2268,6 +2394,7 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
     formData.append("delete_rezults_raid_montan", delete_rezults_raid_montan);
     formData.append("delete_rezults_orienteering", delete_rezults_orienteering);
     formData.append("delete_rezults_knowledge", delete_rezults_knowledge);
+    formData.append("delete_rezults_climb", delete_rezults_climb);
     formData.append("delete_rezults_cultural", delete_rezults_cultural);
 
     var request = new XMLHttpRequest();
@@ -2320,6 +2447,9 @@ $("body").delegate('.js--setup-clean-up', 'click',function(e){
                 }
                 if(data.errors.delete_rezults_knowledge){
                     $( '#delete_rezults_knowledge-error' ).html( data.errors.delete_rezults_knowledge[0] );
+                }
+                if(data.errors.delete_rezults_climb){
+                    $( '#delete_rezults_climb-error' ).html( data.errors.delete_rezults_climb[0] );
                 }
                 if(data.errors.delete_rezults_cultural){
                     $( '#delete_rezults_cultural-error' ).html( data.errors.delete_rezults_cultural[0] );

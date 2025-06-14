@@ -35,6 +35,11 @@
                                             <td class="text-center"><a href="{{ route('rankings.category.knowledge.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
                                         </tr>
                                         <tr>
+                                            <td>Alpinism (Categoria {{ $category->name }})</td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.climb', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
+                                            <td class="text-center"><a href="{{ route('rankings.category.climb.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>
+                                        </tr>
+                                        <tr>
                                             <td>Orientare Categoria (Categoria {{ $category->name }})</td>
                                             <td class="text-center"><a href="{{ route('rankings.category.orienteering', [$stageid, $category->id]) }}" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='award'></i> Vezi Clasament</a></td>
                                             <td class="text-center"><a href="{{ route('rankings.category.orienteering.pdf', [$stageid, $category->id]) }}" target="_blank" class="btn btn-outline-primary waves-effect waves-light"><i data-feather='download'></i> Export Clasament PDF</a></td>

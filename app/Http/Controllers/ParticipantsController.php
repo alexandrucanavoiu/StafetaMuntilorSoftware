@@ -17,6 +17,7 @@ use App\Models\Orienteering;
 use App\Models\RaidmontanStations;
 use App\Models\OrienteeringStationsStages;
 use App\Models\Knowledge;
+use App\Models\Climb;
 use App\Models\RaidmontanParticipations;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;

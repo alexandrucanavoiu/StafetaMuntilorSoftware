@@ -158,6 +158,7 @@ return [
         'uuid_card_raid_id' => 'UUID Raid',
         'scor' => 'Punctaj',
         'time' => 'Timp',
+        'meters' => 'Nr. Metri Escaladati',
         'wrong_answers' => 'Nr. Intrebari Gresite',
         'wrong_questions' => 'Intrebarile Gresite',
         'abandon' => 'Abandon/Status',

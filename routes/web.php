@@ -6,6 +6,7 @@ use App\Http\Controllers\ClubsController;
 use App\Http\Controllers\TeamsController;
 use App\Http\Controllers\CulturalController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\ClimbController;
 use App\Http\Controllers\OrienteeringController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\RankingsController;
@@ -109,6 +110,10 @@ Route::get('/{stageid}/knowledge/{id}', [KnowledgeController::class, 'index'])->
 Route::get('/{stageid}/knowledge/{categoryid}/{teamid}/edit', [KnowledgeController::class, 'edit'])->name('knowledge.edit');
 Route::post('/{stageid}/knowledge/{categoryid}/{teamid}/edit', [KnowledgeController::class, 'update'])->name('knowledge.update');
 
+Route::get('/{stageid}/climb/{id}', [ClimbController::class, 'index'])->name('climb.index');
+Route::get('/{stageid}/climb/{categoryid}/{teamid}/edit', [ClimbController::class, 'edit'])->name('climb.edit');
+Route::post('/{stageid}/climb/{categoryid}/{teamid}/edit', [ClimbController::class, 'update'])->name('climb.update');
+
 Route::get('/{stageid}/orienteering/{id}', [OrienteeringController::class, 'index'])->name('orienteering.index');
 Route::get('/{stageid}/orienteering/{categoryid}/{teamid}/edit', [OrienteeringController::class, 'edit'])->name('orienteering.edit');
 Route::post('/{stageid}/orienteering/{categoryid}/{teamid}/edit', [OrienteeringController::class, 'update'])->name('orienteering.update');
@@ -125,6 +130,8 @@ Route::get('/{stageid}/rankings/{category_id}', [RankingsController::class, 'ind
 
 Route::get('/{stageid}/rankings/{category_id}/knowledge', [RankingsController::class, 'ranking_knowledge'])->name('rankings.category.knowledge');
 Route::get('/{stageid}/rankings/{category_id}/knowledge/pdf', [RankingsController::class, 'ranking_knowledge_pdf'])->name('rankings.category.knowledge.pdf');
+Route::get('/{stageid}/rankings/{category_id}/climb', [RankingsController::class, 'ranking_climb'])->name('rankings.category.climb');
+Route::get('/{stageid}/rankings/{category_id}/climb/pdf', [RankingsController::class, 'ranking_climb_pdf'])->name('rankings.category.climb.pdf');
 Route::get('/{stageid}/rankings/{category_id}/orienteering', [RankingsController::class, 'ranking_orienteering'])->name('rankings.category.orienteering');
 Route::get('/{stageid}/rankings/{category_id}/orienteering/pdf', [RankingsController::class, 'ranking_orienteering_pdf'])->name('rankings.category.orienteering.pdf');
 Route::get('/{stageid}/rankings/{category_id}/raidmontan', [RankingsController::class, 'ranking_raidmontan'])->name('rankings.category.raidmontan');

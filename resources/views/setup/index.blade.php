@@ -140,6 +140,10 @@
                                                     <td class="text-center"><div class="form-check-danger form-check-inline"><input class="form-check-input" type="checkbox" id="delete_rezults_knowledge" name="delete_rezults_knowledge" checked></div></td>
                                                 </tr>
                                                 <tr>
+                                                    <td>Rezultate Proba Alpinism</td>
+                                                    <td class="text-center"><div class="form-check-danger form-check-inline"><input class="form-check-input" type="checkbox" id="delete_rezults_climb" name="delete_rezults_climb" checked></div></td>
+                                                </tr>
+                                                <tr>
                                                     <td>Rezultate Proba Cultural</td>
                                                     <td class="text-center"><div class="form-check-danger form-check-inline"><input class="form-check-input" type="checkbox" id="delete_rezults_cultural" name="delete_rezults_cultural" checked></div></td>
                                                 </tr>

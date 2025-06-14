@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Clasament General - {{ $category->name }}</title>
+<title>Clasament Alpinism - {{ $category->name }}</title>
 
 <style type="text/css">
     * {
@@ -31,7 +31,7 @@
     <tr>
         <td valign="right" class="text-center"><img src="logo.png" alt="" width="150"/></td>
         <td class="text-center">
-            <h1>Clasament General Categoria {{ $category->name }}</h1>
+            <h1>Clasament Alpinism - Categoria {{ $category->name }}</h1>
             <h3>{{ \App\Helpers\Navigation::trophy($stageid)->name }}</h3>
             <h3>{{ \App\Helpers\Navigation::trophy($stageid)->ong }}</h3>
         </td>
@@ -45,27 +45,30 @@
   <table width="100%">
     <thead style="background-color: lightgray;">
       <tr>
-        <td width="5%" class="text-center">Loc</td>
-        <td width="30%">Nume Echipa</th>
-        <td width="10%" class="text-center">Raid Montan</td>
-        <td width="10%" class="text-center">Orientare</td>
-        <td width="10%" class="text-center">Cunostinte Turistice</td>
-        <td width="10%" class="text-center">Alpinism</td>
-        <td width="10%" class="text-center">Total</td>
-        <td width="10%" class="text-center">Punctaj Stafeta Muntilor</td>
+        <th width="5%" class="text-center">Loc</th>
+        <th width="30%">Nume Echipa</th>
+        <th width="10%" class="text-center">Metri</th>
+        <th width="15%" class="text-center">Scor</th>
+        <th width="15%" class="text-center">Timp Realizat</th>
       </tr>
     </thead>
     <tbody>
-        @foreach($ranking_general as $rank)
+        @foreach($rankings as $rank)
         <tr>
             <td class="text-center">{{ $rank['rank'] }}</td>
             <td>{{ $rank['name'] }}</td>
-            <td class="text-center">{{ $rank['scor_raidmontan'] }}</td>
-            <td class="text-center">{{ $rank['scor_orienteering'] }}</td>
-            <td class="text-center">{{ $rank['scor_knowledge'] }}</td>
-            <td class="text-center">{{ $rank['scor_climb'] }}</td>
-            <td class="text-center">{{ $rank['scor_total'] }}</td>
-            <td class="text-center">{{ $rank['scor_stafeta'] }}</td>
+            <td class="text-center">{{ $rank['meters'] }}</td>
+            <td class="text-center">{{ $rank['scor'] }}</td>
+            <td class="text-center">{{ $rank['time'] }}</td>
+        </tr>
+        @endforeach
+        @foreach($teams_list_abandon as $rank)
+        <tr>
+            <td class="text-center">-</td>
+            <td>{{ $rank['name'] }}</td>
+            <td class="text-center">-</td>
+            <td class="text-center">@if($rank['abandon'] == 1) Abandon @else Descalificata @endif</td>
+            <td class="text-center">-</td>
         </tr>
         @endforeach
     </tbody>

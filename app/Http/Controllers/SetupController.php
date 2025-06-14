@@ -17,6 +17,7 @@ use App\Models\OrienteeringStationsStages;
 use App\Models\RaidmontanParticipations;
 use App\Models\RaidmontanParticipationsEntries;
 use App\Models\Knowledge;
+use App\Models\Climb;
 use App\Models\Cultural;
 use App\Models\TeamOrderStart;
 use App\Models\Stages;
@@ -1066,6 +1067,12 @@ class SetupController extends Controller
                 $data['delete_config_knowledge'] = false;
             }
 
+            if($request->input('delete_config_climb') == "true"){
+                $data['delete_config_climb'] = true;
+            } else {
+                $data['delete_config_climb'] = false;
+            }
+
             if($request->input('delete_rezults_raid_montan') == "true"){
                 $data['delete_rezults_raid_montan'] = true;
             } else {
@@ -1084,6 +1091,12 @@ class SetupController extends Controller
                 $data['delete_rezults_knowledge'] = false;
             }
 
+            if($request->input('delete_rezults_climb') == "true"){
+                $data['delete_rezults_climb'] = true;
+            } else {
+                $data['delete_rezults_climb'] = false;
+            }
+
             if($request->input('delete_rezults_cultural') == "true"){
                 $data['delete_rezults_cultural'] = true;
             } else {
@@ -1098,6 +1111,7 @@ class SetupController extends Controller
                 'delete_rezults_raid_montan' => 'required|boolean',
                 'delete_rezults_orienteering' => 'required|boolean',
                 'delete_rezults_knowledge' => 'required|boolean',
+                'delete_rezults_climb' => 'required|boolean',
                 'delete_rezults_cultural' => 'required|boolean',
             ];
 
@@ -1113,6 +1127,7 @@ class SetupController extends Controller
                     RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
                     Orienteering::where('stage_id', $stageid)->delete();
                     Knowledge::where('stage_id', $stageid)->delete();
+                    Climb::where('stage_id', $stageid)->delete();
                     Cultural::where('stage_id', $stageid)->delete();
                 }
 
@@ -1122,6 +1137,7 @@ class SetupController extends Controller
                     RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
                     Orienteering::where('stage_id', $stageid)->delete();
                     Knowledge::where('stage_id', $stageid)->delete();
+                    Climb::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_config_raid_montan'] == true){
@@ -1146,6 +1162,10 @@ class SetupController extends Controller
 
                 if($data['delete_rezults_knowledge'] == true){
                     Knowledge::where('stage_id', $stageid)->delete();
+                }
+
+                if($data['delete_rezults_climb'] == true){
+                    Climb::where('stage_id', $stageid)->delete();
                 }
 
                 if($data['delete_rezults_cultural'] == true){
@@ -1194,6 +1214,7 @@ class SetupController extends Controller
         RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
         Orienteering::where('stage_id', $stageid)->delete();
         Knowledge::where('stage_id', $stageid)->delete();
+        Climb::where('stage_id', $stageid)->delete();
         Cultural::where('stage_id', $stageid)->delete();
         RaidmontanStations::where('stage_id', $stageid)->delete();
         RaidmontanStationsStages::where('stage_id', $stageid)->delete();
@@ -1223,6 +1244,7 @@ class SetupController extends Controller
         RaidmontanParticipationsEntries::where('stage_id', $stageid)->delete();
         Orienteering::where('stage_id', $stageid)->delete();
         Knowledge::where('stage_id', $stageid)->delete();
+        Climb::where('stage_id', $stageid)->delete();
         Cultural::where('stage_id', $stageid)->delete();
         RaidmontanStations::where('stage_id', $stageid)->delete();
         RaidmontanStationsStages::where('stage_id', $stageid)->delete();
