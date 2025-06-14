@@ -2258,9 +2258,9 @@ class RankingsController extends Controller
                     if($team->climb->abandon == 0){
                         $teams_climb_list[$key]['name'] = $team->name;
                         $teams_climb_list[$key]['scor'] = 0;
-                        $teams_climb_list[$key]['meters'] = $team->knowledge->meters;
-                        $teams_climb_list[$key]['time'] = $team->knowledge->time;
-                        $teams_climb_list[$key]['abandon'] = $team->knowledge->abandon;
+                        $teams_climb_list[$key]['meters'] = $team->climb->meters;
+                        $teams_climb_list[$key]['time'] = $team->climb->time;
+                        $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
                     } elseif($team->climb->abandon == 1) {
                         $teams_climb_list_abandon[$key]['name'] = $team->name;
                         $teams_climb_list_abandon[$key]['scor'] = 0;
