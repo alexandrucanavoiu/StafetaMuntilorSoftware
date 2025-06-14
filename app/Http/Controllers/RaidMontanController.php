@@ -200,7 +200,8 @@ class RaidMontanController extends Controller
                     $station_start_unixtime = strtotime($station_start);
                     $station_finish_unixtime = strtotime($station_finish);
 
-                    if($station_start_unixtime > $station_finish_unixtime){
+
+                    if($station_start_unixtime > $station_finish_unixtime && $data['abandon'] !== "2"){
                         $validator->after(function ($validator) {
                             $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si Finish Time');
                         });
@@ -210,14 +211,14 @@ class RaidMontanController extends Controller
                         $time_start_unixtime = strtotime($pa['time_start']);
                         $time_finish_unixtime = strtotime($pa['time_finish']);
 
-                        if($time_start_unixtime > $time_finish_unixtime){
+                        if($time_start_unixtime > $time_finish_unixtime  && $data['abandon'] !== "2"){
                             $validator->after(function ($validator) {
                                 $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, intre PA-URI');
                             });
                         }
 
                         if($key == 0){
-                            if($station_start_unixtime > $time_start_unixtime || $station_start_unixtime > $station_finish_unixtime) {
+                            if(($station_start_unixtime > $time_start_unixtime || $station_start_unixtime > $station_finish_unixtime)  && $data['abandon'] !== "2" ) {
                                 $validator->after(function ($validator) {
                                     $validator->errors()->add('form_corruption', 'Verificati timpii introdusi, Start Time si PA 1 Start');
                                 });
@@ -237,7 +238,7 @@ class RaidMontanController extends Controller
                         // echo "station_finish_unixtime: " . $station_finish_unixtime . "<br />";;
                         // echo $key . "<br />";
                         // echo "</pre>";
-                        if($time_finish_unixtime > $station_finish_unixtime) {
+                        if($time_finish_unixtime > $station_finish_unixtime  && $data['abandon'] !== "2") {
                             $validator->after(function ($validator) {
                                 $validator->errors()->add('form_corruption', 'Verificati timpii introdusi...');
                             });

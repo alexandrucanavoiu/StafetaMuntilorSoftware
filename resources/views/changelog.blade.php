@@ -16,6 +16,19 @@
             </div>
             <div class="content-body">
             <section>
+            <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">[ v6.1.0 ] - 09.06.2025</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Alerta daca echipa nu are CHIP la import sa ii dea ignore si afisare cu eroare</p>
+                        <p class="card-text">- Afisare eroare la clasament etapa daca exista echipe care nu au inca completata proba Cunostinte Turistice</p>
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- Camp "Esclada" la Club pentru organizatorul etapei daca a organizat escalada pentru acordare 200puncte conform regulament</p>
+                    </div>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">[ v6.0.0 ] - 01.06.2025</h4>

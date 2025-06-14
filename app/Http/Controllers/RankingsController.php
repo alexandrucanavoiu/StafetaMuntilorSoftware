@@ -3403,6 +3403,17 @@ class RankingsController extends Controller
                                     // check if knowledge or orienteering is not abandon to give them 10 points.
                                     $knowledge_check_abandon = Knowledge::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
                                     $orienteering_check_abandon = Orienteering::where('stage_id', $stageid)->where('team_id', $rank['team_id'])->first();
+                                    
+                                    // error if knowledge_check_abandon is empty
+                                    if($knowledge_check_abandon == null){
+                                        $notification = array(
+                                            'success_title' => 'Eroare!!',
+                                            'message' => 'Datele nu pot fi generate, echipa ' . $rank["name"] . ' nu are datele completate la Proba Cunostinte Turstice',
+                                            'alert-type' => 'error'
+                                        );
+                                        return redirect()->route('knowledge.index', [$stageid, $category->id])->with($notification);
+                                    }
+
                                     if($knowledge_check_abandon->abandon !== 1 || $orienteering_check_abandon->abandon !== 1){
                                         $ranking_general[$key]['scor_stafeta'] = 10;
                                     } else {

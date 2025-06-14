@@ -477,16 +477,19 @@ $("body").delegate('.js--clubs-update', 'click',function(e){
     e.preventDefault();
     $( '#name-error' ).html( "" );
     $( '#stage_id-error' ).html( "" );
+    $( '#climbing-error' ).html( "" );
     $( '#form_corruption-error' ).html( "" );
     $( '.print-error-msg' ).hide();
     var formData = new FormData();
     var _token = $("input[name='_token']").val();
     var name = $("input[name='name']").val();
     var stage_id = parseInt($("#stage_id").val());
+    var climbing = parseInt($("#climbing").val());
 
     formData.append("_token", _token);
     formData.append("name", name);
     formData.append("stage_id", stage_id);
+    formData.append("climbing", climbing);
     
 
     var request = new XMLHttpRequest();
@@ -541,6 +544,9 @@ $("body").delegate('.js--clubs-update', 'click',function(e){
                 }
                 if(data.errors.stage_id){
                     $( '#stage_id-error' ).html( data.errors.stage_id[0] );
+                }
+                if(data.errors.climbing){
+                    $( '#climbing-error' ).html( data.errors.climbing[0] );
                 }
                 if(data.errors.form_corruption){
                     $( '#form_corruption-error' ).html( data.errors.form_corruption[0] );
