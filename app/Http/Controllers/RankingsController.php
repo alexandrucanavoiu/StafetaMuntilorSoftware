@@ -3682,13 +3682,7 @@ class RankingsController extends Controller
             $clubstagerankings_insert_org = [];
 
             $organier_score = 2000;
-
-            $climb_teams = Team::where('stage_id', $stageid)->with('climb')->get();
-            $is_stage_with_climb = $climb_teams->contains(function ($team) {
-                return $team->climb && $team->climb->abandon != 0;
-            });
-
-            if( $is_stage_with_climb ){
+            if( $organizer_club->climbing > 0 ){
                 $organier_score += 200;
             }
 
