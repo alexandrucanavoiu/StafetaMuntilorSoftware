@@ -13,6 +13,7 @@ use App\Models\RaidmontanParticipationsEntries;
 use App\Models\Orienteering;
 use App\Models\Category;
 use App\Models\Knowledge;
+use App\Models\Climb;
 use App\Models\Cultural;
 use App\Models\Club;
 use App\Models\Team;

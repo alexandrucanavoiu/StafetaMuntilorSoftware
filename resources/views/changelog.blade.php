@@ -16,7 +16,17 @@
             </div>
             <div class="content-body">
             <section>
-            <div class="card">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">[ v6.2.0 ] - 14.06.2025</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- Clasament Alpinism conform regulament Articolul 12 - PROBA DE ALPINISM</p>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">[ v6.1.0 ] - 09.06.2025</h4>
                     </div>

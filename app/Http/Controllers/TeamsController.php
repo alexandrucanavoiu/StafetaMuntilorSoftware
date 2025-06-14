@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\Category;
 use App\Models\TeamOrderStart;
 use App\Models\Knowledge;
+use App\Models\Climb;
 use App\Models\Orienteering;
 use App\Models\RaidmontanParticipations;
 use App\Models\RaidmontanParticipationsEntries;
@@ -372,6 +373,7 @@ class TeamsController extends Controller
             } else {
 
                     Knowledge::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
+                    Climb::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
                     Orienteering::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
                     RaidmontanParticipations::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
                     RaidmontanParticipationsEntries::where('stage_id', $stageid)->where('team_id', $team->id)->delete();
