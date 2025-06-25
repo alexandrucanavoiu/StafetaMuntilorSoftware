@@ -16,6 +16,17 @@
             </div>
             <div class="content-body">
             <section>
+            <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">[ v6.2.1 ] - 25.06.2025</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Setare timp 00:00:00 de start la Orientare daca proba este inainte de Raid.</p>
+                        <p class="card-text">- Daca proba de Alpinism nu se organizeaza, sa nu apara in clasamente si sa fie obligatorie in clasamentul general.</p>
+                    </div>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">[ v6.2.0 ] - 14.06.2025</h4>

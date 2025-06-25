@@ -33,7 +33,9 @@
                                                 <th width="10%" class="text-center">Raid Montan</th>
                                                 <th width="10%" class="text-center">Orientare</th>
                                                 <th width="10%" class="text-center">Cunostinte Turistice</th>
+                                                @if($stage_with_climb == 1)
                                                 <th width="10%" class="text-center">Alpinism</th>
+                                                @endif
                                                 <th width="10%" class="text-center">Total</th>
                                                 <th width="10%" class="text-center">Punctaj Stafeta Muntilor</th>
                                             </tr>
@@ -46,7 +48,9 @@
                                                 <td class="text-center">{{ $rank['scor_raidmontan'] }}</td>
                                                 <td class="text-center">{{ $rank['scor_orienteering'] }}</td>
                                                 <td class="text-center">{{ $rank['scor_knowledge'] }}</td>
+                                                @if($stage_with_climb == 1)
                                                 <td class="text-center">{{ $rank['scor_climb'] }}</td>
+                                                @endif
                                                 <td class="text-center">{{ $rank['scor_total'] }}</td>
                                                 <td class="text-center">{{ $rank['scor_stafeta'] }}</td>
                                             </tr>
