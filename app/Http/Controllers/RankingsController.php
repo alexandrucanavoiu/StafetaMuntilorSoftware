@@ -133,18 +133,28 @@ class RankingsController extends Controller
                 // convert to array + reindex array key to be from 0 to ...
                 $sorted_knowledge  = array_values($sorted_knowledge->toArray());
 
-                if(empty($sorted_knowledge)) {
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-                }
+                // if(empty($sorted_knowledge)) {
+                    // $notification = array(
+                    //     'success_title' => 'Eroare!!',
+                    //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                    //     'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+                // }
 
-                $scor = 1500;
-                $best_score = $sorted_knowledge[0];
-                $fifty_minus = 2;
+                // $scor = 1500;
+                // $best_score = $sorted_knowledge[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_knowledge)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_knowledge[0];
+                    $fifty_minus = 2;
+                }
 
                 foreach ($sorted_knowledge as $key => &$item) 
                 {
@@ -267,18 +277,28 @@ class RankingsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $sorted_knowledge  = array_values($sorted_knowledge->toArray());
 
-            if(empty($sorted_knowledge)) {
-                $notification = array(
-                    'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                    'alert-type' => 'error'
-                );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
+            // if(empty($sorted_knowledge)) {
+                // $notification = array(
+                //     'success_title' => 'Eroare!!',
+                //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                //     'alert-type' => 'error'
+                // );
+                // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            // }
 
-            $scor = 1500;
-            $best_score = $sorted_knowledge[0];
-            $fifty_minus = 2;
+            // $scor = 1500;
+            // $best_score = $sorted_knowledge[0];
+            // $fifty_minus = 2;
+
+            if(empty($sorted_knowledge)) {
+                $scor = 1500;
+                $best_score = "";
+                $fifty_minus = 2;
+            } else {
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
+            }
 
             foreach ($sorted_knowledge as $key => &$item) 
             {
@@ -410,18 +430,28 @@ class RankingsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $sorted_climb  = array_values($sorted_climb->toArray());
 
-            if(empty($sorted_climb)) {
-                $notification = array(
-                    'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
-                    'alert-type' => 'error'
-                );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
+            // if(empty($sorted_climb)) {
+                // $notification = array(
+                //     'success_title' => 'Eroare!!',
+                //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                //     'alert-type' => 'error'
+                // );
+                // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            // }
 
-            $scor = 1500;
-            $best_score = $sorted_climb[0];
-            $fifty_minus = 2;
+            // $scor = 1500;
+            // $best_score = $sorted_climb[0];
+            // $fifty_minus = 2;
+
+            if(empty($sorted_climb)) {
+                $scor = 1500;
+                $best_score = "";
+                $fifty_minus = 2;
+            } else {
+                $scor = 1500;
+                $best_score = $sorted_climb[0];
+                $fifty_minus = 2;
+            }
 
             foreach ($sorted_climb as $key => &$item) 
             {
@@ -540,18 +570,28 @@ class RankingsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $sorted_climb  = array_values($sorted_climb->toArray());
 
-            if(empty($sorted_climb)) {
-                $notification = array(
-                    'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
-                    'alert-type' => 'error'
-                );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
+            // if(empty($sorted_climb)) {
+                // $notification = array(
+                //     'success_title' => 'Eroare!!',
+                //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                //     'alert-type' => 'error'
+                // );
+                // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            // }
 
-            $scor = 1500;
-            $best_score = $sorted_climb[0];
-            $fifty_minus = 2;
+            // $scor = 1500;
+            // $best_score = $sorted_climb[0];
+            // $fifty_minus = 2;
+
+            if(empty($sorted_climb)) {
+                $scor = 1500;
+                $best_score = "";
+                $fifty_minus = 2;
+            } else {
+                $scor = 1500;
+                $best_score = $sorted_climb[0];
+                $fifty_minus = 2;
+            }
 
             foreach ($sorted_climb as $key => &$item) 
             {
@@ -1409,6 +1449,14 @@ class RankingsController extends Controller
     {
         $category = Category::FindOrFail($category_id);
         $teams = Team::where('stage_id', $stageid)->where('category_id', $category_id)->get();
+
+        $get_if_is_stage_with_climb = Club::where('stage_id', $stageid)->where('climbing', 1)->first();
+        $stage_with_climb = 0;
+        if($get_if_is_stage_with_climb == null){
+            $stage_with_climb = 0;
+        } else {
+            $stage_with_climb = 1;
+        }
     
         // rank for knowledge
         $teams_knowledge = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
@@ -1460,18 +1508,28 @@ class RankingsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $sorted_knowledge  = array_values($sorted_knowledge->toArray());
 
+            // if(empty($sorted_knowledge)) {
+            //     $notification = array(
+            //         'success_title' => 'Eroare!!',
+            //         'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+            //         'alert-type' => 'error'
+            //     );
+            //     return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            // }
+
             if(empty($sorted_knowledge)) {
-                $notification = array(
-                    'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                    'alert-type' => 'error'
-                );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+                $scor = 1500;
+                $best_score = "";
+                $fifty_minus = 2;
+            } else {
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
             }
 
-            $scor = 1500;
-            $best_score = $sorted_knowledge[0];
-            $fifty_minus = 2;
+            // $scor = 1500;
+            // $best_score = $sorted_knowledge[0];
+            // $fifty_minus = 2;
 
             foreach ($sorted_knowledge as $key => &$item) 
             {
@@ -1542,132 +1600,145 @@ class RankingsController extends Controller
 
         }
 
-        // rank for climb
-        $teams_climb = Team::where('stage_id', $stageid)->with('climb')->where('category_id', $category_id)->get();
-        if($teams_climb->isEmpty()) { 
-            $notification = array(
-                'success_title' => 'Eroare!!',
-                'message' => 'Eroare validare date!',
-                'alert-type' => 'error'
-            );
-            return redirect()->route('dashboard', $stageid)->with($notification);
-        } else {
-            $teams_climb_list = [];
-            $teams_climb_list_abandon = [];
-            foreach($teams_climb as $key => $team){
-                if($team->climb == null){
-                    continue;
-                } else {
-                    if($team->climb->abandon == 0){
-                        $teams_climb_list[$key]['name'] = $team->name;
-                        $teams_climb_list[$key]['scor'] = 0;
-                        $teams_climb_list[$key]['meters'] = (float)$team->climb->meters;
-                        $teams_climb_list[$key]['time'] = $team->climb->time;
-                        $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
-                    } elseif($team->climb->abandon == 1) {
-                        $teams_climb_list_abandon[$key]['name'] = $team->name;
-                        $teams_climb_list_abandon[$key]['scor'] = 0;
-                        $teams_list_abandon[$key]['meters'] = "0.0";
-                        $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_climb_list_abandon[$key]['abandon'] = 1;
-                    } else {
-                        $teams_climb_list_abandon[$key]['name'] = $team->name;
-                        $teams_climb_list_abandon[$key]['scor'] = 0;
-                        $teams_list_abandon[$key]['meters'] = "0.0";
-                        $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_climb_list_abandon[$key]['abandon'] = 2;
-                    }
-                }
-            }
-
-            $collection_climb = collect($teams_climb_list);
-            $sorted_climb = $collection_climb->sortBy([
-                ['meters', 'desc'],
-                ['time', 'asc'],
-            ]);
-
-            // convert to array + reindex array key to be from 0 to ...
-            $sorted_climb  = array_values($sorted_climb->toArray());
-
-            if(empty($sorted_climb)) {
+        $teams_climb_list = [];
+        $teams_climb_list_abandon = [];
+        if($stage_with_climb == 1){
+            // rank for climb
+            $teams_climb = Team::where('stage_id', $stageid)->with('climb')->where('category_id', $category_id)->get();
+            if($teams_climb->isEmpty()) { 
                 $notification = array(
                     'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                    'message' => 'Eroare validare date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
-
-            $scor = 1500;
-            $best_score = $sorted_climb[0];
-            $fifty_minus = 2;
-
-            foreach ($sorted_climb as $key => &$item) 
-            {
-                // Calculate "scor" based on key
-                if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
-                    $item['scor'] = $scor;
-                } 
-                else 
-                {
-
-                    if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
-                        $item['scor'] = $scor;
+                return redirect()->route('dashboard', $stageid)->with($notification);
+            } else {
+                foreach($teams_climb as $key => $team){
+                    if($team->climb == null){
+                        continue;
+                    } else {
+                        if($team->climb->abandon == 0){
+                            $teams_climb_list[$key]['name'] = $team->name;
+                            $teams_climb_list[$key]['scor'] = 0;
+                            $teams_climb_list[$key]['meters'] = (float)$team->climb->meters;
+                            $teams_climb_list[$key]['time'] = $team->climb->time;
+                            $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
+                        } elseif($team->climb->abandon == 1) {
+                            $teams_climb_list_abandon[$key]['name'] = $team->name;
+                            $teams_climb_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['meters'] = "0.0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_climb_list_abandon[$key]['abandon'] = 1;
+                        } else {
+                            $teams_climb_list_abandon[$key]['name'] = $team->name;
+                            $teams_climb_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['meters'] = "0.0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_climb_list_abandon[$key]['abandon'] = 2;
+                        }
                     }
+                }
+
+                $collection_climb = collect($teams_climb_list);
+                $sorted_climb = $collection_climb->sortBy([
+                    ['meters', 'desc'],
+                    ['time', 'asc'],
+                ]);
+
+                // convert to array + reindex array key to be from 0 to ...
+                $sorted_climb  = array_values($sorted_climb->toArray());
+
+                // if(empty($sorted_climb)) {
+                    // continue;
+                    // $notification = array(
+                    //     'success_title' => 'Eroare!!',
+                    //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                    //     'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+                // }
+
+                // $scor = 1500;
+                // $best_score = $sorted_climb[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_climb)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_climb[0];
+                    $fifty_minus = 2;
+                }
+
+                foreach ($sorted_climb as $key => &$item) 
+                {
+                    // Calculate "scor" based on key
+                    if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
+                        $item['scor'] = $scor;
+                    } 
                     else 
                     {
-                        if($fifty_minus > 0  )
-                        {
-                            $scor = $scor - 50;
+
+                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
                             $item['scor'] = $scor;
-                            $fifty_minus--;
                         }
                         else 
                         {
-                            $scor = $scor - 30;
-                            $item['scor'] = $scor;
+                            if($fifty_minus > 0  )
+                            {
+                                $scor = $scor - 50;
+                                $item['scor'] = $scor;
+                                $fifty_minus--;
+                            }
+                            else 
+                            {
+                                $scor = $scor - 30;
+                                $item['scor'] = $scor;
+                            }
                         }
+                        
                     }
-                    
+
+                    $last_score = $item;
+
                 }
 
-                $last_score = $item;
+                $rankings = array();
+                $x = 1;
+                $unique_id = 0;
 
-            }
-
-            $rankings = array();
-            $x = 1;
-            $unique_id = 0;
-
-            foreach($sorted_climb as $key => $team){
-                $decrease_rank = 0;
-                $rankings[$unique_id]['name'] = $team['name'];
-                $rankings[$unique_id]['meters'] = $team['meters'];
-                $rankings[$unique_id]['time'] = $team['time'];
-                $rankings[$unique_id]['abandon'] = $team['abandon'];
-                $rankings[$unique_id]['scor'] = $team['scor'];
-                $rankings[$unique_id]['rank'] = $x;
-                    if(isset($sorted_climb[$key-1]))
-                    {
-                        if($team['time'] == $sorted_climb[$key-1]['time'])
+                foreach($sorted_climb as $key => $team){
+                    $decrease_rank = 0;
+                    $rankings[$unique_id]['name'] = $team['name'];
+                    $rankings[$unique_id]['meters'] = $team['meters'];
+                    $rankings[$unique_id]['time'] = $team['time'];
+                    $rankings[$unique_id]['abandon'] = $team['abandon'];
+                    $rankings[$unique_id]['scor'] = $team['scor'];
+                    $rankings[$unique_id]['rank'] = $x;
+                        if(isset($sorted_climb[$key-1]))
                         {
-                            $decrease_rank = 1;
-                            $rankings[$unique_id]['rank'] = $x-1;
-                        }
-                    }   
-    
-                if($decrease_rank == 0)
-                {
-                    $x++;
+                            if($team['time'] == $sorted_climb[$key-1]['time'])
+                            {
+                                $decrease_rank = 1;
+                                $rankings[$unique_id]['rank'] = $x-1;
+                            }
+                        }   
+        
+                    if($decrease_rank == 0)
+                    {
+                        $x++;
+                    }
+        
+                    $unique_id++;
+                    
+
                 }
-    
-                $unique_id++;
                 
+                $teams_climb_list = $rankings;
 
             }
-            
-            $teams_climb_list = $rankings;
-
         }
 
         // rank for orienteering
@@ -2100,7 +2171,7 @@ class RankingsController extends Controller
             
             
             
-            return view('rankings.general_category',compact('ranking_general', 'category', 'stageid'));
+            return view('rankings.general_category',compact('stage_with_climb', 'ranking_general', 'category', 'stageid'));
 
     }
 
@@ -2108,6 +2179,14 @@ class RankingsController extends Controller
     {
         $category = Category::FindOrFail($category_id);
         $teams = Team::where('stage_id', $stageid)->where('category_id', $category_id)->get();
+
+        $get_if_is_stage_with_climb = Club::where('stage_id', $stageid)->where('climbing', 1)->first();
+        $stage_with_climb = 0;
+        if($get_if_is_stage_with_climb == null){
+            $stage_with_climb = 0;
+        } else {
+            $stage_with_climb = 1;
+        }
     
         // rank for knowledge
         $teams_knowledge = Team::where('stage_id', $stageid)->with('knowledge')->where('category_id', $category_id)->get();
@@ -2159,18 +2238,28 @@ class RankingsController extends Controller
             // convert to array + reindex array key to be from 0 to ...
             $sorted_knowledge  = array_values($sorted_knowledge->toArray());
 
-            if(empty($sorted_knowledge)) {
-                $notification = array(
-                    'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                    'alert-type' => 'error'
-                );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
+            // if(empty($sorted_knowledge)) {
+                // $notification = array(
+                //     'success_title' => 'Eroare!!',
+                //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                //     'alert-type' => 'error'
+                // );
+                // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+            // }
 
-            $scor = 1500;
-            $best_score = $sorted_knowledge[0];
-            $fifty_minus = 2;
+            // $scor = 1500;
+            // $best_score = $sorted_knowledge[0];
+            // $fifty_minus = 2;
+
+            if(empty($sorted_knowledge)) {
+                $scor = 1500;
+                $best_score = "";
+                $fifty_minus = 2;
+            } else {
+                $scor = 1500;
+                $best_score = $sorted_knowledge[0];
+                $fifty_minus = 2;
+            }
 
             foreach ($sorted_knowledge as $key => &$item) 
             {
@@ -2239,131 +2328,145 @@ class RankingsController extends Controller
             $teams_knowledge_list = $rankings;
         }
 
-        // rank for climb
-        $teams_climb = Team::where('stage_id', $stageid)->with('climb')->where('category_id', $category_id)->get();
-        if($teams_climb->isEmpty()) {
-            $notification = array(
-                'success_title' => 'Eroare!!',
-                'message' => 'Eroare validare date!',
-                'alert-type' => 'error'
-            );
-            return redirect()->route('dashboard', $stageid)->with($notification);
-        } else {
-            $teams_climb_list = [];
-            $teams_climb_list_abandon = [];
-            foreach($teams_climb as $key => $team){
-                if($team->climb == null){
-                    continue;
-                } else {     
-                    if($team->climb->abandon == 0){
-                        $teams_climb_list[$key]['name'] = $team->name;
-                        $teams_climb_list[$key]['scor'] = 0;
-                        $teams_climb_list[$key]['meters'] = $team->climb->meters;
-                        $teams_climb_list[$key]['time'] = $team->climb->time;
-                        $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
-                    } elseif($team->climb->abandon == 1) {
-                        $teams_climb_list_abandon[$key]['name'] = $team->name;
-                        $teams_climb_list_abandon[$key]['scor'] = 0;
-                        $teams_list_abandon[$key]['meters'] = "0.0";
-                        $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_climb_list_abandon[$key]['abandon'] = 1;
-                    } else {
-                        $teams_climb_list_abandon[$key]['name'] = $team->name;
-                        $teams_climb_list_abandon[$key]['scor'] = 0;
-                        $teams_list_abandon[$key]['meters'] = "0.0";
-                        $teams_list_abandon[$key]['time'] = "00:00:00";
-                        $teams_climb_list_abandon[$key]['abandon'] = 2;
-                    }
-                }
-            }
-
-            $collection_climb = collect($teams_climb_list);
-            $sorted_climb = $collection_climb->sortBy([
-                ['meters', 'desc'],
-                ['time', 'asc'],
-            ]);
-
-            // convert to array + reindex array key to be from 0 to ...
-            $sorted_climb  = array_values($sorted_climb->toArray());
-
-
-            if(empty($sorted_climb)) {
+        $teams_climb_list = [];
+        $teams_climb_list_abandon = [];
+        if($stage_with_climb == 1){
+            // rank for climb
+            $teams_climb = Team::where('stage_id', $stageid)->with('climb')->where('category_id', $category_id)->get();
+            if($teams_climb->isEmpty()) { 
                 $notification = array(
                     'success_title' => 'Eroare!!',
-                    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                    'message' => 'Eroare validare date!',
                     'alert-type' => 'error'
                 );
-                return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
-            }
-
-            $scor = 1500;
-            $best_score = $sorted_climb[0];
-            $fifty_minus = 2;
-
-            foreach ($sorted_climb as $key => &$item) 
-            {
-                // Calculate "scor" based on key
-                if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
-                    $item['scor'] = $scor;
-                } 
-                else 
-                {
-
-                    if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
-                        $item['scor'] = $scor;
+                return redirect()->route('dashboard', $stageid)->with($notification);
+            } else {
+                foreach($teams_climb as $key => $team){
+                    if($team->climb == null){
+                        continue;
+                    } else {
+                        if($team->climb->abandon == 0){
+                            $teams_climb_list[$key]['name'] = $team->name;
+                            $teams_climb_list[$key]['scor'] = 0;
+                            $teams_climb_list[$key]['meters'] = (float)$team->climb->meters;
+                            $teams_climb_list[$key]['time'] = $team->climb->time;
+                            $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
+                        } elseif($team->climb->abandon == 1) {
+                            $teams_climb_list_abandon[$key]['name'] = $team->name;
+                            $teams_climb_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['meters'] = "0.0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_climb_list_abandon[$key]['abandon'] = 1;
+                        } else {
+                            $teams_climb_list_abandon[$key]['name'] = $team->name;
+                            $teams_climb_list_abandon[$key]['scor'] = 0;
+                            $teams_list_abandon[$key]['meters'] = "0.0";
+                            $teams_list_abandon[$key]['time'] = "00:00:00";
+                            $teams_climb_list_abandon[$key]['abandon'] = 2;
+                        }
                     }
+                }
+
+                $collection_climb = collect($teams_climb_list);
+                $sorted_climb = $collection_climb->sortBy([
+                    ['meters', 'desc'],
+                    ['time', 'asc'],
+                ]);
+
+                // convert to array + reindex array key to be from 0 to ...
+                $sorted_climb  = array_values($sorted_climb->toArray());
+
+                // if(empty($sorted_climb)) {
+                    // continue;
+                    // $notification = array(
+                    //     'success_title' => 'Eroare!!',
+                    //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                    //     'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('rankings.index_category', [$stageid, $category_id])->with($notification);
+                // }
+
+                // $scor = 1500;
+                // $best_score = $sorted_climb[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_climb)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_climb[0];
+                    $fifty_minus = 2;
+                }
+
+                foreach ($sorted_climb as $key => &$item) 
+                {
+                    // Calculate "scor" based on key
+                    if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
+                        $item['scor'] = $scor;
+                    } 
                     else 
                     {
-                        if($fifty_minus > 0  )
-                        {
-                            $scor = $scor - 50;
+
+                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
                             $item['scor'] = $scor;
-                            $fifty_minus--;
                         }
                         else 
                         {
-                            $scor = $scor - 30;
-                            $item['scor'] = $scor;
+                            if($fifty_minus > 0  )
+                            {
+                                $scor = $scor - 50;
+                                $item['scor'] = $scor;
+                                $fifty_minus--;
+                            }
+                            else 
+                            {
+                                $scor = $scor - 30;
+                                $item['scor'] = $scor;
+                            }
                         }
+                        
                     }
-                    
+
+                    $last_score = $item;
+
                 }
 
-                $last_score = $item;
+                $rankings = array();
+                $x = 1;
+                $unique_id = 0;
 
-            }
-
-            $rankings = array();
-            $x = 1;
-            $unique_id = 0;
-
-            foreach($sorted_climb as $key => $team){
-                $decrease_rank = 0;
-                $rankings[$unique_id]['name'] = $team['name'];
-                $rankings[$unique_id]['meters'] = $team['meters'];
-                $rankings[$unique_id]['time'] = $team['time'];
-                $rankings[$unique_id]['abandon'] = $team['abandon'];
-                $rankings[$unique_id]['scor'] = $team['scor'];
-                $rankings[$unique_id]['rank'] = $x;
-                    if(isset($sorted_climb[$key-1]))
-                    {
-                        if($team['time'] == $sorted_climb[$key-1]['time'])
+                foreach($sorted_climb as $key => $team){
+                    $decrease_rank = 0;
+                    $rankings[$unique_id]['name'] = $team['name'];
+                    $rankings[$unique_id]['meters'] = $team['meters'];
+                    $rankings[$unique_id]['time'] = $team['time'];
+                    $rankings[$unique_id]['abandon'] = $team['abandon'];
+                    $rankings[$unique_id]['scor'] = $team['scor'];
+                    $rankings[$unique_id]['rank'] = $x;
+                        if(isset($sorted_climb[$key-1]))
                         {
-                            $decrease_rank = 1;
-                            $rankings[$unique_id]['rank'] = $x-1;
-                        }
-                    }   
-    
-                if($decrease_rank == 0)
-                {
-                    $x++;
+                            if($team['time'] == $sorted_climb[$key-1]['time'])
+                            {
+                                $decrease_rank = 1;
+                                $rankings[$unique_id]['rank'] = $x-1;
+                            }
+                        }   
+        
+                    if($decrease_rank == 0)
+                    {
+                        $x++;
+                    }
+        
+                    $unique_id++;
+                    
+
                 }
-    
-                $unique_id++;
+                
+                $teams_climb_list = $rankings;
 
             }
-            
-            $teams_climb_list = $rankings;
         }
 
         // rank for orienteering
@@ -2775,7 +2878,7 @@ class RankingsController extends Controller
                 $unique_id++;
             }
 
-            $pdf = PDF::loadView('rankings.general_category_pdf', ['ranking_general' => $ranking_general, 'category' => $category, 'stageid' => $stageid]);
+            $pdf = PDF::loadView('rankings.general_category_pdf', ['stage_with_climb' => $stage_with_climb, 'ranking_general' => $ranking_general, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
             $general_category_pdf = 'rankings.general_category_pdf';
             return $pdf->stream($general_category_pdf);
@@ -2791,6 +2894,13 @@ class RankingsController extends Controller
         //organize clubs in order to add points for the cumulate ranking.
         $organizer_clubs = Club::where('stage_id', $stageid)->get();
        
+        $get_if_is_stage_with_climb = Club::where('stage_id', $stageid)->where('climbing', 1)->first();
+        $stage_with_climb = 0;
+        if($get_if_is_stage_with_climb == null){
+            $stage_with_climb = 0;
+        } else {
+            $stage_with_climb = 1;
+        }
 
         if($stage == null){
             $notification = array(
@@ -2822,12 +2932,14 @@ class RankingsController extends Controller
                 // rank for knowledge
                 $teams_knowledge = Team::with('knowledge')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 if($teams_knowledge->isEmpty()) {
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'Verificati daca exista cluburi cu proba de Cunostinte Turstice completata!',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('dashboard', $stageid)->with($notification);
+                    continue;
+                    // dd($teams_knowledge);
+                    // $notification = array(
+                    //     'success_title' => 'Eroare!!',
+                    //     'message' => 'Verificati daca exista cluburi cu proba de Cunostinte Turstice completata!',
+                    //     'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('dashboard', $stageid)->with($notification);
                 }
         
                 $teams_knowledge_list = [];
@@ -2870,18 +2982,29 @@ class RankingsController extends Controller
                 // convert to array + reindex array key to be from 0 to ...
                 $sorted_knowledge  = array_values($sorted_knowledge->toArray());
     
-                if(empty($sorted_knowledge)) {
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('dashboard', [$stageid])->with($notification);
-                }
+                // if(empty($sorted_knowledge)) {
+                    // dd($teams_knowledge);
+                    // $notification = array(
+                    //     'success_title' => 'Eroare!!',
+                    //     'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                    //     'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('dashboard', [$stageid])->with($notification);
+                // }
 
-                $scor = 1500;
-                $best_score = $sorted_knowledge[0];
-                $fifty_minus = 2;
+                // $scor = 1500;
+                // $best_score = $sorted_knowledge[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_knowledge)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_knowledge[0];
+                    $fifty_minus = 2;
+                }
     
                 foreach ($sorted_knowledge as $key => &$item) 
                 {
@@ -2949,132 +3072,149 @@ class RankingsController extends Controller
                 
                 $teams_knowledge_list = $rankings;
 
-                // rank for climbing
-                $teams_climb = Team::with('climb')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
-                                
-                if($teams_climb->isEmpty()) {
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'Verificati daca exista cluburi cu proba de Alpinism completata!',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('dashboard', $stageid)->with($notification);
-                }
-        
                 $teams_climb_list = [];
                 $teams_climb_list_abandon = [];
-                foreach($teams_climb as $key => $team){
-                    if($team->climb == null){
+                if($stage_with_climb == 1){
+                        
+                    // rank for climbing
+                    $teams_climb = Team::with('climb')->where('stage_id', $stageid)->where('category_id', $category->id)->get();
+                                    
+                    if($teams_climb->isEmpty()) {
                         continue;
-                    } else {     
-                        if($team->climb->abandon == 0){
-                            $teams_climb_list[$key]['name'] = $team->name;
-                            $teams_climb_list[$key]['scor'] = 0;
-                            $teams_climb_list[$key]['meters'] = (float) $team->climb->meters;
-                            $teams_climb_list[$key]['time'] = $team->climb->time;
-                            $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
-                        } elseif($team->climb->abandon == 1) {
-                            $teams_climb_list_abandon[$key]['name'] = $team->name;
-                            $teams_climb_list_abandon[$key]['scor'] = 0;
-                            $teams_list_abandon[$key]['meters'] = "0.0";
-                            $teams_list_abandon[$key]['time'] = "00:00:00";
-                            $teams_climb_list_abandon[$key]['abandon'] = 1;
-                        } else {
-                            $teams_climb_list_abandon[$key]['name'] = $team->name;
-                            $teams_climb_list_abandon[$key]['scor'] = 0;
-                            $teams_list_abandon[$key]['meters'] = "0.0";
-                            $teams_list_abandon[$key]['time'] = "00:00:00";
-                            $teams_climb_list_abandon[$key]['abandon'] = 2;
+                        // $notification = array(
+                        //     'success_title' => 'Eroare!!',
+                        //     'message' => 'Verificati daca exista cluburi cu proba de Alpinism completata!',
+                        //     'alert-type' => 'error'
+                        // );
+                        // return redirect()->route('dashboard', $stageid)->with($notification);
+                    }
+            
+                    $teams_climb_list = [];
+                    $teams_climb_list_abandon = [];
+                    foreach($teams_climb as $key => $team){
+                        if($team->climb == null){
+                            continue;
+                        } else {     
+                            if($team->climb->abandon == 0){
+                                $teams_climb_list[$key]['name'] = $team->name;
+                                $teams_climb_list[$key]['scor'] = 0;
+                                $teams_climb_list[$key]['meters'] = (float) $team->climb->meters;
+                                $teams_climb_list[$key]['time'] = $team->climb->time;
+                                $teams_climb_list[$key]['abandon'] = $team->climb->abandon;
+                            } elseif($team->climb->abandon == 1) {
+                                $teams_climb_list_abandon[$key]['name'] = $team->name;
+                                $teams_climb_list_abandon[$key]['scor'] = 0;
+                                $teams_list_abandon[$key]['meters'] = "0.0";
+                                $teams_list_abandon[$key]['time'] = "00:00:00";
+                                $teams_climb_list_abandon[$key]['abandon'] = 1;
+                            } else {
+                                $teams_climb_list_abandon[$key]['name'] = $team->name;
+                                $teams_climb_list_abandon[$key]['scor'] = 0;
+                                $teams_list_abandon[$key]['meters'] = "0.0";
+                                $teams_list_abandon[$key]['time'] = "00:00:00";
+                                $teams_climb_list_abandon[$key]['abandon'] = 2;
+                            }
                         }
                     }
-                }
-    
-                $collection_climb = collect($teams_climb_list);
-              
-                $sorted_climb = $collection_climb->sortBy([
-                    ['meters', 'desc'],
-                    ['time', 'asc'],
-                ]);
+        
+                    $collection_climb = collect($teams_climb_list);
+                
+                    $sorted_climb = $collection_climb->sortBy([
+                        ['meters', 'desc'],
+                        ['time', 'asc'],
+                    ]);
 
-                // convert to array + reindex array key to be from 0 to ...
-                $sorted_climb  = array_values($sorted_climb->toArray());
-                 if(empty($sorted_climb)) {
-                     $notification = array(
-                         'success_title' => 'Eroare!!',
-                         'message' => "Una sau mai multe echipe nu are date introduse la proba de Alpinism!",
-                         'alert-type' => 'error'
-                     );
-                     return redirect()->route('dashboard', [$stageid])->with($notification);
-                 }
+                    // convert to array + reindex array key to be from 0 to ...
+                    $sorted_climb  = array_values($sorted_climb->toArray());
 
-                $scor = 1500;
-                $best_score = $sorted_climb[0];
-                $fifty_minus = 2;
-    
-                foreach ($sorted_climb as $key => &$item) 
-                {
-                    // Calculate "scor" based on key
-                    if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
-                        $item['scor'] = $scor;
-                    } 
-                    else 
+                    // if(empty($sorted_climb)) {
+                        // $notification = array(
+                        //     'success_title' => 'Eroare!!',
+                        //     'message' => "Una sau mai multe echipe nu are date introduse la proba de Alpinism!",
+                        //     'alert-type' => 'error'
+                        // );
+                        // return redirect()->route('dashboard', [$stageid])->with($notification);
+                    // }
+
+                    // $scor = 1500;
+                    // $best_score = $sorted_climb[0];
+                    // $fifty_minus = 2;
+
+                    if(empty($sorted_climb)) {
+                        $scor = 1500;
+                        $best_score = "";
+                        $fifty_minus = 2;
+                    } else {
+                        $scor = 1500;
+                        $best_score = $sorted_climb[0];
+                        $fifty_minus = 2;
+                    }
+        
+                    foreach ($sorted_climb as $key => &$item) 
                     {
-    
-                        if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
+                        // Calculate "scor" based on key
+                        if ($item['time'] == $best_score['time'] && $item['meters'] == $best_score['meters'] ) {
                             $item['scor'] = $scor;
-                        }
+                        } 
                         else 
                         {
-                            if($fifty_minus > 0  )
-                            {
-                                $scor = $scor - 50;
+        
+                            if( !empty($last_score) && $item['time'] == $last_score['time'] && $item['meters'] == $last_score['meters'] ){
                                 $item['scor'] = $scor;
-                                $fifty_minus--;
                             }
                             else 
                             {
-                                $scor = $scor - 30;
-                                $item['scor'] = $scor;
+                                if($fifty_minus > 0  )
+                                {
+                                    $scor = $scor - 50;
+                                    $item['scor'] = $scor;
+                                    $fifty_minus--;
+                                }
+                                else 
+                                {
+                                    $scor = $scor - 30;
+                                    $item['scor'] = $scor;
+                                }
                             }
+                            
                         }
-                        
+        
+                        $last_score = $item;
+        
                     }
-    
-                    $last_score = $item;
-    
-                }
-    
-                $rankings = array();
-                $x = 1;
-                $unique_id = 0;
-    
-                foreach($sorted_climb as $key => $team){
-                    $decrease_rank = 0;
-                    $rankings[$unique_id]['name'] = $team['name'];
-                    $rankings[$unique_id]['meters'] = $team['meters'];
-                    $rankings[$unique_id]['time'] = $team['time'];
-                    $rankings[$unique_id]['abandon'] = $team['abandon'];
-                    $rankings[$unique_id]['scor'] = $team['scor'];
-                    $rankings[$unique_id]['rank'] = $x;
-                        if(isset($sorted_climb[$key-1]))
-                        {
-                            if($team['time'] == $sorted_climb[$key-1]['time'])
+        
+                    $rankings = array();
+                    $x = 1;
+                    $unique_id = 0;
+        
+                    foreach($sorted_climb as $key => $team){
+                        $decrease_rank = 0;
+                        $rankings[$unique_id]['name'] = $team['name'];
+                        $rankings[$unique_id]['meters'] = $team['meters'];
+                        $rankings[$unique_id]['time'] = $team['time'];
+                        $rankings[$unique_id]['abandon'] = $team['abandon'];
+                        $rankings[$unique_id]['scor'] = $team['scor'];
+                        $rankings[$unique_id]['rank'] = $x;
+                            if(isset($sorted_climb[$key-1]))
                             {
-                                $decrease_rank = 1;
-                                $rankings[$unique_id]['rank'] = $x-1;
-                            }
-                        }   
+                                if($team['time'] == $sorted_climb[$key-1]['time'])
+                                {
+                                    $decrease_rank = 1;
+                                    $rankings[$unique_id]['rank'] = $x-1;
+                                }
+                            }   
+            
+                        if($decrease_rank == 0)
+                        {
+                            $x++;
+                        }
+            
+                        $unique_id++;
         
-                    if($decrease_rank == 0)
-                    {
-                        $x++;
                     }
-        
-                    $unique_id++;
-    
+                    
+                    $teams_climb_list = $rankings;
                 }
-                
-                $teams_climb_list = $rankings;
                 
                 // rank for orienteering
 
@@ -3765,18 +3905,28 @@ class RankingsController extends Controller
                 // convert to array + reindex array key to be from 0 to ...
                 $sorted_knowledge  = array_values($sorted_knowledge->toArray());
 
-                if(empty($sorted_knowledge)) {
-                    $notification = array(
-                        'success_title' => 'Eroare!!',
-                        'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
-                        'alert-type' => 'error'
-                    );
-                    return redirect()->route('dashboard', [$stageid])->with($notification);
-                }
+                // if(empty($sorted_knowledge)) {
+                //     $notification = array(
+                //         'success_title' => 'Eroare!!',
+                //         'message' => 'Una sau mai multe echipe nu are date introduse la proba de Cunostinte Turistice!',
+                //         'alert-type' => 'error'
+                //     );
+                //     return redirect()->route('dashboard', [$stageid])->with($notification);
+                // }
                 
-                $scor = 1500;
-                $best_score = $sorted_knowledge[0];
-                $fifty_minus = 2;
+                // $scor = 1500;
+                // $best_score = $sorted_knowledge[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_knowledge)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_knowledge[0];
+                    $fifty_minus = 2;
+                }
     
                 foreach ($sorted_knowledge as $key => &$item) 
                 {
@@ -3884,18 +4034,28 @@ class RankingsController extends Controller
                 // convert to array + reindex array key to be from 0 to ...
                 $sorted_climb  = array_values($sorted_climb->toArray());
    
-                if(empty($sorted_climb)) {
-                    $notification = array(
-                       'success_title' => 'Eroare!!',
-                       'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
-                       'alert-type' => 'error'
-                    );
-                    return redirect()->route('dashboard', [$stageid])->with($notification);
-                }
+                // if(empty($sorted_climb)) {
+                    // $notification = array(
+                    //    'success_title' => 'Eroare!!',
+                    //    'message' => 'Una sau mai multe echipe nu are date introduse la proba de Alpinism!',
+                    //    'alert-type' => 'error'
+                    // );
+                    // return redirect()->route('dashboard', [$stageid])->with($notification);
+                // }
                     
-                $scor = 1500;
-                $best_score = $sorted_climb[0];
-                $fifty_minus = 2;
+                // $scor = 1500;
+                // $best_score = $sorted_climb[0];
+                // $fifty_minus = 2;
+
+                if(empty($sorted_climb)) {
+                    $scor = 1500;
+                    $best_score = "";
+                    $fifty_minus = 2;
+                } else {
+                    $scor = 1500;
+                    $best_score = $sorted_climb[0];
+                    $fifty_minus = 2;
+                }
                
                foreach ($sorted_climb as $key => &$item) 
                {

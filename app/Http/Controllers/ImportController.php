@@ -472,7 +472,7 @@ class ImportController extends Controller
             $orienteering_stations_array = [];
 
             foreach($categories as $category){
-                $orienteering_stations_category = OrienteeringStationsStages::where('category_id', $category->id)->get();
+                $orienteering_stations_category = OrienteeringStationsStages::where('stage_id', $stageid)->where('category_id', $category->id)->get();
                 $first_post = optional($orienteering_stations_category->first())->post;
                 $last_post = optional($orienteering_stations_category->last())->post;
                 foreach($orienteering_stations_category as $orienteering_stations){
@@ -504,6 +504,8 @@ class ImportController extends Controller
                 }
 
             }
+
+            // dd($orienteering_stations_array);
 
 
             // Optional: validate that all were found
@@ -563,7 +565,7 @@ class ImportController extends Controller
                             }
                             
                             //Creaza metoda de calcul 1 2 3
-                            // 1 - Daca Orientarea este la inceput si dupa raid-ul - Finish-ul trebuie calculat altfel: finish punch - start punch 
+                            // 1 - Daca Orientarea este la inceput si dupa raid-ul
                             // 2 - Daca Raid-ul este la inceput si dupa orientare
                             // 3 - Daca Orientarea si Raid-ul sunt pe zile spearate si au Start Punch / Finish Punch ambele
                             // Pentru asta am creat $finish_punch_array
@@ -635,7 +637,8 @@ class ImportController extends Controller
                                 if (str_starts_with($start_time_input, "12")) {
                                     $start_time_input = "00" . substr($start_time_input, 2);  // păstrează ":26:17"
                                 }
-                                $start_time = date("H:i:s",strtotime($start_time_input));
+                                // $start_time = date("H:i:s",strtotime($start_time_input));
+                                $start_time = date("H:i:s",strtotime("00:00:00"));
 
                                 $end_time_input = end($teams_in_stage[$fields[$chipnoIndex]]['stations']);
                                 if (str_starts_with($end_time_input, "12")) {
@@ -702,6 +705,7 @@ class ImportController extends Controller
 
             }
 
+            // dd($teams_in_stage);
             // dd($teams_with_issue);
             foreach($teams_in_stage as $team_in_stage){
                 if(isset($team_in_stage['stations'])){                   
