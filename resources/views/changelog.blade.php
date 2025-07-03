@@ -18,6 +18,18 @@
             <section>
             <div class="card">
                     <div class="card-header">
+                        <h4 class="card-title">[ v6.2.2 ] - 03.07.2025</h4>
+                    </div>
+                    <div class="card-body">
+                        <br />
+                        <p class="card-text">[Bug Fix]</p>
+                        <p class="card-text">- Schimbare metoda cand raid-ul este dupa orientare la import csv.</p>
+                        <p class="card-text">[Adaugare]</p>
+                        <p class="card-text">- Cand se exporta clasamentele numele fisierului sa fie mai clar.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
                         <h4 class="card-title">[ v6.2.1 ] - 25.06.2025</h4>
                     </div>
                     <div class="card-body">
