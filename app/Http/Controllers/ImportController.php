@@ -966,8 +966,8 @@ class ImportController extends Controller
                         }
 
                     
-                        // if the raidmontan is after orienteering else do the standard way.
-                        if ($post_keys[0] !== "Start punch" && end($post_keys) === "Finish punch") {
+                        // if the raidmontan is after orienteering or comes from a separate file
+                        if (($post_keys[0] !== "Start punch" || $post_keys[0] === "Start punch") && end($post_keys) === "Finish punch") {
 
                             if( $key == ( count($post_keys) -1 ) ){                                
                                 $post_times['252']['arrived'] = [
@@ -975,11 +975,9 @@ class ImportController extends Controller
                                     'time' => $formatted_time_difference_from_finish_minus_start[$team_in_stage['chipno']]
                                 ];
                                 continue;
-                            }
-                            
-                            
+                            }   
+                         // do the standard way.
                         } else {
-                         
                             if( $key == ( count($post_keys) -1 ) ){
                                 $post_times['252']['arrived'] = [
                                     'key' => $name,
