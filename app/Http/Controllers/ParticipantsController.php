@@ -801,7 +801,7 @@ class ParticipantsController extends Controller
 
         $pdf = PDF::loadView('participants.participants_clubs_stage_rankings_pdf', ['rankings' => $rankings, 'clubsstagecategoryrankings_rankings' => $clubsstagecategoryrankings_rankings, 'categories' => $categories, 'stages' => $stages]);
         $pdf->setPaper('A4', 'landscape');
-        $rankings = 'participants.participants_clubs_stage_rankings_pdf';
+        $rankings = 'ClasamentGeneralCumulat.pdf';
         return $pdf->stream($rankings);
 
     }

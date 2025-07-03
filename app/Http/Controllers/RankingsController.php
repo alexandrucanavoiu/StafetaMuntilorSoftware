@@ -367,7 +367,7 @@ class RankingsController extends Controller
                 $pdf = PDF::loadView('rankings.knowledge_pdf', ['rankings' => $rankings, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
                 $pdf->setPaper('A4', 'landscape');
                 // $pdf->setPaper('A4', 'portrait');
-                $listrankknowledge = 'rankings.knowledge_pdf';
+                $listrankknowledge = 'Clasament_CunostinteTuristice_' . $category->name . '.pdf';
                 return $pdf->stream($listrankknowledge);
         }
     }
@@ -659,7 +659,7 @@ class RankingsController extends Controller
                 $pdf = PDF::loadView('rankings.climb_pdf', ['rankings' => $rankings, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
                 $pdf->setPaper('A4', 'landscape');
                 // $pdf->setPaper('A4', 'portrait');
-                $listRankClimb = 'rankings.climb_pdf';
+                $listRankClimb = 'Clasament_Alpinism_' . $category->name . '.pdf';
                 return $pdf->stream($listRankClimb);
         }
     }
@@ -971,7 +971,7 @@ class RankingsController extends Controller
 
             $pdf = PDF::loadView('rankings.orienteering_pdf', ['ultra_orienteering' => $ultra_orienteering, 'rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
-            $listrankknowledge = 'rankings.knowledge_pdf';
+            $listrankknowledge = 'Clasament_Orientare_' . $category->name . '.pdf';
             return $pdf->stream($listrankknowledge);
 
         }
@@ -1438,7 +1438,7 @@ class RankingsController extends Controller
 
             $pdf = PDF::loadView('rankings.raidmontan_pdf', ['rankings' => $rankings, 'teams_list_disqualified' => $teams_list_disqualified, 'teams_list_abandon' => $teams_list_abandon, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
-            $raidmontan_pdf = 'rankings.raidmontan_pdf';
+            $raidmontan_pdf = 'Clasament_RaidMontan_' . $category->name . '.pdf';
             return $pdf->stream($raidmontan_pdf);
 
         }
@@ -2880,7 +2880,7 @@ class RankingsController extends Controller
 
             $pdf = PDF::loadView('rankings.general_category_pdf', ['stage_with_climb' => $stage_with_climb, 'ranking_general' => $ranking_general, 'category' => $category, 'stageid' => $stageid]);
             $pdf->setPaper('A4', 'landscape');
-            $general_category_pdf = 'rankings.general_category_pdf';
+            $general_category_pdf = 'ClasamentCategoria_' . $category->name . '_Etapa_' . $stageid . '.pdf';
             return $pdf->stream($general_category_pdf);
 
     }
@@ -4620,7 +4620,7 @@ class RankingsController extends Controller
 
         $pdf = PDF::loadView('rankings.general_pdf', ['rankings' => $rankings, 'categories' => $categories, 'stageid' => $stageid]);
         $pdf->setPaper('A4', 'landscape');
-        $general_pdf = 'rankings.general_pdf';
+        $general_pdf = 'ClasamentGeneral_Etapa_' . $stageid . '.pdf';
         return $pdf->stream($general_pdf);
 
     }
